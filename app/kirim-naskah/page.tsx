@@ -7,7 +7,7 @@ export default function KirimNaskahPage() {
             Kirim Naskah
           </h1>
           <p className="text-slate-400 mt-2">
-            Kirimkan karya atau naskah ilmiah Anda untuk ditinjau oleh tim redaksi Pustaka Ilman.
+            Kirimkan karya atau naskah ilmiah Anda untuk ditinjau oleh tim redaksi Pustaka Iman.
           </p>
         </div>
 

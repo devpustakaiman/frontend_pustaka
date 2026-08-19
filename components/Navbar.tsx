@@ -16,7 +16,7 @@ export default function Navbar() {
               PI
             </div>
             <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
-              Pustaka Ilman
+              Pustaka Iman
             </span>
           </Link>
 
