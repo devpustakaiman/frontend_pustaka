@@ -17,7 +17,7 @@ export default function HeroBanner() {
               </span>
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl leading-relaxed">
-              Selamat datang di Pustaka Ilman. Kami menyajikan berbagai koleksi naskah terpilih, buku akademik, dan literasi umum bermutu untuk menunjang wawasan Anda.
+              Selamat datang di Pustaka Iman. Kami menyajikan berbagai koleksi naskah terpilih, buku akademik, dan literasi umum bermutu untuk menunjang wawasan Anda.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link
@@ -52,7 +52,7 @@ export default function HeroBanner() {
                 </p>
               </div>
               <div className="pt-4 border-t border-slate-700/50 flex justify-between items-center text-sm">
-                <span className="text-emerald-300 font-semibold">Pustaka Ilman Press</span>
+                <span className="text-emerald-300 font-semibold">Pustaka Iman Press</span>
                 <span className="text-xs text-slate-400">Edisi 2026</span>
               </div>
             </div>

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pustaka Ilman - Penerbit & Katalog Buku",
+  title: "Pustaka Iman - Penerbit & Katalog Buku",
   description: "Penerbit & Penyedia Literasi berkualitas tinggi untuk mencerdaskan bangsa.",
 };
 

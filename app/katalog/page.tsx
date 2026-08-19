@@ -1,6 +1,9 @@
 import BookGrid from "@/components/BookGrid";
+import { getBooks } from "@/lib/api";
 
-export default function KatalogPage() {
+export default async function KatalogPage() {
+  const books = await getBooks();
+
   return (
     <div className="bg-slate-950 min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,10 +12,10 @@ export default function KatalogPage() {
             Katalog Buku
           </h1>
           <p className="text-slate-400 mt-2">
-            Jelajahi seluruh koleksi publikasi dan penerbitan berkualitas dari Pustaka Ilman.
+            Jelajahi seluruh koleksi publikasi dan penerbitan berkualitas dari Pustaka Iman.
           </p>
         </div>
-        <BookGrid />
+        <BookGrid books={books} />
       </div>
     </div>
   );

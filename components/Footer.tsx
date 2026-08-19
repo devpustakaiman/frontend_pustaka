@@ -10,7 +10,7 @@ export default function Footer() {
               <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white text-lg">
                 PI
               </div>
-              <span className="font-bold text-lg text-white">Pustaka Ilman</span>
+              <span className="font-bold text-lg text-white">Pustaka Iman</span>
             </div>
             <p className="text-sm text-slate-400 max-w-sm">
               Penerbit & Penyedia Literasi berkualitas tinggi untuk mencerdaskan
@@ -45,13 +45,13 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               Kontak
             </h3>
-            <p className="text-sm text-slate-400">Email: info@pustakailman.com</p>
+            <p className="text-sm text-slate-400">Email: info@pustakaiman.com</p>
             <p className="text-sm text-slate-400 mt-1">Jakarta, Indonesia</p>
           </div>
         </div>
 
         <div className="pt-8 border-t border-slate-800 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} Pustaka Ilman. Hak Cipta Dilindungi Undang-Undang.</p>
+          <p>&copy; {new Date().getFullYear()} Pustaka Iman. Hak Cipta Dilindungi Undang-Undang.</p>
         </div>
       </div>
     </footer>

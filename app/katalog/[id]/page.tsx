@@ -45,14 +45,14 @@ export default async function BookDetailPage({ params }: PageProps) {
                   Judul Buku Placeholder #{id}
                 </h1>
                 <p className="text-slate-400 text-sm mt-1">
-                  Penulis: <span className="text-slate-200 font-medium">Penulis Pustaka Ilman</span>
+                  Penulis: <span className="text-slate-200 font-medium">Penulis Pustaka Iman</span>
                 </p>
               </div>
 
               <div className="border-t border-b border-slate-800 py-4 space-y-2">
                 <h2 className="text-lg font-bold text-slate-200">Sinopsis</h2>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Ini adalah placeholder sinopsis buku ID #{id}. Buku ini membahas topik-topik ilmiah dan literasi mendalam yang diterbitkan oleh Pustaka Ilman. Menyajikan argumen terstruktur, riset mendalam, serta panduan praktis bagi para pembaca dan akademisi.
+                  Ini adalah placeholder sinopsis buku ID #{id}. Buku ini membahas topik-topik ilmiah dan literasi mendalam yang diterbitkan oleh Pustaka Iman. Menyajikan argumen terstruktur, riset mendalam, serta panduan praktis bagi para pembaca dan akademisi.
                 </p>
               </div>
 
