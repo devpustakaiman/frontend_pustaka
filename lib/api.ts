@@ -49,3 +49,46 @@ export async function getArticles() {
 
   return data || [];
 }
+
+export async function submitManuscript(
+  formData: { senderName: string; email: string; synopsis: string },
+  file: File
+) {
+  const fileName = `${Date.now()}_${file.name}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("naskah")
+    .upload(fileName, file);
+
+  if (uploadError) {
+    console.error("Error uploading manuscript file:", uploadError);
+    throw uploadError;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from("naskah")
+    .getPublicUrl(fileName);
+
+  const pdfDocumentUrl = urlData.publicUrl;
+
+  const { error: insertError } = await supabase
+    .from("submissions")
+    .insert([
+      {
+        senderName: formData.senderName,
+        email: formData.email,
+        synopsis: formData.synopsis,
+        pdfDocumentUrl,
+        status: "pending",
+      },
+    ]);
+
+  if (insertError) {
+    console.error("Error inserting manuscript submission:", insertError);
+    throw insertError;
+  }
+
+  return { success: true };
+}
+
+
