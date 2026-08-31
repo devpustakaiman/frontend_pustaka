@@ -18,23 +18,47 @@ export async function getBookById(id: string) {
   if (!id) return null;
 
   try {
+    // 1. Try matching by exact ID
     const { data, error } = await supabase
       .from("books")
       .select("*")
       .eq("id", id)
       .maybeSingle();
 
+    if (data) return data;
+
     if (error) {
       console.warn(`Gracefully handling getBookById error for id "${id}":`, error.message);
-      return null;
     }
 
-    return data;
+    // 2. Try matching by slug if column exists
+    const { data: slugData } = await supabase
+      .from("books")
+      .select("*")
+      .eq("slug", id)
+      .maybeSingle();
+
+    if (slugData) return slugData;
+
+    // 3. Fallback: search all books and match ID string or title
+    const { data: allBooks } = await supabase.from("books").select("*");
+    if (allBooks && allBooks.length > 0) {
+      const match = allBooks.find(
+        (b) =>
+          String(b.id) === String(id) ||
+          b.slug === id ||
+          b.title?.toLowerCase() === decodeURIComponent(id).toLowerCase()
+      );
+      if (match) return match;
+    }
+
+    return null;
   } catch (err) {
     console.warn(`Exception caught in getBookById for id "${id}":`, err);
     return null;
   }
 }
+
 
 export async function getArticles() {
   const { data, error } = await supabase
@@ -49,6 +73,29 @@ export async function getArticles() {
 
   return data || [];
 }
+
+export async function getArticleById(id: string) {
+  if (!id) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) {
+      console.warn(`Gracefully handling getArticleById error for id "${id}":`, error.message);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.warn(`Exception caught in getArticleById for id "${id}":`, err);
+    return null;
+  }
+}
+
 
 export async function submitManuscript(
   formData: { senderName: string; email: string; synopsis: string },

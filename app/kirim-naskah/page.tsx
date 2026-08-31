@@ -51,22 +51,25 @@ export default function KirimNaskah() {
   };
 
   return (
-    <div className="bg-slate-950 min-h-screen py-12 text-white">
+    <div className="bg-[#FAF8F3] text-[#272522] min-h-screen py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 border-b border-slate-800 pb-6 text-center">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">
-            Kirim Naskah
+        <div className="mb-8 border-b border-[#EAE5D9] pb-6 text-center">
+          <span className="text-xs uppercase tracking-widest font-semibold text-[#B67A2D]">
+            Penerbitan Karya
+          </span>
+          <h1 className="font-serif text-4xl font-bold text-[#272522] tracking-tight mt-1">
+            Kirim Naskah Anda
           </h1>
-          <p className="text-slate-400 mt-2">
+          <p className="text-[#76716A] text-sm mt-2">
             Kirimkan karya atau naskah ilmiah Anda untuk ditinjau oleh tim redaksi Pustaka Iman.
           </p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+        <div className="bg-white shadow-sm border border-[#EAE5D9] rounded-xl p-6 sm:p-8">
           {/* Feedback Alerts */}
           {successMsg && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-950/80 border border-emerald-500 text-emerald-300 text-sm font-medium flex items-center gap-3">
-              <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-center gap-3">
+              <svg className="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>{successMsg}</span>
@@ -74,8 +77,8 @@ export default function KirimNaskah() {
           )}
 
           {errorMsg && (
-            <div className="mb-6 p-4 rounded-xl bg-red-950/80 border border-red-500 text-red-300 text-sm font-medium flex items-center gap-3">
-              <svg className="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm font-medium flex items-center gap-3">
+              <svg className="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{errorMsg}</span>
@@ -85,7 +88,7 @@ export default function KirimNaskah() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Sender Name Input */}
             <div>
-              <label htmlFor="senderName" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="senderName" className="block text-xs font-semibold uppercase tracking-wider text-[#272522] mb-2">
                 Nama Lengkap
               </label>
               <input
@@ -96,13 +99,13 @@ export default function KirimNaskah() {
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
                 placeholder="Masukkan nama lengkap Anda"
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                className="w-full px-4 py-3 rounded-md bg-white border border-[#EAE5D9] text-[#272522] placeholder-[#76716A] focus:outline-none focus:border-[#B67A2D] focus:ring-1 focus:ring-[#B67A2D] transition-colors text-sm"
               />
             </div>
 
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[#272522] mb-2">
                 Alamat Email
               </label>
               <input
@@ -113,13 +116,13 @@ export default function KirimNaskah() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="contoh@email.com"
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                className="w-full px-4 py-3 rounded-md bg-white border border-[#EAE5D9] text-[#272522] placeholder-[#76716A] focus:outline-none focus:border-[#B67A2D] focus:ring-1 focus:ring-[#B67A2D] transition-colors text-sm"
               />
             </div>
 
             {/* Synopsis Input */}
             <div>
-              <label htmlFor="synopsis" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="synopsis" className="block text-xs font-semibold uppercase tracking-wider text-[#272522] mb-2">
                 Sinopsis Naskah
               </label>
               <textarea
@@ -130,23 +133,23 @@ export default function KirimNaskah() {
                 value={synopsis}
                 onChange={(e) => setSynopsis(e.target.value)}
                 placeholder="Tuliskan ringkasan atau sinopsis singkat mengenai naskah Anda..."
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-md bg-white border border-[#EAE5D9] text-[#272522] placeholder-[#76716A] focus:outline-none focus:border-[#B67A2D] focus:ring-1 focus:ring-[#B67A2D] transition-colors resize-none text-sm"
               />
             </div>
 
             {/* File Upload (PDF) */}
             <div>
-              <label htmlFor="file" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="file" className="block text-xs font-semibold uppercase tracking-wider text-[#272522] mb-2">
                 Unggah File Naskah (PDF)
               </label>
               <div className="flex items-center justify-center w-full">
                 <label
                   htmlFor="file"
-                  className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer bg-slate-950 hover:bg-slate-900 hover:border-emerald-500/50 transition-all"
+                  className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-[#EAE5D9] rounded-xl cursor-pointer bg-[#FAF8F3] hover:bg-[#F1E8D8] hover:border-[#B67A2D] transition-all"
                 >
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <svg
-                      className="w-8 h-8 mb-2 text-slate-400"
+                      className="w-8 h-8 mb-2 text-[#B67A2D]"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -158,10 +161,10 @@ export default function KirimNaskah() {
                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                       />
                     </svg>
-                    <p className="mb-1 text-sm text-slate-300 font-medium">
+                    <p className="mb-1 text-sm text-[#272522] font-medium">
                       {file ? file.name : "Klik untuk mengunggah file PDF"}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#76716A]">
                       {file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "Format file: PDF (Maksimal 10MB)"}
                     </p>
                   </div>
@@ -183,7 +186,7 @@ export default function KirimNaskah() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:cursor-not-allowed font-bold text-white shadow-lg shadow-emerald-600/30 transition-all text-center cursor-pointer"
+                className="w-full py-3.5 px-6 rounded-md bg-[#B67A2D] hover:bg-[#8D5D20] disabled:bg-[#B67A2D]/50 disabled:cursor-not-allowed font-medium text-[#FAF8F3] shadow-sm transition-all text-center cursor-pointer uppercase tracking-wider text-xs"
               >
                 {isSubmitting ? "Mengirim..." : "Kirim Naskah"}
               </button>

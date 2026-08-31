@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#E2FFDA" />
+      <stop offset="100%" stop-color="#9DF287" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background Rounded Square -->
+  <rect x="12" y="12" width="488" height="488" rx="64" fill="url(#bgGrad)" stroke="#89E472" stroke-width="8" />
+
+  <!-- Subtle White Highlight -->
+  <circle cx="160" cy="160" r="140" fill="#FFFFFF" opacity="0.25" />
+
+  <!-- Letter P (Red) -->
+  <path d="M 75 95 L 210 95 C 265 95 290 120 290 185 C 290 250 265 275 210 275 L 135 275 L 135 415 L 75 415 Z M 135 145 L 135 225 L 205 225 C 225 225 235 215 235 185 C 235 155 225 145 205 145 Z" fill="#EE0A0A" />
+
+  <!-- Letter I (Left Half Red, Right Half Black) -->
+  <rect x="325" y="95" width="60" height="320" fill="#EE0A0A" />
+  <rect x="385" y="95" width="60" height="320" fill="#0A0A0A" />
+</svg>

@@ -1,31 +1,43 @@
 import HeroBanner from "@/components/HeroBanner";
-import BookGrid from "@/components/BookGrid";
-import NewsTimeline from "@/components/NewsTimeline";
+import RecommendedSection from "@/components/RecommendedSection";
+import CategorySection from "@/components/CategorySection";
+import RecentlyAddedSection from "@/components/RecentlyAddedSection";
+import BestSellerSection from "@/components/BestSellerSection";
+import FeaturedVideo from "@/components/FeaturedVideo";
+import NewsGrid from "@/components/NewsGrid";
 import { getBooks, getArticles } from "@/lib/api";
 
 export default async function Home() {
   const [allBooks, allArticles] = await Promise.all([getBooks(), getArticles()]);
 
-  const books = allBooks.slice(0, 4);
+  // Sliced data streams for homepage sections
+  const recommendedBooks = allBooks.slice(0, 4);
+  const recentlyAddedBooks = allBooks.slice(0, 10);
+  const bestSellerBooks = allBooks.slice(0, 10);
   const articles = allArticles.slice(0, 3);
 
   return (
-    <div>
+    <main className="w-full min-h-screen bg-[#FEFDF7]">
+      {/* Hero Section */}
       <HeroBanner />
-      <section className="bg-slate-950 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">
-              Buku Pilihan
-            </h2>
-            <p className="text-slate-400 mt-1">
-              Koleksi buku penerbitan terbaru dan rekomendasi terbaik.
-            </p>
-          </div>
-          <BookGrid books={books} />
-        </div>
-      </section>
-      <NewsTimeline articles={articles} />
-    </div>
+
+      {/* 1. Recommended Books Section (bg-[#FEFDF7]) */}
+      <RecommendedSection books={recommendedBooks} />
+
+      {/* 2. Category Section (bg-[#FEFDF7]) */}
+      <CategorySection />
+
+      {/* 3. Recently Added Books Section (bg-[#F7F4E9]) */}
+      <RecentlyAddedSection books={recentlyAddedBooks} />
+
+      {/* 4. Best Seller Books Section (bg-[#FEFDF7]) */}
+      <BestSellerSection books={bestSellerBooks} />
+
+      {/* 5. Featured Video Section (bg-[#F7F4E9]) */}
+      <FeaturedVideo />
+
+      {/* 6. Overhauled Warta & Pengumuman 3-Column Grid (bg-[#F7F4E9]) */}
+      <NewsGrid articles={articles} />
+    </main>
   );
 }

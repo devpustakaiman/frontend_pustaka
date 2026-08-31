@@ -17,6 +17,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Pustaka Iman - Penerbit & Katalog Buku",
   description: "Penerbit & Penyedia Literasi berkualitas tinggi untuk mencerdaskan bangsa.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -29,7 +37,7 @@ export default function RootLayout({
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">
+      <body className="min-h-screen flex flex-col bg-[#FAF8F3] text-[#272522] font-sans antialiased">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
