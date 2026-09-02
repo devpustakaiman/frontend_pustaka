@@ -1,3 +1,143 @@
+export interface Book {
+  id: string | number;
+  title: string;
+  author: string;
+  category?: string;
+  coverUrl?: string;
+  cover_url?: string;
+  price?: string | number;
+  synopsis?: string;
+  pdfPreviewUrl?: string;
+  pdf_preview_url?: string;
+  mizanstoreUrl?: string;
+  mizanstore_url?: string;
+  gallery_urls?: string[];
+  galleryUrls?: string[];
+  gallery_images?: string[];
+  galleryImages?: string[];
+  slug?: string;
+  // New marketing columns
+  is_promo?: boolean;
+  promo_price?: number | string | null;
+  promo_percentage?: number | null;
+  promo_end_date?: string | null;
+  is_recommended?: boolean;
+}
+
+/**
+ * Checks whether a book's promotion is currently active.
+ * A promo is ONLY valid if:
+ * 1. is_promo === true
+ * 2. promo_end_date exists and is strictly greater than current local time (new Date()).
+ * 
+ * Note: promo_end_date is locked to 23:59:59.999 local time so promos don't expire prematurely at 00:00 UTC (7:00 AM local).
+ */
+export function isActivePromo(book?: Book | null): boolean {
+  if (!book || !book.is_promo || !book.promo_end_date) {
+    return false;
+  }
+  const endDate = new Date(book.promo_end_date);
+  if (isNaN(endDate.getTime())) return false;
+
+  // Lock target date to 23:59:59.999 local time
+  endDate.setHours(23, 59, 59, 999);
+
+  const now = new Date();
+  return endDate > now;
+}
+
+
+/**
+ * Calculates remaining days until promo_end_date (locked to 23:59:59 local time).
+ * Returns 0 if expired or invalid.
+ */
+export function getPromoDaysRemaining(promoEndDate?: string | null): number {
+  if (!promoEndDate) return 0;
+  const endDate = new Date(promoEndDate);
+  if (isNaN(endDate.getTime())) return 0;
+
+  // Lock target date to 23:59:59.999 local time
+  endDate.setHours(23, 59, 59, 999);
+
+  const now = new Date();
+  const diffTime = endDate.getTime() - now.getTime();
+  if (diffTime <= 0) return 0;
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+export interface PromoCountdownDetails {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  millis: number;
+  totalHours: number;
+  isExpired: boolean;
+  formattedTime: string;
+}
+
+/**
+ * Calculates exact real-time countdown breakdown from backend promo_end_date timestamptz (locked to 23:59:59 local time).
+ */
+export function getPromoCountdownDetails(promoEndDate?: string | null): PromoCountdownDetails {
+  const now = new Date();
+  let endDate: Date;
+  
+  if (promoEndDate) {
+    endDate = new Date(promoEndDate);
+    if (isNaN(endDate.getTime())) {
+      endDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+    }
+  } else {
+    endDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+  }
+
+  // Force Local End of Day: lock to 23:59:59.999 local time
+  endDate.setHours(23, 59, 59, 999);
+
+  const diff = endDate.getTime() - now.getTime();
+
+  if (diff <= 0) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      millis: 0,
+      totalHours: 0,
+      isExpired: true,
+      formattedTime: "00 : 00 : 00",
+    };
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const millis = Math.floor((diff % 1000) / 10);
+  const totalHours = Math.floor(diff / (1000 * 60 * 60));
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  
+  const formattedTime = days > 0
+    ? `0${days}D : ${pad(hours)}H : ${pad(minutes)}M`
+    : `${pad(hours)} : ${pad(minutes)} : ${pad(seconds)}`;
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds,
+    millis,
+    totalHours,
+    isExpired: false,
+    formattedTime,
+  };
+}
+
+
+
+
 /**
  * Utility function to strip raw JSON (e.g. Quill rich text ops [{"insert":"tes\n"}])
  * or HTML tags into clean plain text for article excerpts and summaries.
@@ -135,6 +275,7 @@ export function formatBookPrice(price?: number | string | null): string {
     maximumFractionDigits: 0,
   }).format(numPrice);
 }
+
 
 
 

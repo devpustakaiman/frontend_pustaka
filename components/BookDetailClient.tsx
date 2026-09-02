@@ -2,24 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
-import BookGrid, { Book } from "./BookGrid";
+import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, BookOpen, Clock, Tag } from "lucide-react";
+import BookGrid from "./BookGrid";
+import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining } from "@/lib/utils";
 
 interface BookDetailClientProps {
-  book: {
-    id: string | number;
-    title: string;
-    author: string;
-    category?: string;
-    synopsis?: string;
-    coverUrl?: string;
-    cover_url?: string;
-    price?: string | number;
-    pdfPreviewUrl?: string;
-    pdf_preview_url?: string;
-    mizanstoreUrl?: string;
-    mizanstore_url?: string;
-  };
+  book: Book;
   relatedBooks?: Book[];
 }
 
@@ -28,7 +16,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
   const pdfUrl = book.pdfPreviewUrl || book.pdf_preview_url;
   const mizanUrl = book.mizanstoreUrl || book.mizanstore_url || "https://www.mizanstore.com";
 
-  // Gallery state: mock 4 thumbnails derived from cover or placeholders
+  // Gallery state
   const galleryImages = [
     mainCover,
     mainCover,
@@ -39,11 +27,16 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
   const [activeImage, setActiveImage] = useState<string>(mainCover);
   const [isSynopsisExpanded, setIsSynopsisExpanded] = useState<boolean>(false);
 
-  const formattedPrice = book.price
-    ? typeof book.price === "number"
-      ? `Rp ${book.price.toLocaleString("id-ID")}`
-      : String(book.price)
-    : "Rp 95.000";
+  // Active promo calculations
+  const hasActivePromo = isActivePromo(book);
+  const formattedOriginalPrice = formatBookPrice(book.price);
+  const formattedPromoPrice = formatBookPrice(book.promo_price);
+  const daysRemaining = getPromoDaysRemaining(book.promo_end_date);
+
+  let discountPct = book.promo_percentage;
+  if (!discountPct && hasActivePromo && typeof book.price === "number" && typeof book.promo_price === "number" && book.price > 0) {
+    discountPct = Math.round(((book.price - book.promo_price) / book.price) * 100);
+  }
 
   return (
     <div className="bg-[#FAF8F3] min-h-screen py-10 text-[#272522]">
@@ -80,6 +73,15 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                     Sampul Tidak Tersedia
                   </div>
                 )}
+                {hasActivePromo && (
+                  <div className="absolute top-3 right-3">
+                    <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+                      <Tag size={13} />
+                      <span>PROMO</span>
+                      {discountPct && <span>-{discountPct}%</span>}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Multi-Image Gallery UI (4 Thumbnails) */}
@@ -114,7 +116,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
               </div>
             </div>
 
-            {/* Right Column: Book Details & Prominent CTA Immediately Below Price */}
+            {/* Right Column: Book Details & Prominent Pricing / CTA */}
             <div className="md:col-span-7 flex flex-col justify-between space-y-6">
               <div className="space-y-3">
                 <span className="inline-block px-3 py-1 bg-[#FAF8F3] border border-[#EAE5D9] text-xs font-bold text-[#D32F2F] rounded-md uppercase tracking-wider">
@@ -132,13 +134,52 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
 
               {/* Price & CTA Section (Instant Visibility Above Fold) */}
               <div className="bg-[#FAF8F3] border border-[#EAE5D9] rounded-xl p-5 space-y-4">
+                
+                {/* FOMO Countdown Banner if Promo Active */}
+                {hasActivePromo && (
+                  <div className="bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-300/80 rounded-lg p-3 flex items-center gap-2.5 text-orange-900 text-xs sm:text-sm font-semibold shadow-xs">
+                    <span className="text-lg animate-bounce">🔥</span>
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={16} className="text-orange-600 flex-shrink-0" />
+                      <span>
+                        {daysRemaining > 1
+                          ? `Promo berakhir dalam ${daysRemaining} hari`
+                          : "Promo berakhir hari ini!"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Pricing UI */}
                 <div>
                   <span className="text-xs text-[#76716A] uppercase font-bold tracking-wider block mb-1">
-                    Harga Resmi
+                    {hasActivePromo ? "Harga Promo Spesial" : "Harga Resmi Publisher"}
                   </span>
-                  <span className="text-3xl font-black text-[#D32F2F]">
-                    {formattedPrice}
-                  </span>
+                  
+                  {hasActivePromo ? (
+                    <div className="flex items-baseline flex-wrap gap-2.5">
+                      <span className="text-3xl sm:text-4xl font-black text-[#D32F2F]">
+                        {formattedPromoPrice}
+                      </span>
+                      <span className="line-through text-gray-400 text-lg font-normal">
+                        {formattedOriginalPrice}
+                      </span>
+                      {discountPct && (
+                        <span className="bg-red-600 text-white font-extrabold text-xs px-2.5 py-1 rounded-full shadow-sm">
+                          -{discountPct}%
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-3xl font-black text-[#D32F2F]">
+                      {formattedOriginalPrice}
+                    </span>
+                  )}
+
+                  {/* Required Price Disclaimer */}
+                  <p className="text-[11px] sm:text-xs text-gray-500 italic mt-2 block leading-normal">
+                    Harga estimasi. Ketersediaan dan harga final dapat berubah sewaktu-waktu mengikuti kebijakan Mizanstore.
+                  </p>
                 </div>
 
                 {/* Immediately Below Price: Beli di Mizanstore Button */}
@@ -217,3 +258,4 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
     </div>
   );
 }
+

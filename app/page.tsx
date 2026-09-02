@@ -1,43 +1,47 @@
 import HeroBanner from "@/components/HeroBanner";
+import PromoSection from "@/components/PromoSection";
 import RecommendedSection from "@/components/RecommendedSection";
-import CategorySection from "@/components/CategorySection";
 import RecentlyAddedSection from "@/components/RecentlyAddedSection";
-import BestSellerSection from "@/components/BestSellerSection";
+import CategorySection from "@/components/CategorySection";
 import FeaturedVideo from "@/components/FeaturedVideo";
 import NewsGrid from "@/components/NewsGrid";
-import { getBooks, getArticles } from "@/lib/api";
+import { getPromoBooks, getRecommendedBooks, getNewBooks, getArticles } from "@/lib/api";
 
 export default async function Home() {
-  const [allBooks, allArticles] = await Promise.all([getBooks(), getArticles()]);
+  // Fetch real backend data from Supabase
+  const [promoBooks, recommendedBooks, newBooks, articles] = await Promise.all([
+    getPromoBooks(),
+    getRecommendedBooks(),
+    getNewBooks(),
+    getArticles(),
+  ]);
 
-  // Sliced data streams for homepage sections
-  const recommendedBooks = allBooks.slice(0, 4);
-  const recentlyAddedBooks = allBooks.slice(0, 10);
-  const bestSellerBooks = allBooks.slice(0, 10);
-  const articles = allArticles.slice(0, 3);
+  // Fallbacks if database table records for promo or recommended are not populated yet
+  const displayPromo = promoBooks.length > 0 ? promoBooks : newBooks;
+  const displayRecommended =
+    recommendedBooks.length > 0 ? recommendedBooks : newBooks.slice(0, 4);
 
   return (
     <main className="w-full min-h-screen bg-[#FEFDF7]">
-      {/* Hero Section */}
+      {/* 1. Hero / Banner Section */}
       <HeroBanner />
 
-      {/* 1. Recommended Books Section (bg-[#FEFDF7]) */}
-      <RecommendedSection books={recommendedBooks} />
+      {/* 2. Promo Section: 🔥 FLASH SALE & PROMO SPESIAL */}
+      <PromoSection books={displayPromo} />
 
-      {/* 2. Category Section (bg-[#FEFDF7]) */}
+      {/* 3. Recommendation Section: ⭐ Pilihan Editor */}
+      <RecommendedSection books={displayRecommended} title="⭐ Pilihan Editor" />
+
+      {/* 4. New Arrivals Section: ✨ Buku Baru Terbit */}
+      <RecentlyAddedSection books={newBooks} />
+
+      {/* Secondary Sections */}
       <CategorySection />
-
-      {/* 3. Recently Added Books Section (bg-[#F7F4E9]) */}
-      <RecentlyAddedSection books={recentlyAddedBooks} />
-
-      {/* 4. Best Seller Books Section (bg-[#FEFDF7]) */}
-      <BestSellerSection books={bestSellerBooks} />
-
-      {/* 5. Featured Video Section (bg-[#F7F4E9]) */}
       <FeaturedVideo />
-
-      {/* 6. Overhauled Warta & Pengumuman 3-Column Grid (bg-[#F7F4E9]) */}
-      <NewsGrid articles={articles} />
+      <NewsGrid articles={articles.slice(0, 3)} />
     </main>
   );
 }
+
+
+

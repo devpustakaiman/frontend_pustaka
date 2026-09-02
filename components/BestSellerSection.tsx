@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { TrendingUp, ChevronRight, ChevronLeft } from "lucide-react";
-import { Book } from "./BookGrid";
+import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
 import { useScrollCarousel } from "./ScrollCarousel";
 
 interface BestSellerSectionProps {
@@ -70,6 +70,7 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
             >
               {books.map((book, idx) => {
                 const price = formatPrice(book.price);
+                const hasPromo = isActivePromo(book);
                 return (
                   <div
                     key={book.id}
@@ -107,7 +108,12 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
                       <p className="text-[10px] text-[#76716A] mt-0.5 truncate">{book.author}</p>
 
                       <div className="mt-2.5 pt-2.5 border-t border-[#E7E1D8] flex items-center justify-between gap-1">
-                        {price ? (
+                        {hasPromo ? (
+                          <div className="flex flex-col">
+                            <span className="font-extrabold text-[#D32F2F] text-xs sm:text-sm leading-none">{formatBookPrice(book.promo_price)}</span>
+                            <span className="line-through text-gray-400 text-[10px]">{formatBookPrice(book.price)}</span>
+                          </div>
+                        ) : price ? (
                           <span className="font-bold text-[#B67A2D] text-sm leading-none">{price}</span>
                         ) : (
                           <span className="text-[10px] text-[#76716A] italic">Hubungi Kami</span>

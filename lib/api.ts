@@ -14,6 +14,53 @@ export async function getBooks() {
   return data || [];
 }
 
+export async function getPromoBooks() {
+  const { data, error } = await supabase
+    .from("books")
+    .select("*")
+    .eq("is_promo", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching promo books:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function getRecommendedBooks() {
+  const { data, error } = await supabase
+    .from("books")
+    .select("*")
+    .eq("is_recommended", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching recommended books:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function getNewBooks() {
+  const { data, error } = await supabase
+    .from("books")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  if (error) {
+    console.error("Error fetching new books:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+
+
 export async function getBookById(id: string) {
   if (!id) return null;
 

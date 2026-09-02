@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
@@ -13,13 +14,17 @@ export default function NotFound() {
         <p className="text-[#76716A] text-sm mb-6">
           Maaf, halaman atau buku yang Anda cari tidak ditemukan atau telah dipindahkan.
         </p>
-        <Link
-          href="/katalog"
-          className="inline-flex items-center justify-center px-6 py-3 bg-[#B67A2D] hover:bg-[#8D5D20] font-medium text-[#FAF8F3] rounded-md shadow-sm transition-all text-xs uppercase tracking-wider"
-        >
-          &larr; Kembali ke Katalog
-        </Link>
+        <div className="flex justify-center">
+          <Link
+            href="/katalog"
+            className="inline-flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-amber-500/50 transition-all duration-300 text-sm active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft size={18} strokeWidth={2} />
+            <span>Kembali ke Katalog</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
+

@@ -78,14 +78,14 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
     <div className="bg-[#FAF8F3] min-h-screen py-8 md:py-14 text-[#272522]">
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        {/* Back Button: <- Kembali */}
+        {/* Back Button: Kembali ke Warta */}
         <div>
           <Link
             href="/warta"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-medium text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
           >
-            <ArrowLeft size={16} strokeWidth={1.5} />
-            <span>&lt;- Kembali</span>
+            <ArrowLeft size={16} strokeWidth={2} />
+            <span>Kembali ke Warta</span>
           </Link>
         </div>
 
@@ -149,7 +149,7 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
               className="inline-flex items-center gap-2 px-5 py-2.5 text-xs md:text-sm font-bold text-[#272522] bg-[#FAF8F3] hover:bg-[#F1E8D8] border border-[#EAE5D9] rounded-xl transition-all duration-200 shadow-sm"
             >
               <ArrowLeft size={16} strokeWidth={2} />
-              <span>&lt;- Kembali ke Warta</span>
+              <span>Kembali ke Warta</span>
             </Link>
 
             <span className="text-xs text-[#76716A] italic">

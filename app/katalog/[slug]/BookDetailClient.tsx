@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
-import BookCard, { Book } from "@/components/BookCard";
+import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Clock, Tag } from "lucide-react";
+import BookCard from "@/components/BookCard";
 import { getBookById, getBooks } from "@/lib/api";
-import { formatBookPrice } from "@/lib/utils";
+import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining } from "@/lib/utils";
 
 const PLACEHOLDER_COVER = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800";
 
@@ -49,7 +50,7 @@ interface BookDetailClientProps {
 }
 
 export default function BookDetailClient({ slug }: BookDetailClientProps) {
-  const [book, setBook] = useState<any>(null);
+  const [book, setBook] = useState<Book | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState<string>("");
@@ -109,30 +110,31 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
   }, [slug]);
 
   // Extract main cover URL from backend DB record
-  const mainCover = book?.cover_url || book?.coverUrl || book?.cover || PLACEHOLDER_COVER;
+  const mainCover = book?.cover_url || book?.coverUrl || PLACEHOLDER_COVER;
 
   // Extract gallery photos array from backend DB record
   let backendGallery: string[] = [];
-  const rawGallery =
-    book?.gallery_urls ||
-    book?.galleryUrls ||
-    book?.gallery_images ||
-    book?.galleryImages;
+  const rawGallery: any =
+    (book as any)?.gallery_urls ||
+    (book as any)?.galleryUrls ||
+    (book as any)?.gallery_images ||
+    (book as any)?.galleryImages;
 
   if (Array.isArray(rawGallery)) {
     backendGallery = rawGallery;
-  } else if (typeof rawGallery === "string" && rawGallery.trim().length > 0) {
+  } else if (typeof rawGallery === "string" && (rawGallery as string).trim().length > 0) {
     try {
       const parsed = JSON.parse(rawGallery);
       if (Array.isArray(parsed)) {
         backendGallery = parsed;
       } else {
-        backendGallery = rawGallery.split(",").map((s) => s.trim());
+        backendGallery = (rawGallery as string).split(",").map((s: string) => s.trim());
       }
     } catch {
-      backendGallery = rawGallery.split(",").map((s) => s.trim());
+      backendGallery = (rawGallery as string).split(",").map((s: string) => s.trim());
     }
   }
+
 
   backendGallery = backendGallery.filter(
     (url) => typeof url === "string" && url.trim().length > 0
@@ -159,9 +161,17 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
 
   const currentDisplayImage = activeImage || mainCover;
 
-  // Price formatting & fallback handling
-  const formattedPrice = formatBookPrice(book?.price);
-  const isFallbackPrice = formattedPrice === "Lihat Harga di Mizanstore";
+  // Active promo calculations
+  const hasActivePromo = isActivePromo(book);
+  const formattedOriginalPrice = formatBookPrice(book?.price);
+  const formattedPromoPrice = formatBookPrice(book?.promo_price);
+  const isFallbackPrice = formattedOriginalPrice === "Lihat Harga di Mizanstore";
+  const daysRemaining = getPromoDaysRemaining(book?.promo_end_date);
+
+  let discountPct = book?.promo_percentage;
+  if (!discountPct && hasActivePromo && typeof book?.price === "number" && typeof book?.promo_price === "number" && book.price > 0) {
+    discountPct = Math.round(((book.price - book.promo_price) / book.price) * 100);
+  }
 
   const mizanUrl = book?.mizanstoreUrl || book?.mizanstore_url || "https://www.mizanstore.com";
 
@@ -196,6 +206,15 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                     (e.target as HTMLImageElement).src = mainCover;
                   }}
                 />
+                {hasActivePromo && (
+                  <div className="absolute top-3 right-3">
+                    <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+                      <Tag size={13} />
+                      <span>PROMO</span>
+                      {discountPct && <span>-{discountPct}%</span>}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -256,19 +275,56 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
 
               {/* Price & CTA Section (Instant Visibility Above Fold) */}
               <div className="bg-[#FAF8F3] border border-[#EAE5D9] rounded-xl p-5 md:p-6 space-y-4">
+                
+                {/* FOMO Countdown Banner if Promo Active */}
+                {hasActivePromo && (
+                  <div className="bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-300/80 rounded-lg p-3 flex items-center gap-2.5 text-orange-900 text-xs sm:text-sm font-semibold shadow-xs">
+                    <span className="text-lg animate-bounce">🔥</span>
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={16} className="text-orange-600 flex-shrink-0" />
+                      <span>
+                        {daysRemaining > 1
+                          ? `Promo berakhir dalam ${daysRemaining} hari`
+                          : "Promo berakhir hari ini!"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Price Display */}
                 <div>
                   <span className="text-xs text-[#76716A] uppercase font-bold tracking-wider block mb-1">
-                    Harga Resmi Publisher
+                    {hasActivePromo ? "Harga Promo Spesial" : "Harga Resmi Publisher"}
                   </span>
-                  {isFallbackPrice ? (
+                  
+                  {hasActivePromo ? (
+                    <div className="flex items-baseline flex-wrap gap-2.5">
+                      <span className="text-3xl sm:text-4xl font-black text-[#D32F2F]">
+                        {formattedPromoPrice}
+                      </span>
+                      <span className="line-through text-gray-400 text-lg font-normal">
+                        {formattedOriginalPrice}
+                      </span>
+                      {discountPct && (
+                        <span className="bg-red-600 text-white font-extrabold text-xs px-2.5 py-1 rounded-full shadow-sm">
+                          -{discountPct}%
+                        </span>
+                      )}
+                    </div>
+                  ) : isFallbackPrice ? (
                     <span className="text-xl font-bold text-[#B67A2D] italic block">
-                      {formattedPrice}
+                      {formattedOriginalPrice}
                     </span>
                   ) : (
                     <span className="text-3xl font-black text-[#D32F2F]">
-                      {formattedPrice}
+                      {formattedOriginalPrice}
                     </span>
                   )}
+
+                  {/* Required Price Disclaimer */}
+                  <p className="text-[11px] sm:text-xs text-gray-500 italic mt-2 block leading-normal">
+                    Harga estimasi. Ketersediaan dan harga final dapat berubah sewaktu-waktu mengikuti kebijakan Mizanstore.
+                  </p>
                 </div>
 
                 {/* Immediately Below Price: Beli di Mizanstore CTA Button */}

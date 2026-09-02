@@ -16,10 +16,10 @@ export default async function KatalogPage() {
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
           >
-            <ArrowLeft size={16} strokeWidth={1.5} />
-            <span>&lt;- Kembali ke Beranda</span>
+            <ArrowLeft size={16} strokeWidth={2} />
+            <span>Kembali ke Beranda</span>
           </Link>
         </div>
 
