@@ -120,14 +120,15 @@ These values are **initial design proposals**, not immutable brand guidelines. T
 ## 5.1 Color Tokens
 
 ```txt
-background        #FAF8F3
+background        #FAF7F2
 surface           #FFFFFF
 text-primary      #272522
 text-secondary    #76716A
-border            #E7E1D8
-accent            #B67A2D
-accent-dark       #8D5D20
-accent-soft       #F1E8D8
+border            #EAE5D9
+primary           #E52E2D (Main Brand Red)
+primary-hover     #C12A26
+primary-light     #FEF2F2
+primary-border    #FCA5A5
 ```
 
 Rules:

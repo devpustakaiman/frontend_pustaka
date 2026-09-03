@@ -15,13 +15,23 @@ export interface Book {
   galleryUrls?: string[];
   gallery_images?: string[];
   galleryImages?: string[];
+  gallery_url_1?: string;
+  gallery_url_2?: string;
+  gallery_url_3?: string;
+  gallery_url_4?: string;
   slug?: string;
+  tags?: string[];
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
   // New marketing columns
   is_promo?: boolean;
   promo_price?: number | string | null;
   promo_percentage?: number | null;
   promo_end_date?: string | null;
   is_recommended?: boolean;
+  is_featured?: boolean;
+  is_bestseller?: boolean;
 }
 
 /**

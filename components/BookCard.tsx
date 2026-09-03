@@ -33,11 +33,11 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
   }
 
   return (
-    <div className="bg-white border border-[#E7E1D8] rounded-xl overflow-hidden hover:border-red-300 hover:shadow-xl transition-all duration-200 group flex flex-col h-full relative">
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all duration-200 group flex flex-col h-full relative">
       {/* Cover image & top-right promo badge overlay */}
       <Link
         href={`/katalog/${currentBook.id}`}
-        className="block overflow-hidden bg-[#F1E8D8] aspect-[3/4] relative"
+        className="block overflow-hidden bg-gray-50 aspect-[3/4] relative"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -49,41 +49,40 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
         {/* Cover Image Overlay Badge (-X%) */}
         {hasActivePromo && (
           <div className="absolute top-2.5 right-2.5 z-10">
-            <span className="inline-flex items-center bg-red-600 text-white font-extrabold text-xs px-2.5 py-0.5 rounded-full shadow-md border border-red-500">
+            <span className="inline-flex items-center bg-[#E52E2D] text-white font-extrabold text-xs px-2.5 py-0.5 rounded-full shadow-md">
               {discountPct ? `-${discountPct}%` : "PROMO"}
             </span>
           </div>
         )}
       </Link>
 
-      {/* Card body */}
-      <div className="flex flex-col flex-1 p-4">
-        <span className="text-[10px] font-bold text-[#B67A2D] uppercase tracking-wider">
+      <div className="flex flex-col flex-1 p-3">
+        <span className="text-[9px] font-bold text-[#E52E2D] uppercase tracking-wider">
           {currentBook.category || "Literasi"}
         </span>
-        <h3 className="font-serif font-bold text-[15px] text-[#272522] mt-1 group-hover:text-[#B67A2D] transition-colors leading-snug line-clamp-2">
+        <h3 className="font-serif font-bold text-[13px] text-[#272522] mt-0.5 group-hover:text-[#E52E2D] transition-colors leading-snug line-clamp-2">
           <Link href={`/katalog/${currentBook.id}`}>{currentBook.title}</Link>
         </h3>
-        <p className="text-xs text-[#76716A] mt-1 font-medium truncate">
+        <p className="text-[11px] text-[#76716A] mt-0.5 font-medium truncate">
           {currentBook.author}
         </p>
 
         {/* Dynamic FOMO Deadline Indicator (Only rendered if isActivePromo is true) */}
         {hasActivePromo && (
-          <div className="mt-3 bg-red-50/80 border border-red-200/60 rounded-lg p-2 space-y-1">
-            {/* Compact rounded progress bar (filled ~75% gradient) */}
+          <div className="mt-3 bg-red-50/80 border border-red-200/60 rounded-xl p-2 space-y-1">
+            {/* Compact rounded progress bar */}
             <div className="w-full h-1.5 bg-red-100 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-red-500 via-rose-500 to-orange-500 rounded-full w-[75%]" />
+              <div className="h-full bg-gradient-to-r from-[#E52E2D] via-rose-500 to-orange-500 rounded-full w-[75%]" />
             </div>
             
             <div className="flex items-center justify-between text-[11px]">
               {daysRemaining <= 1 ? (
-                <span className="text-red-600 font-extrabold text-xs flex items-center gap-1 animate-pulse">
+                <span className="text-[#E52E2D] font-extrabold text-xs flex items-center gap-1 animate-pulse">
                   <span>⚡</span>
                   <span>Berakhir HARI INI!</span>
                 </span>
               ) : (
-                <span className="text-xs text-orange-900 font-semibold flex items-center gap-1">
+                <span className="text-xs text-red-900 font-semibold flex items-center gap-1">
                   <span>⏳</span>
                   <span>Berakhir dalam {daysRemaining} hari</span>
                 </span>
@@ -92,38 +91,36 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
           </div>
         )}
 
-        {/* Pricing UI with High Contrast & 'HEBOH' Discount Badge */}
-        <div className="mt-3 flex-1 flex items-end">
+        <div className="mt-2 flex-1 flex items-end">
           {hasActivePromo ? (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-extrabold text-red-600 text-lg sm:text-xl tracking-tight">
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="font-extrabold text-[#E52E2D] text-sm tracking-tight">
                 {formattedPromoPrice}
               </span>
-              <span className="line-through text-gray-400 text-xs font-normal">
+              <span className="line-through text-gray-400 text-[10px] font-normal">
                 {formattedOriginalPrice}
               </span>
               {discountPct ? (
-                <span className="bg-red-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full shadow-md animate-pulse -rotate-2 inline-block border border-red-500 tracking-tight">
+                <span className="bg-[#E52E2D] text-white font-black text-[9px] px-2 py-0.5 rounded-full shadow-sm -rotate-1 inline-block tracking-tight">
                   HEMAT {discountPct}%
                 </span>
               ) : null}
             </div>
           ) : isFallbackPrice ? (
-            <span className="text-xs text-[#B67A2D] font-semibold italic">
+            <span className="text-[11px] text-[#E52E2D] font-semibold italic">
               {formattedOriginalPrice}
             </span>
           ) : (
-            <span className="font-bold text-[#B67A2D] text-base tracking-tight">
+            <span className="font-extrabold text-[#E52E2D] text-sm tracking-tight">
               {formattedOriginalPrice}
             </span>
           )}
         </div>
 
-        {/* CTA Button - always aligned to bottom with mt-auto */}
-        <div className="mt-auto pt-3 border-t border-[#E7E1D8]">
+        <div className="mt-auto pt-2 border-t border-gray-100">
           <Link
             href={`/katalog/${currentBook.id}`}
-            className="w-full block text-center px-3 py-2 text-xs font-semibold bg-[#B67A2D] hover:bg-[#8D5D20] rounded-md text-white transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B67A2D] uppercase tracking-wider shadow-sm hover:shadow-md"
+            className="w-full block text-center px-3 py-2 text-[11px] font-bold bg-[#E52E2D] hover:bg-[#C12A26] rounded-lg text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md uppercase tracking-wider"
           >
             Lihat Detail
           </Link>

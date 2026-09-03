@@ -75,14 +75,14 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
   const paragraphs = parseQuillJsonToParagraphs(rawContent);
 
   return (
-    <div className="bg-[#FAF8F3] min-h-screen py-8 md:py-14 text-[#272522]">
+    <div className="bg-white min-h-screen py-8 md:py-14 text-[#272522]">
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Back Button: Kembali ke Warta */}
         <div>
           <Link
             href="/warta"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold text-[#272522] bg-white border border-gray-200 rounded-full hover:bg-white hover:border-[#E52E2D] hover:text-[#E52E2D] shadow-2xs transition-all duration-200"
           >
             <ArrowLeft size={16} strokeWidth={2} />
             <span>Kembali ke Warta</span>
@@ -90,10 +90,10 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
         </div>
 
         {/* Hero Card & Content Header */}
-        <div className="bg-white border border-[#EAE5D9] rounded-2xl overflow-hidden shadow-sm p-6 sm:p-10 space-y-8">
+        <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm p-6 sm:p-10 space-y-8">
           
           {/* Large Hero Image at the Top */}
-          <div className="w-full aspect-[16/9] max-h-[480px] bg-[#F1E8D8] rounded-xl overflow-hidden border border-[#EAE5D9] relative shadow-inner">
+          <div className="w-full aspect-[16/9] max-h-[480px] bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 relative shadow-inner">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={heroImage}
@@ -103,9 +103,9 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
           </div>
 
           {/* Title, Category, Author, and Date */}
-          <div className="space-y-4 border-b border-[#EAE5D9] pb-6">
+          <div className="space-y-4 border-b border-gray-100 pb-6">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-block px-3 py-1 bg-[#FAF8F3] border border-[#EAE5D9] text-xs font-bold text-[#B67A2D] rounded-md uppercase tracking-wider">
+              <span className="inline-block px-3 py-1 bg-red-50 border border-red-200/60 text-xs font-bold text-[#E52E2D] rounded-full uppercase tracking-wider">
                 {categoryName}
               </span>
             </div>
@@ -117,17 +117,17 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
             {/* Author and Date Meta Row */}
             <div className="flex items-center gap-6 text-xs md:text-sm text-[#76716A] pt-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <User size={16} className="text-[#B67A2D]" />
+                <User size={16} className="text-[#E52E2D]" />
                 <span>Penulis: <strong className="text-[#272522] font-semibold">{authorName}</strong></span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar size={16} className="text-[#B67A2D]" />
+                <Calendar size={16} className="text-[#E52E2D]" />
                 <time dateTime={rawDate}>{formattedDate}</time>
               </div>
             </div>
           </div>
 
-          {/* Body Content: Clean Readable Paragraphs Parsed from Quill JSON */}
+          {/* Body Content: Clean Readable Paragraphs */}
           <div className="prose prose-lg max-w-none text-[#272522]/90 leading-relaxed font-serif space-y-6 pt-2">
             {paragraphs && paragraphs.length > 0 ? (
               paragraphs.map((para, index) => (
@@ -143,10 +143,10 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
           </div>
 
           {/* Article Footer & Back Button */}
-          <div className="border-t border-[#EAE5D9] pt-8 flex items-center justify-between flex-wrap gap-4">
+          <div className="border-t border-gray-100 pt-8 flex items-center justify-between flex-wrap gap-4">
             <Link
               href="/warta"
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs md:text-sm font-bold text-[#272522] bg-[#FAF8F3] hover:bg-[#F1E8D8] border border-[#EAE5D9] rounded-xl transition-all duration-200 shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs md:text-sm font-bold text-[#272522] bg-gray-50 hover:bg-red-50 hover:text-[#E52E2D] hover:border-[#E52E2D] border border-gray-200 rounded-xl transition-all duration-200 shadow-2xs"
             >
               <ArrowLeft size={16} strokeWidth={2} />
               <span>Kembali ke Warta</span>

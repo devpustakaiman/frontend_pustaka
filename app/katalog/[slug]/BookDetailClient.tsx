@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Clock, Tag } from "lucide-react";
 import BookCard from "@/components/BookCard";
@@ -60,93 +59,68 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
     async function loadBookData() {
       setLoading(true);
       try {
-        const [data, allBooks] = await Promise.all([
-          getBookById(slug),
-          getBooks(),
-        ]);
+        const fetchedBook = await getBookById(slug);
+        setBook(fetchedBook);
 
-        if (data) {
-          setBook(data);
-          const cover = data.cover_url || data.coverUrl || data.cover || PLACEHOLDER_COVER;
+        if (fetchedBook) {
+          const cover = fetchedBook.coverUrl || fetchedBook.cover_url || PLACEHOLDER_COVER;
           setActiveImage(cover);
-        } else {
-          // Fallback mock book detail if not found by exact ID
-          const fallbackCover = PLACEHOLDER_COVER;
-          setBook({
-            id: slug,
-            title: "Filsafat Literasi Islam: Sejarah, Pemikiran & Spiritualitas",
-            author: "Prof. Dr. H. M. Quraish Shihab",
-            category: "Literasi & Pemikiran",
-            price: 95000,
-            coverUrl: fallbackCover,
-            mizanstoreUrl: "https://www.mizanstore.com",
-            synopsis: `Buku karya Prof. Dr. H. M. Quraish Shihab ini mengupas secara mendalam tentang sejarah, dinamika pemikiran, serta tradisi keilmuan literasi Islam yang tumbuh dan berkembang pesat sepanjang abad pertengahan hingga era kontemporer.\n\nDalam karya inspiratif ini, pembaca diajak menjelajahi bagaimana peradaban Islam menempatkan ilmu pengetahuan dan baca-tulis sebagai pondasi tertinggi kemajuan sosial dan spiritual. Penulis memaparkan argumentasi filosofis yang jernih namun kaya akan rujukan klasik serta kontemporer.\n\nSangat direkomendasikan bagi kalangan akademisi, mahasiswa, peneliti, dan segenap pecinta literasi keislaman yang mendambakan wawasan komprehensif mengenai pentingnya tradisi membaca dan menulis dalam konteks zaman hari ini.`,
-          });
-          setActiveImage(fallbackCover);
         }
 
-        // Set related books from DB or fallback
+        const allBooks = await getBooks();
         if (allBooks && allBooks.length > 0) {
-          const filtered = allBooks
-            .filter((b) => String(b.id) !== String(slug) && b.id !== data?.id)
+          const related = allBooks
+            .filter((b) => String(b.id) !== String(slug))
             .slice(0, 4);
-          if (filtered.length > 0) {
-            setRelatedBooks(filtered);
-          } else {
-            setRelatedBooks(DUMMY_RELATED_BOOKS);
-          }
-        } else {
-          setRelatedBooks(DUMMY_RELATED_BOOKS);
+          setRelatedBooks(related);
         }
       } catch (err) {
-        console.error("Error loading book detail:", err);
-        setRelatedBooks(DUMMY_RELATED_BOOKS);
+        console.error("Gagal memuat detail buku:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    loadBookData();
+    if (slug) {
+      loadBookData();
+    }
   }, [slug]);
 
-  // Extract main cover URL from backend DB record
-  const mainCover = book?.cover_url || book?.coverUrl || PLACEHOLDER_COVER;
-
-  // Extract gallery photos array from backend DB record
-  let backendGallery: string[] = [];
-  const rawGallery: any =
-    (book as any)?.gallery_urls ||
-    (book as any)?.galleryUrls ||
-    (book as any)?.gallery_images ||
-    (book as any)?.galleryImages;
-
-  if (Array.isArray(rawGallery)) {
-    backendGallery = rawGallery;
-  } else if (typeof rawGallery === "string" && (rawGallery as string).trim().length > 0) {
-    try {
-      const parsed = JSON.parse(rawGallery);
-      if (Array.isArray(parsed)) {
-        backendGallery = parsed;
-      } else {
-        backendGallery = (rawGallery as string).split(",").map((s: string) => s.trim());
-      }
-    } catch {
-      backendGallery = (rawGallery as string).split(",").map((s: string) => s.trim());
-    }
+  if (loading) {
+    return (
+      <div className="bg-white min-h-screen py-16 text-[#272522]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-gray-200 rounded-full w-44" />
+            <div className="bg-white border border-gray-200 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+              <div className="md:col-span-5 aspect-[3/4] bg-gray-200 rounded-2xl" />
+              <div className="md:col-span-7 space-y-4">
+                <div className="h-6 bg-gray-200 rounded w-28" />
+                <div className="h-10 bg-gray-200 rounded w-3/4" />
+                <div className="h-5 bg-gray-200 rounded w-1/2" />
+                <div className="h-32 bg-gray-100 rounded-2xl" />
+                <div className="h-12 bg-gray-200 rounded-xl w-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
+  const mainCover = book?.coverUrl || book?.cover_url || PLACEHOLDER_COVER;
 
-  backendGallery = backendGallery.filter(
-    (url) => typeof url === "string" && url.trim().length > 0
-  );
+  // Build gallery
+  const galleryImages: string[] = [mainCover];
+  const possibleUrls = [
+    book?.gallery_url_1,
+    book?.gallery_url_2,
+    book?.gallery_url_3,
+    book?.gallery_url_4,
+  ];
 
-  const galleryImages: string[] = [];
-  if (mainCover) {
-    galleryImages.push(mainCover);
-  }
-
-  backendGallery.forEach((url) => {
-    if (!galleryImages.includes(url)) {
+  possibleUrls.forEach((url) => {
+    if (url && typeof url === "string" && url.trim().length > 0) {
       galleryImages.push(url);
     }
   });
@@ -176,27 +150,27 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
   const mizanUrl = book?.mizanstoreUrl || book?.mizanstore_url || "https://www.mizanstore.com";
 
   return (
-    <div className="bg-[#FAF8F3] min-h-screen py-8 md:py-12 text-[#272522]">
+    <div className="bg-white min-h-screen py-8 md:py-12 text-[#272522]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 md:space-y-12">
         
         {/* Navigation / Back Button */}
         <div>
           <Link
             href="/katalog"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-medium text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold text-[#272522] bg-white border border-gray-200 rounded-full hover:bg-white hover:border-[#E52E2D] hover:text-[#E52E2D] shadow-2xs transition-all duration-200"
           >
-            <ArrowLeft size={16} strokeWidth={1.5} />
+            <ArrowLeft size={16} strokeWidth={2} />
             <span>Kembali ke Katalog</span>
           </Link>
         </div>
 
         {/* Top Layout: 2 Columns Above the Fold */}
-        <div className="bg-white border border-[#EAE5D9] rounded-2xl p-6 sm:p-8 lg:p-10 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
             
             {/* Left Column: Book Cover + Mockup Gallery Row */}
             <div className="md:col-span-5 space-y-4">
-              <div className="w-full aspect-[3/4] bg-[#F1E8D8] rounded-xl border border-[#EAE5D9] overflow-hidden shadow-md relative group flex items-center justify-center">
+              <div className="w-full aspect-[3/4] bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden shadow-md relative group flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={currentDisplayImage}
@@ -208,7 +182,7 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                 />
                 {hasActivePromo && (
                   <div className="absolute top-3 right-3">
-                    <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+                    <span className="inline-flex items-center gap-1.5 bg-[#E52E2D] text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
                       <Tag size={13} />
                       <span>PROMO</span>
                       {discountPct && <span>-{discountPct}%</span>}
@@ -229,10 +203,10 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                         key={idx}
                         onClick={() => setActiveImage(img)}
                         type="button"
-                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
+                        className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
                           isSelected
-                            ? "border-[#D32F2F] ring-2 ring-[#D32F2F]/20 shadow-md scale-105"
-                            : "border-[#EAE5D9] hover:border-[#B67A2D]/60 opacity-75 hover:opacity-100"
+                            ? "border-[#E52E2D] ring-2 ring-red-100 shadow-md scale-105"
+                            : "border-gray-200 hover:border-[#E52E2D]/60 opacity-75 hover:opacity-100"
                         }`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -255,10 +229,10 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
             <div className="md:col-span-7 flex flex-col justify-between space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="inline-block px-3 py-1 bg-[#FAF8F3] border border-[#EAE5D9] text-xs font-bold text-[#D32F2F] rounded-md uppercase tracking-wider">
+                  <span className="inline-block px-3 py-1 bg-red-50 border border-red-200/60 text-xs font-bold text-[#E52E2D] rounded-full uppercase tracking-wider">
                     {book?.category || "Literasi Utama"}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-xs text-[#76716A] bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">
+                  <span className="inline-flex items-center gap-1 text-xs text-[#76716A] bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-full font-medium">
                     <CheckCircle2 size={13} className="text-emerald-600" />
                     <span>Stok Tersedia</span>
                   </span>
@@ -274,14 +248,14 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
               </div>
 
               {/* Price & CTA Section (Instant Visibility Above Fold) */}
-              <div className="bg-[#FAF8F3] border border-[#EAE5D9] rounded-xl p-5 md:p-6 space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 md:p-6 space-y-4">
                 
                 {/* FOMO Countdown Banner if Promo Active */}
                 {hasActivePromo && (
-                  <div className="bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-300/80 rounded-lg p-3 flex items-center gap-2.5 text-orange-900 text-xs sm:text-sm font-semibold shadow-xs">
+                  <div className="bg-red-50/80 border border-red-200/70 rounded-xl p-3 flex items-center gap-2.5 text-red-950 text-xs sm:text-sm font-semibold shadow-2xs">
                     <span className="text-lg animate-bounce">🔥</span>
                     <div className="flex items-center gap-1.5">
-                      <Clock size={16} className="text-orange-600 flex-shrink-0" />
+                      <Clock size={16} className="text-[#E52E2D] flex-shrink-0" />
                       <span>
                         {daysRemaining > 1
                           ? `Promo berakhir dalam ${daysRemaining} hari`
@@ -299,24 +273,24 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                   
                   {hasActivePromo ? (
                     <div className="flex items-baseline flex-wrap gap-2.5">
-                      <span className="text-3xl sm:text-4xl font-black text-[#D32F2F]">
+                      <span className="text-3xl sm:text-4xl font-black text-[#E52E2D]">
                         {formattedPromoPrice}
                       </span>
                       <span className="line-through text-gray-400 text-lg font-normal">
                         {formattedOriginalPrice}
                       </span>
                       {discountPct && (
-                        <span className="bg-red-600 text-white font-extrabold text-xs px-2.5 py-1 rounded-full shadow-sm">
+                        <span className="bg-[#E52E2D] text-white font-extrabold text-xs px-2.5 py-1 rounded-full shadow-sm">
                           -{discountPct}%
                         </span>
                       )}
                     </div>
                   ) : isFallbackPrice ? (
-                    <span className="text-xl font-bold text-[#B67A2D] italic block">
+                    <span className="text-xl font-bold text-[#E52E2D] italic block">
                       {formattedOriginalPrice}
                     </span>
                   ) : (
-                    <span className="text-3xl font-black text-[#D32F2F]">
+                    <span className="text-3xl font-black text-[#E52E2D]">
                       {formattedOriginalPrice}
                     </span>
                   )}
@@ -333,7 +307,7 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                     href={mizanUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full px-6 py-3.5 bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-wider text-center"
+                    className="w-full px-6 py-4 bg-[#E52E2D] hover:bg-[#C12A26] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-wider text-center"
                   >
                     <span>Beli di Mizanstore</span>
                     <ExternalLink size={16} strokeWidth={2} />
@@ -342,7 +316,7 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
               </div>
 
               {/* Synopsis Section: line-clamp-4 with toggle */}
-              <div className="border-t border-[#EAE5D9] pt-5 space-y-3">
+              <div className="border-t border-gray-200 pt-5 space-y-3">
                 <h2 className="font-serif text-xl font-bold text-[#272522]">Sinopsis Buku</h2>
                 <div className="relative">
                   <p
@@ -357,7 +331,7 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                 <button
                   onClick={() => setIsSynopsisExpanded(!isSynopsisExpanded)}
                   type="button"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#D32F2F] hover:underline focus:outline-none pt-1 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E52E2D] hover:underline focus:outline-none pt-1 cursor-pointer"
                 >
                   <span>{isSynopsisExpanded ? "Tutup" : "Lihat Selengkapnya"}</span>
                   {isSynopsisExpanded ? (
@@ -374,16 +348,19 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
 
         {/* Bottom Section: 'Buku Terkait' rendering 4 <BookCard /> components */}
         <div className="space-y-6 pt-4">
-          <div className="border-b border-[#EAE5D9] pb-4 flex items-center justify-between">
+          <div className="border-b border-gray-200 pb-4 flex items-center justify-between">
             <div>
-              <span className="text-xs text-[#B67A2D] font-bold uppercase tracking-wider">Rekomendasi Terbaik</span>
-              <h2 className="font-serif text-2xl font-bold text-[#272522]">Buku Terkait</h2>
+              <span className="text-xs text-[#E52E2D] font-bold uppercase tracking-wider">Rekomendasi Terbaik</span>
+              <h2 className="font-serif text-2xl font-bold text-[#272522]">
+                Buku <span className="text-[#C12A26] italic font-serif">Terkait</span>
+              </h2>
             </div>
             <Link
               href="/katalog"
-              className="text-xs font-bold text-[#D32F2F] hover:underline"
+              className="text-xs font-bold text-[#E52E2D] hover:underline flex items-center gap-1"
             >
-              Lihat Seluruh Katalog &rarr;
+              <span>Lihat Seluruh Katalog</span>
+              <span>&rarr;</span>
             </Link>
           </div>
 

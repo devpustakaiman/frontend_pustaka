@@ -9,6 +9,32 @@ export interface CountdownState {
   seconds: number;
   isExpired: boolean;
   formattedTime: string;
+  naturalTime: string;
+  progressPercent: number;
+}
+
+/**
+ * Natural Indonesian text helper function:
+ * - If time remaining >= 1 day: X hari Y jam Z menit
+ * - If time remaining < 1 day: Y jam Z menit S detik
+ * - If time remaining < 1 hour: Z menit S detik
+ */
+export function formatNaturalIndonesianCountdown(
+  days: number,
+  hours: number,
+  minutes: number,
+  seconds: number,
+  isExpired: boolean
+): string {
+  if (isExpired) return "Promo Berakhir";
+
+  if (days >= 1) {
+    return `${days} hari ${hours} jam ${minutes} menit`;
+  }
+  if (hours >= 1) {
+    return `${hours} jam ${minutes} menit ${seconds} detik`;
+  }
+  return `${minutes} menit ${seconds} detik`;
 }
 
 export function useCountdown(targetDate?: string | null): CountdownState {
@@ -30,6 +56,8 @@ export function useCountdown(targetDate?: string | null): CountdownState {
           seconds: 0,
           isExpired: true,
           formattedTime: "00:00:00",
+          naturalTime: "Promo Berakhir",
+          progressPercent: 0,
         };
       }
       // Force Local End of Day: lock to 23:59:59.999 local time
@@ -46,6 +74,8 @@ export function useCountdown(targetDate?: string | null): CountdownState {
         seconds: 0,
         isExpired: true,
         formattedTime: "00:00:00",
+        naturalTime: "Promo Berakhir",
+        progressPercent: 0,
       };
     }
 
@@ -60,6 +90,19 @@ export function useCountdown(targetDate?: string | null): CountdownState {
         ? `${pad(days)}d ${pad(hours)}h ${pad(minutes)}m`
         : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 
+    const naturalTime = formatNaturalIndonesianCountdown(
+      days,
+      hours,
+      minutes,
+      seconds,
+      false
+    );
+
+    // Active promo progress calculation (remaining time against promo cycle, clamped 8% - 95%)
+    const promoCycleMs = 7 * 24 * 60 * 60 * 1000;
+    const totalMs = Math.max(difference, promoCycleMs);
+    const progressPercent = Math.min(95, Math.max(8, Math.round((difference / totalMs) * 100)));
+
     return {
       days,
       hours,
@@ -67,6 +110,8 @@ export function useCountdown(targetDate?: string | null): CountdownState {
       seconds,
       isExpired: false,
       formattedTime,
+      naturalTime,
+      progressPercent,
     };
   };
 
@@ -82,4 +127,3 @@ export function useCountdown(targetDate?: string | null): CountdownState {
 
   return countdown;
 }
-

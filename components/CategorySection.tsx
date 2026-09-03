@@ -14,7 +14,6 @@ import {
 
 interface CategoryCardProps {
   name: string;
-  count: string;
   icon: React.ElementType;
   bg: string;
   borderColor: string;
@@ -24,15 +23,13 @@ interface CategoryCardProps {
 const categories: CategoryCardProps[] = [
   {
     name: "Agama & Filsafat",
-    count: "140+ Buku",
     icon: BookOpen,
-    bg: "bg-[#FFFDF7]",
-    borderColor: "border-amber-200/80",
-    iconBg: "bg-amber-100/90 text-amber-800",
+    bg: "bg-red-50/50",
+    borderColor: "border-red-200/60",
+    iconBg: "bg-red-100 text-[#E52E2D]",
   },
   {
     name: "Fiksi & Novel",
-    count: "250+ Buku",
     icon: Feather,
     bg: "bg-[#F4FBF7]",
     borderColor: "border-emerald-200/80",
@@ -40,7 +37,6 @@ const categories: CategoryCardProps[] = [
   },
   {
     name: "Buku Anak & Komik",
-    count: "180+ Buku",
     icon: Sparkles,
     bg: "bg-[#F4FAFF]",
     borderColor: "border-sky-200/80",
@@ -48,15 +44,13 @@ const categories: CategoryCardProps[] = [
   },
   {
     name: "Non Fiksi & Biografi",
-    count: "110+ Buku",
     icon: Scroll,
-    bg: "bg-[#FFF9F3]",
-    borderColor: "border-orange-200/80",
-    iconBg: "bg-orange-100/90 text-orange-800",
+    bg: "bg-rose-50/50",
+    borderColor: "border-rose-200/60",
+    iconBg: "bg-rose-100 text-rose-800",
   },
   {
     name: "Pengembangan Diri",
-    count: "95+ Buku",
     icon: Compass,
     bg: "bg-[#F6F5FF]",
     borderColor: "border-indigo-200/80",
@@ -64,7 +58,6 @@ const categories: CategoryCardProps[] = [
   },
   {
     name: "Social Science",
-    count: "80+ Buku",
     icon: Globe,
     bg: "bg-[#F4F8FF]",
     borderColor: "border-blue-200/80",
@@ -72,7 +65,6 @@ const categories: CategoryCardProps[] = [
   },
   {
     name: "Psikologi & Humaniora",
-    count: "120+ Buku",
     icon: Heart,
     bg: "bg-[#FFF5F7]",
     borderColor: "border-rose-200/80",
@@ -80,7 +72,6 @@ const categories: CategoryCardProps[] = [
   },
   {
     name: "Sains & Teknologi",
-    count: "75+ Buku",
     icon: Layers,
     bg: "bg-[#F3FAF9]",
     borderColor: "border-teal-200/80",
@@ -90,37 +81,37 @@ const categories: CategoryCardProps[] = [
 
 export default function CategorySection() {
   return (
-    <section className="w-full bg-[#FEFDF7] py-8 md:py-12">
+    <section className="w-full bg-white py-10 md:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Soft Parchment Outer Container */}
-        <div className="bg-[#FAF7F0] border border-[#EAE3D2] rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm relative overflow-hidden">
+        {/* Clean Neutral Outer Container */}
+        <div className="bg-gray-50/70 border border-gray-100 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xs relative overflow-hidden">
           
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-5 border-b border-[#EAE3D2] gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-5 border-b border-gray-200/70 gap-4">
             <div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#B67A2D] bg-amber-100/80 px-3 py-1 rounded-full border border-amber-200/80 mb-2">
-                <CompassIcon size={13} className="text-[#B67A2D]" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#E52E2D] bg-red-50 px-3 py-1 rounded-full border border-red-200/80 mb-2">
+                <CompassIcon size={13} className="text-[#E52E2D]" />
                 EKSPLORASI LITERASI
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#272522] tracking-tight">
-                Kategori Pilihan
+                Kategori <span className="text-[#C12A26] italic font-serif">Pilihan</span>
               </h2>
               <p className="text-xs sm:text-sm text-[#76716A] mt-1 font-medium">
-                Temukan buku berdasarkan genre favorit dan topik favoritmu.
+                Temukan buku berdasarkan genre favorit dan topik yang menggugah jiwamu.
               </p>
             </div>
 
             <Link
               href="/katalog"
-              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#B67A2D] transition-colors bg-white px-4 py-2.5 rounded-full border border-[#EAE3D2] shadow-2xs hover:shadow-xs shrink-0 self-stretch sm:self-auto justify-center"
+              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-4 py-2.5 rounded-full border border-gray-200/80 shadow-2xs hover:shadow-xs shrink-0 self-stretch sm:self-auto justify-center"
             >
               <span>Lihat Semua Kategori</span>
-              <ChevronRight size={15} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight size={15} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
             </Link>
           </div>
 
-          {/* Responsive Category Grid (2 Cols on Mobile, 4 Cols on Desktop) */}
+          {/* Clean Modern Category Cards Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-4">
             {categories.map((cat) => {
               const Icon = cat.icon;
@@ -128,25 +119,19 @@ export default function CategorySection() {
                 <Link
                   key={cat.name}
                   href={`/katalog?category=${encodeURIComponent(cat.name)}`}
-                  className={`bg-white border ${cat.borderColor} hover:border-[#B67A2D] rounded-2xl p-3.5 sm:p-4 flex items-center justify-between shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden`}
+                  className="bg-white border border-gray-200/80 hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl ${cat.iconBg} flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon size={18} strokeWidth={2} />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className={`w-11 h-11 rounded-xl ${cat.iconBg} flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon size={20} strokeWidth={2} />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-serif font-bold text-xs sm:text-sm text-[#272522] leading-snug truncate group-hover:text-[#B67A2D] transition-colors">
-                        {cat.name}
-                      </h3>
-                      <span className="text-[10px] text-[#76716A] font-medium block truncate mt-0.5">
-                        {cat.count}
-                      </span>
-                    </div>
+                    <h3 className="font-serif font-bold text-xs sm:text-sm text-[#272522] leading-snug truncate group-hover:text-[#E52E2D] transition-colors">
+                      {cat.name}
+                    </h3>
                   </div>
-
                   <ChevronRight
                     size={16}
-                    className="text-gray-400 group-hover:text-[#B67A2D] group-hover:translate-x-1 transition-all shrink-0 ml-1"
+                    className="text-gray-300 group-hover:text-[#E52E2D] group-hover:translate-x-0.5 transition-all shrink-0 ml-1.5"
                   />
                 </Link>
               );
@@ -159,4 +144,3 @@ export default function CategorySection() {
     </section>
   );
 }
-

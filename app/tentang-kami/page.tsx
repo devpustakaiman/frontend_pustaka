@@ -9,7 +9,6 @@ import {
   Eye,
 } from "lucide-react";
 
-
 export const metadata = {
   title: "Tentang Kami - Pustaka IIMaN",
   description:
@@ -21,43 +20,43 @@ export default function TentangKamiPage() {
   const shareText = "Pustaka IIMaN - Penerbit Profesional & Berpengalaman";
 
   return (
-    <div className="bg-[#FAF8F3] min-h-screen py-10 md:py-16 text-[#272522]">
+    <div className="bg-white min-h-screen py-10 md:py-16 text-[#272522]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Navigation / Back Button */}
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-medium text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold text-[#272522] bg-white border border-gray-200 rounded-full hover:bg-white hover:border-[#E52E2D] hover:text-[#E52E2D] shadow-2xs transition-all duration-200"
           >
-            <ArrowLeft size={16} strokeWidth={1.5} />
+            <ArrowLeft size={16} strokeWidth={2} />
             <span>Kembali ke Beranda</span>
           </Link>
         </div>
 
         {/* Main Content Card */}
-        <article className="bg-white border border-[#EAE5D9] rounded-3xl p-6 sm:p-10 md:p-12 shadow-sm space-y-8">
+        <article className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-10 md:p-12 shadow-sm space-y-8">
           
           {/* Header */}
-          <div className="border-b border-[#EAE5D9] pb-6 space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FAF8F3] border border-[#EAE5D9] text-xs font-bold text-[#B67A2D] rounded-md uppercase tracking-wider">
+          <div className="border-b border-gray-100 pb-6 space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-200/60 text-xs font-bold text-[#E52E2D] rounded-full uppercase tracking-wider">
               <Building2 size={13} />
               Profil Penerbit
             </span>
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#272522] leading-tight">
-              Tentang Pustaka IIMaN
+              Tentang <span className="text-[#C12A26] italic font-serif">Pustaka IIMaN</span>
             </h1>
           </div>
 
           {/* Typography Content */}
-          <div className="prose prose-amber max-w-none text-[#272522]/90 leading-relaxed text-base sm:text-lg space-y-6">
+          <div className="prose prose-red max-w-none text-[#272522]/90 leading-relaxed text-base sm:text-lg space-y-6 font-sans">
             <p className="text-base sm:text-lg leading-relaxed">
               Didirikan pada tahun 2001, Pustaka IIMaN adalah penerbit yang profesional dan berpengalaman. Menerbitkan berbagai macam buku yang diterjemahkan dari bahasa Inggris dan Arab dan juga buku-buku berkualitas yang ditulis oleh penulis-penulis Indonesia. Beberapa buku kami telah dicetak ulang dan mendapat kategori best-seller.
             </p>
 
             {/* Visi Card */}
-            <div className="bg-[#FAF8F3] border border-[#EAE5D9] rounded-2xl p-6 md:p-8 space-y-3 my-6">
-              <div className="flex items-center gap-2 text-[#B67A2D]">
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8 space-y-3 my-6">
+              <div className="flex items-center gap-2 text-[#E52E2D]">
                 <Eye size={22} strokeWidth={2} />
                 <h2 className="font-serif text-2xl font-bold text-[#272522] m-0">Visi</h2>
               </div>
@@ -67,8 +66,8 @@ export default function TentangKamiPage() {
             </div>
 
             {/* Misi Card */}
-            <div className="bg-[#FAF8F3] border border-[#EAE5D9] rounded-2xl p-6 md:p-8 space-y-3 my-6">
-              <div className="flex items-center gap-2 text-[#D32F2F]">
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8 space-y-3 my-6">
+              <div className="flex items-center gap-2 text-[#E52E2D]">
                 <Target size={22} strokeWidth={2} />
                 <h2 className="font-serif text-2xl font-bold text-[#272522] m-0">Misi</h2>
               </div>
@@ -79,9 +78,9 @@ export default function TentangKamiPage() {
           </div>
 
           {/* Share Section */}
-          <div className="border-t border-[#EAE5D9] pt-8 space-y-4">
+          <div className="border-t border-gray-100 pt-8 space-y-4">
             <div className="flex items-center gap-2 text-sm font-bold text-[#76716A] uppercase tracking-wider">
-              <Share2 size={16} className="text-[#B67A2D]" />
+              <Share2 size={16} className="text-[#E52E2D]" />
               <span>Bagikan Halaman Ini:</span>
             </div>
 
@@ -133,22 +132,10 @@ export default function TentangKamiPage() {
                 <Send size={16} />
                 <span>Telegram</span>
               </a>
-
-              {/* Line */}
-              <a
-                href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(pageUrl)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
-              >
-                <span className="font-black text-xs">LINE</span>
-                <span>Line</span>
-              </a>
             </div>
           </div>
 
         </article>
-
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ import { BookCardSkeletonGrid } from "@/components/BookCardSkeleton";
  */
 export default function RootLoading() {
   return (
-    <div className="w-full min-h-screen bg-[#FEFDF7] animate-pulse">
+    <div className="w-full min-h-screen bg-white animate-pulse">
       {/* Hero skeleton */}
       <div className="w-full h-[480px] bg-gray-200" />
 

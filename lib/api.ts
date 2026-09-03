@@ -4,6 +4,7 @@ export async function getBooks() {
   const { data, error } = await supabase
     .from("books")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -18,6 +19,7 @@ export async function getPromoBooks() {
   const { data, error } = await supabase
     .from("books")
     .select("*")
+    .is("deleted_at", null)
     .eq("is_promo", true)
     .order("created_at", { ascending: false });
 
@@ -33,6 +35,7 @@ export async function getRecommendedBooks() {
   const { data, error } = await supabase
     .from("books")
     .select("*")
+    .is("deleted_at", null)
     .eq("is_recommended", true)
     .order("created_at", { ascending: false });
 
@@ -48,6 +51,7 @@ export async function getNewBooks() {
   const { data, error } = await supabase
     .from("books")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(12);
 
@@ -65,10 +69,11 @@ export async function getBookById(id: string) {
   if (!id) return null;
 
   try {
-    // 1. Try matching by exact ID
+    // 1. Try matching by exact ID (exclude soft-deleted)
     const { data, error } = await supabase
       .from("books")
       .select("*")
+      .is("deleted_at", null)
       .eq("id", id)
       .maybeSingle();
 
@@ -82,13 +87,18 @@ export async function getBookById(id: string) {
     const { data: slugData } = await supabase
       .from("books")
       .select("*")
+      .is("deleted_at", null)
       .eq("slug", id)
       .maybeSingle();
 
     if (slugData) return slugData;
 
-    // 3. Fallback: search all books and match ID string or title
-    const { data: allBooks } = await supabase.from("books").select("*");
+    // 3. Fallback: search active books and match ID string or title
+    const { data: allBooks } = await supabase
+      .from("books")
+      .select("*")
+      .is("deleted_at", null);
+      
     if (allBooks && allBooks.length > 0) {
       const match = allBooks.find(
         (b) =>
@@ -183,6 +193,46 @@ export async function submitManuscript(
   }
 
   return { success: true };
+}
+
+export interface SiteSettings {
+  id?: string;
+  hero_headline?: string;
+  hero_subheadline?: string;
+  hero_banner_url?: string;
+  featured_book_id?: string;
+  featured_book?: {
+    id: string;
+    title: string;
+    author: string;
+    price?: number | string;
+    promo_price?: number | string | null;
+    is_promo?: boolean;
+    cover_url?: string;
+    coverUrl?: string;
+    [key: string]: any;
+  } | null;
+  updated_at?: string;
+}
+
+export async function getSiteSettings(): Promise<SiteSettings | null> {
+  try {
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("*, featured_book:books(*)")
+      .eq("id", "default")
+      .maybeSingle();
+
+    if (error) {
+      console.warn("Could not fetch site_settings:", error.message);
+      return null;
+    }
+
+    return data as SiteSettings | null;
+  } catch (err) {
+    console.warn("Exception caught in getSiteSettings:", err);
+    return null;
+  }
 }
 
 

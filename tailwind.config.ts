@@ -9,7 +9,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "pustaka-red": "#D32F2F",
+        primary: "#E52E2D",
+        "primary-hover": "#C12A26",
+        "primary-light": "#FEF2F2",
+        "primary-border": "#FCA5A5",
+        "pustaka-red": "#E52E2D",
         "pustaka-green": "#388E3C",
         "pustaka-black": "#1A1A1A",
       },

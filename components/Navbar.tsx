@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Search,
+  ChevronDown,
+  ChevronRight,
+  Menu,
+  X,
+  BookOpen,
+  ArrowRight,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export interface MizanCategorySubItem {
   name: string;
@@ -102,303 +111,516 @@ export function buildMizanCategoryTree(): MizanCategoryGroup[] {
     });
   });
 
-  // Sort alphabetically by parent category name for clean list order
   tree.sort((a, b) => a.name.localeCompare(b.name));
-
   return tree;
 }
 
 export const CATEGORY_TREE = buildMizanCategoryTree();
 
+export interface NavLinkItem {
+  name: string;
+  href: string;
+  hasDropdown?: boolean;
+}
+
+export const NAV_LINKS: NavLinkItem[] = [
+  { name: "BERANDA", href: "/" },
+  { name: "KOLEKSI", href: "/shop", hasDropdown: true },
+  { name: "PRE-ORDER", href: "/pre-order" },
+  { name: "WARTA", href: "/warta" },
+  { name: "TENTANG", href: "/tentang" },
+  { name: "KONTAK", href: "/kontak" },
+];
+
+interface SearchResultItem {
+  id: string;
+  title: string;
+  author?: string;
+  cover_url?: string;
+  price?: number;
+}
+
 export default function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [activeMobileSub, setActiveMobileSub] = useState<string | null>(null);
-  const pathname = usePathname();
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Determine active route state dynamically
+  const isItemActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (href === "/shop") return pathname.startsWith("/shop") || pathname.startsWith("/katalog");
+    if (href === "/tentang") return pathname.startsWith("/tentang") || pathname.startsWith("/tentang-kami");
+    if (href === "/kontak") return pathname.startsWith("/kontak") || pathname.startsWith("/contact");
+    return pathname.startsWith(href);
+  };
+
+  // 1. Scroll State Listener (window.scrollY > 20)
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Close menus on page navigation
   useEffect(() => {
     setMobileMenuOpen(false);
     setMobileShopOpen(false);
     setActiveMobileSub(null);
+    setShowDropdown(false);
   }, [pathname]);
 
+  // Click outside to close instant search popup
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Live autocomplete search with debounce
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query || query.length < 2) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const { data, error } = await supabase
+          .from("books")
+          .select("id, title, author, cover_url, price")
+          .is("deleted_at", null)
+          .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+          .limit(4);
+
+        if (!error && data) {
+          setSearchResults(data);
+          setShowDropdown(true);
+        }
+      } catch (err) {
+        console.error("Instant search error:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setShowDropdown(false);
+      router.push(`/katalog?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-[#FAF8F3]/95 backdrop-blur-md border-b border-[#E7E1D8] transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo / Brand Anchor */}
-          <Link
-            href="/"
-            className="flex items-center group focus:outline-none focus:ring-2 focus:ring-[#D32F2F] rounded-md p-1"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo500x200_1.png"
-              alt="Pustaka Iman Logo"
-              className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
-            />
-          </Link>
+    <header
+      className={`sticky z-50 px-4 sm:px-6 lg:px-8 transition-all duration-300 ease-in-out ${
+        isScrolled ? "top-3 sm:top-4" : "top-0"
+      }`}
+    >
+      {/* Dynamic Animated Container */}
+      <div
+        className={`relative mx-auto flex items-center justify-between gap-4 transition-all duration-300 ease-in-out ${
+          isScrolled
+            ? "bg-white/95 backdrop-blur-md border border-gray-200/80 shadow-md max-w-6xl mt-2 sm:mt-3 px-6 h-[52px] sm:h-14 rounded-full"
+            : "bg-white/95 backdrop-blur-md border border-gray-200/80 shadow-xs max-w-7xl mt-2 px-5 h-14 sm:h-16 rounded-full sm:rounded-2xl"
+        }`}
+      >
+        {/* Left: Brand Logo */}
+        <Link
+          href="/"
+          className="flex items-center shrink-0 focus:outline-none rounded-md group py-1"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo500x200_1.png"
+            alt="PUSTAKA IMaN"
+            className="h-9 sm:h-10 lg:h-11 w-auto object-contain transition-transform group-hover:scale-105"
+          />
+        </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-7 text-xs font-semibold tracking-wider text-[#272522]">
-            <Link
-              href="/"
-              className={`hover:text-[#B67A2D] transition-colors uppercase ${
-                pathname === "/" ? "text-[#B67A2D]" : ""
-              }`}
-            >
-              BERANDA
-            </Link>
+        {/* Center Navigation Links (Desktop Dynamic Mapping) */}
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-xs tracking-wider self-stretch h-full">
+          {NAV_LINKS.map((item) => {
+            const isActive = isItemActive(item.href);
 
-            {/* Shop Hover Flyout Dropdown (Narrow Column + Flyout Submenu to the right, NO SCROLLBARS) */}
-            <div className="relative group py-6">
+            if (item.hasDropdown) {
+              return (
+                <div
+                  key={item.name}
+                  className="relative group self-stretch flex items-center py-1"
+                >
+                  <Link
+                    href={item.href}
+                    className={`relative self-stretch flex items-center gap-1 uppercase transition-colors ${
+                      isActive
+                        ? "text-[#E52E2D] font-bold"
+                        : "text-gray-700 hover:text-gray-950 font-semibold"
+                    }`}
+                  >
+                    <span>{item.name}</span>
+                    <ChevronDown
+                      size={13}
+                      className={`transition-transform duration-200 group-hover:rotate-180 ${
+                        isActive
+                          ? "text-[#E52E2D]"
+                          : "text-gray-500 group-hover:text-gray-950"
+                      }`}
+                    />
+                    {isActive && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[5px] w-7 rounded-t-full bg-[#E52E2D]" />
+                    )}
+                  </Link>
+
+                  {/* Category Dropdown Flyout Menu */}
+                  <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
+                    <div className="w-64 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 overflow-visible">
+                      <Link
+                        href="/katalog"
+                        className="px-4 py-2 text-xs font-bold text-[#E52E2D] bg-red-50/50 hover:bg-red-50 border-b border-gray-100 transition-colors flex items-center justify-between"
+                      >
+                        <span>SEMUA PRODUK</span>
+                        <span>&rarr;</span>
+                      </Link>
+
+                      <div className="py-1">
+                        {CATEGORY_TREE.map((cat) => {
+                          const hasSub = cat.subcategories && cat.subcategories.length > 0;
+                          return (
+                            <div key={cat.name} className="relative group/sub">
+                              <Link
+                                href={`/katalog?category=${encodeURIComponent(cat.name)}`}
+                                className="px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-950 transition-colors flex items-center justify-between"
+                              >
+                                <span className="truncate pr-2">{cat.name}</span>
+                                {hasSub && (
+                                  <ChevronRight
+                                    size={13}
+                                    className="text-gray-400 shrink-0 group-hover/sub:text-gray-950"
+                                  />
+                                )}
+                              </Link>
+
+                              {/* Nested Sub-Category Flyout Menu */}
+                              {hasSub && (
+                                <div className="absolute left-full top-0 pl-1 hidden group-hover/sub:block z-50">
+                                  <div className="w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2">
+                                    <div className="px-4 py-1.5 bg-gray-50 border-b border-gray-100 mb-1">
+                                      <span className="text-[10px] font-bold text-[#E52E2D] uppercase tracking-wider block">
+                                        Sub-Kategori
+                                      </span>
+                                      <span className="text-xs font-serif font-bold text-gray-900 truncate block">
+                                        {cat.name}
+                                      </span>
+                                    </div>
+                                    {cat.subcategories.map((sub) => (
+                                      <Link
+                                        key={sub.full}
+                                        href={`/katalog?category=${encodeURIComponent(sub.name)}`}
+                                        className="block px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-950 transition-colors"
+                                      >
+                                        {sub.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
               <Link
-                href="/katalog"
-                className={`flex items-center space-x-1 uppercase hover:text-[#B67A2D] transition-colors ${
-                  pathname.startsWith("/katalog") ? "text-[#B67A2D]" : ""
+                key={item.name}
+                href={item.href}
+                className={`relative self-stretch flex items-center py-1 transition-colors uppercase ${
+                  isActive
+                    ? "text-[#E52E2D] font-bold"
+                    : "text-gray-700 hover:text-gray-950 font-semibold"
                 }`}
               >
-                <span>SHOP</span>
-                <ChevronDownIcon />
-              </Link>
-
-              {/* Main Category Dropdown Column (No overflow hidden/auto to allow flyout projection) */}
-              <div className="absolute left-0 top-full hidden group-hover:block w-64 bg-white border border-[#EAE5D9] rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200">
-                {/* Bold Highlighted 'Semua Produk' Link */}
-                <Link
-                  href="/katalog"
-                  className="px-3.5 py-2 text-xs font-bold text-[#D32F2F] bg-[#FAF8F3] hover:bg-[#F1E8D8] border-b border-[#EAE5D9] transition-colors flex items-center justify-between"
-                >
-                  <span>SEMUA PRODUK</span>
-                  <span>&rarr;</span>
-                </Link>
-
-                <div className="py-1">
-                  {CATEGORY_TREE.map((cat) => {
-                    const hasSub = cat.subcategories && cat.subcategories.length > 0;
-                    return (
-                      <div key={cat.name} className="relative group/sub">
-                        <Link
-                          href={`/katalog?category=${encodeURIComponent(cat.name)}`}
-                          className="px-3.5 py-2 text-xs font-medium text-[#272522] hover:bg-[#F1E8D8]/70 hover:text-[#B67A2D] border-b border-[#F7F4EC] transition-colors flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="truncate pr-2">{cat.name}</span>
-                          {hasSub && (
-                            <ChevronRight size={13} className="text-[#76716A] flex-shrink-0 group-hover/sub:text-[#B67A2D]" />
-                          )}
-                        </Link>
-
-                        {/* Sub-Category Flyout Menu on Hover (Opens directly to the right, NO scrollbars) */}
-                        {hasSub && (
-                          <div className="absolute left-full top-0 hidden group-hover/sub:block w-64 bg-white border border-[#EAE5D9] rounded-xl shadow-2xl py-1.5 ml-1 z-50">
-                            <div className="px-3.5 py-1.5 bg-[#FAF8F3] border-b border-[#EAE5D9] mb-1">
-                              <span className="text-[10px] font-bold text-[#B67A2D] uppercase tracking-wider block">
-                                Sub-Kategori
-                              </span>
-                              <span className="text-xs font-serif font-bold text-[#272522]">
-                                {cat.name}
-                              </span>
-                            </div>
-                            {cat.subcategories.map((sub) => (
-                              <Link
-                                key={sub.full}
-                                href={`/katalog?category=${encodeURIComponent(sub.name)}`}
-                                className="block px-3.5 py-1.5 text-xs font-medium text-[#272522] hover:bg-[#FAF8F3] hover:text-[#B67A2D] border-b border-[#F7F4EC] transition-colors"
-                              >
-                                {sub.name}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Warta Buku */}
-            <Link
-              href="/warta"
-              className={`hover:text-[#B67A2D] transition-colors uppercase ${
-                pathname.startsWith("/warta") ? "text-[#B67A2D]" : ""
-              }`}
-            >
-              WARTA BUKU
-            </Link>
-
-            {/* Tentang Kami */}
-            <Link
-              href="/tentang-kami"
-              className={`hover:text-[#B67A2D] transition-colors uppercase ${
-                pathname === "/tentang-kami" ? "text-[#B67A2D]" : ""
-              }`}
-            >
-              TENTANG KAMI
-            </Link>
-
-            {/* Kontak */}
-            <Link
-              href="/kontak"
-              className={`hover:text-[#B67A2D] transition-colors uppercase ${
-                pathname === "/kontak" ? "text-[#B67A2D]" : ""
-              }`}
-            >
-              KONTAK
-            </Link>
-
-            {/* Primary Action Button: Kirim Naskah */}
-            <Link
-              href="/kirim-naskah"
-              className="ml-2 px-4 py-2 rounded-md bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-medium transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D32F2F] uppercase tracking-wider"
-            >
-              KIRIM NASKAH
-            </Link>
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <div className="flex items-center lg:hidden">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              type="button"
-              className="p-2 rounded-md text-[#272522] hover:bg-[#F1E8D8] focus:outline-none focus:ring-2 focus:ring-[#B67A2D] transition-all duration-200 active:scale-95"
-              aria-label="Toggle Menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                <span>{item.name}</span>
+                {isActive && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[5px] w-7 rounded-t-full bg-[#E52E2D]" />
                 )}
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#FAF8F3] border-b border-[#E7E1D8] px-4 pt-2 pb-6 space-y-3 shadow-lg max-h-[80vh] overflow-y-auto">
-          <Link
-            href="/"
-            className="block py-2 text-sm font-semibold uppercase tracking-wider text-[#272522] hover:text-[#B67A2D]"
-          >
-            Beranda
-          </Link>
-
-          {/* Shop Mobile Accordion */}
-          <div className="border-t border-[#E7E1D8] pt-2">
-            <button
-              onClick={() => setMobileShopOpen(!mobileShopOpen)}
-              className="w-full flex items-center justify-between py-2 text-sm font-semibold uppercase tracking-wider text-[#272522] hover:text-[#B67A2D]"
+        {/* Right-Side: Search Bar + Kirim Naskah Button (Clean: Profile & Cart icons removed) */}
+        <div className="flex items-center gap-3">
+          {/* Smart Search Input with Autocomplete Popup */}
+          <div ref={searchContainerRef} className="relative hidden md:block">
+            <form
+              onSubmit={handleSearchSubmit}
+              className={`flex items-center border rounded-full px-3.5 py-1.5 text-xs focus-within:border-gray-400 w-40 lg:w-48 xl:w-52 transition-all ${
+                isScrolled
+                  ? "bg-gray-50 border-gray-200/80 focus-within:bg-white"
+                  : "bg-white/90 border-gray-200 focus-within:bg-white shadow-2xs"
+              }`}
             >
-              <span>SHOP</span>
-              <ChevronDownIcon isOpen={mobileShopOpen} />
-            </button>
-            {mobileShopOpen && (
-              <div className="pl-4 space-y-2 py-1 text-sm text-[#76716A]">
-                <Link
-                  href="/katalog"
-                  className="block py-1 font-bold text-[#D32F2F] hover:text-[#B71C1C]"
-                >
-                  Semua Produk &rarr;
-                </Link>
-                {CATEGORY_TREE.map((cat) => {
-                  const isSubOpen = activeMobileSub === cat.name;
-                  const hasSub = cat.subcategories && cat.subcategories.length > 0;
-                  return (
-                    <div key={cat.name} className="py-1">
-                      <div className="flex items-center justify-between">
-                        <Link
-                          href={`/katalog?category=${encodeURIComponent(cat.name)}`}
-                          className="hover:text-[#B67A2D] font-medium"
-                        >
-                          {cat.name}
-                        </Link>
-                        {hasSub && (
-                          <button
-                            onClick={() => setActiveMobileSub(isSubOpen ? null : cat.name)}
-                            type="button"
-                            className="p-1 text-[#76716A] hover:text-[#B67A2D]"
-                          >
-                            <ChevronDownIcon isOpen={isSubOpen} />
-                          </button>
-                        )}
-                      </div>
-                      {hasSub && isSubOpen && (
-                        <div className="pl-3 mt-1.5 space-y-1.5 border-l-2 border-[#E7E1D8] text-xs">
-                          {cat.subcategories.map((sub) => (
-                            <Link
-                              key={sub.full}
-                              href={`/katalog?category=${encodeURIComponent(sub.name)}`}
-                              className="block py-1 text-[#76716A] hover:text-[#B67A2D]"
-                            >
-                              {sub.name}
-                            </Link>
-                          ))}
+              <button
+                type="submit"
+                aria-label="Cari"
+                className="text-gray-400 hover:text-gray-700 transition-colors shrink-0"
+              >
+                <Search size={14} />
+              </button>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => {
+                  if (searchResults.length > 0) setShowDropdown(true);
+                }}
+                placeholder="Cari buku..."
+                className="bg-transparent text-gray-800 placeholder-gray-400 text-xs focus:outline-none w-full ml-1.5"
+              />
+              {isSearching && (
+                <div className="animate-spin w-3 h-3 border-2 border-gray-300 border-t-[#E52E2D] rounded-full shrink-0" />
+              )}
+            </form>
+
+            {/* Instant Autocomplete Search Dropdown */}
+            {showDropdown && searchResults.length > 0 && (
+              <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 flex items-center justify-between">
+                  <span>Hasil Pencarian</span>
+                  <span>{searchResults.length} Buku</span>
+                </div>
+                <div className="py-1 divide-y divide-gray-50">
+                  {searchResults.map((book) => (
+                    <Link
+                      key={book.id}
+                      href={`/katalog/${book.id}`}
+                      onClick={() => setShowDropdown(false)}
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group"
+                    >
+                      {book.cover_url ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={book.cover_url}
+                          alt={book.title}
+                          className="w-9 h-12 object-cover rounded shadow-2xs shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-12 bg-amber-50 rounded flex items-center justify-center text-amber-600 shrink-0">
+                          <BookOpen size={14} />
                         </div>
                       )}
-                    </div>
-                  );
-                })}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-semibold text-gray-900 group-hover:text-[#E52E2D] transition-colors truncate">
+                          {book.title}
+                        </h4>
+                        <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                          {book.author || "Pustaka Iman"}
+                        </p>
+                        {book.price && (
+                          <span className="text-xs font-bold text-[#E52E2D] block mt-0.5">
+                            Rp{book.price.toLocaleString("id-ID")}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                <Link
+                  href={`/katalog?q=${encodeURIComponent(searchQuery.trim())}`}
+                  onClick={() => setShowDropdown(false)}
+                  className="mt-1 w-full py-2 px-3 text-xs font-bold text-center text-[#E52E2D] bg-red-50/60 hover:bg-red-50 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <span>Lihat semua hasil untuk &ldquo;{searchQuery}&rdquo;</span>
+                  <ArrowRight size={13} />
+                </Link>
               </div>
             )}
           </div>
 
+          {/* CTA Button ('KIRIM NASKAH') */}
           <Link
-            href="/warta"
-            className="block py-2 text-sm font-semibold uppercase tracking-wider text-[#272522] hover:text-[#B67A2D] border-t border-[#E7E1D8] pt-2"
+            href="/kirim-naskah"
+            className="hidden sm:inline-flex items-center justify-center border border-[#E52E2D] text-[#E52E2D] hover:bg-red-50 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-wide transition-colors whitespace-nowrap active:scale-95"
           >
-            WARTA BUKU
+            KIRIM NASKAH
           </Link>
 
-          <Link
-            href="/tentang-kami"
-            className="block py-2 text-sm font-semibold uppercase tracking-wider text-[#272522] hover:text-[#B67A2D] border-t border-[#E7E1D8] pt-2"
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            type="button"
+            className="p-1.5 text-gray-700 hover:text-black rounded-full lg:hidden hover:bg-gray-100 transition-colors"
+            aria-label="Buka Menu"
           >
-            TENTANG KAMI
-          </Link>
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
 
-          <Link
-            href="/kontak"
-            className="block py-2 text-sm font-semibold uppercase tracking-wider text-[#272522] hover:text-[#B67A2D] border-t border-[#E7E1D8] pt-2"
+      </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden mt-2 max-w-7xl mx-auto bg-white/98 backdrop-blur-md rounded-3xl shadow-xl border border-gray-100 p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+          {/* Mobile Search */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-xs w-full"
           >
-            KONTAK
-          </Link>
+            <Search size={15} className="text-gray-400 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari buku..."
+              className="bg-transparent text-gray-800 placeholder-gray-400 text-xs focus:outline-none w-full ml-2"
+            />
+          </form>
 
-          <div className="pt-3 border-t border-[#E7E1D8]">
-            <Link
-              href="/kirim-naskah"
-              className="block w-full text-center py-2.5 rounded-md bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-medium uppercase tracking-wider text-xs shadow transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#D32F2F]"
-            >
-              KIRIM NASKAH
-            </Link>
-          </div>
+          {/* Mobile Dynamic Links */}
+          <nav className="space-y-2 text-xs uppercase tracking-wider">
+            {NAV_LINKS.map((item) => {
+              const isActive = isItemActive(item.href);
+
+              if (item.hasDropdown) {
+                return (
+                  <div key={item.name} className="border-t border-gray-100 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setMobileShopOpen(!mobileShopOpen)}
+                      className={`w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs uppercase tracking-wider ${
+                        isActive
+                          ? "bg-red-50 text-[#E52E2D] font-bold"
+                          : "text-gray-700 hover:bg-gray-50 font-semibold"
+                      }`}
+                    >
+                      <span>{item.name}</span>
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform duration-200 ${
+                          mobileShopOpen ? "rotate-180 text-[#E52E2D]" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {mobileShopOpen && (
+                      <div className="pl-3 pr-1 py-1 space-y-1 text-xs">
+                        <Link
+                          href="/katalog"
+                          className="block py-1.5 px-3 font-bold text-[#E52E2D] bg-red-50/50 rounded-lg"
+                        >
+                          Semua Produk &rarr;
+                        </Link>
+                        {CATEGORY_TREE.map((cat) => {
+                          const isSubOpen = activeMobileSub === cat.name;
+                          const hasSub = cat.subcategories && cat.subcategories.length > 0;
+                          return (
+                            <div key={cat.name} className="py-0.5">
+                              <div className="flex items-center justify-between">
+                                <Link
+                                  href={`/katalog?category=${encodeURIComponent(cat.name)}`}
+                                  className="py-1 px-3 text-gray-700 hover:text-gray-950 truncate block"
+                                >
+                                  {cat.name}
+                                </Link>
+                                {hasSub && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setActiveMobileSub(isSubOpen ? null : cat.name)
+                                    }
+                                    className="p-1 text-gray-400 hover:text-gray-600"
+                                  >
+                                    <ChevronDown
+                                      size={13}
+                                      className={`transition-transform duration-200 ${
+                                        isSubOpen ? "rotate-180" : ""
+                                      }`}
+                                    />
+                                  </button>
+                                )}
+                              </div>
+                              {hasSub && isSubOpen && (
+                                <div className="pl-4 py-1 space-y-1 border-l border-gray-100 ml-3">
+                                  {cat.subcategories.map((sub) => (
+                                    <Link
+                                      key={sub.full}
+                                      href={`/katalog?category=${encodeURIComponent(sub.name)}`}
+                                      className="block py-1 text-[11px] text-gray-500 hover:text-gray-900"
+                                    >
+                                      {sub.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`block py-2 px-3 rounded-xl transition-colors ${
+                    isActive
+                      ? "bg-red-50 text-[#E52E2D] font-bold"
+                      : "text-gray-700 hover:bg-gray-50 font-semibold"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
+
+            <div className="pt-2">
+              <Link
+                href="/kirim-naskah"
+                className="w-full inline-flex items-center justify-center border border-[#E52E2D] text-[#E52E2D] hover:bg-red-50 text-xs font-bold py-2.5 rounded-full uppercase tracking-wide transition-colors"
+              >
+                KIRIM NASKAH
+              </Link>
+            </div>
+          </nav>
         </div>
       )}
     </header>
-  );
-}
-
-function ChevronDownIcon({ isOpen }: { isOpen?: boolean }) {
-  return (
-    <svg
-      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-        isOpen ? "rotate-180 text-[#B67A2D]" : "text-[#76716A] group-hover:text-[#B67A2D]"
-      }`}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-    </svg>
   );
 }

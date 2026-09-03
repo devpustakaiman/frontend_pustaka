@@ -74,12 +74,12 @@ export function CarouselArrowButtons({
     "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 focus:outline-none focus:ring-2 focus:ring-offset-2";
 
   const light = {
-    active: `bg-white border border-[#E7E1D8] text-[#272522] shadow-sm hover:bg-[#B67A2D] hover:border-[#B67A2D] hover:text-white hover:shadow-md focus:ring-[#B67A2D]`,
-    inactive: `bg-white/30 border border-[#E7E1D8]/40 text-[#272522]/20 cursor-not-allowed`,
+    active: `bg-white border border-gray-200 text-[#272522] shadow-sm hover:bg-[#E52E2D] hover:border-[#E52E2D] hover:text-white hover:shadow-md focus:ring-[#E52E2D]`,
+    inactive: `bg-white/30 border border-gray-200/40 text-[#272522]/20 cursor-not-allowed`,
   };
 
   const dark = {
-    active: `bg-white/10 border border-white/20 text-white hover:bg-amber-400 hover:border-amber-400 hover:text-[#1A2B3C] hover:shadow-md focus:ring-amber-400`,
+    active: `bg-white/10 border border-white/20 text-white hover:bg-[#E52E2D] hover:border-[#E52E2D] hover:text-white hover:shadow-md focus:ring-[#E52E2D]`,
     inactive: `bg-white/5 border border-white/10 text-white/15 cursor-not-allowed`,
   };
 

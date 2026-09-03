@@ -1,153 +1,327 @@
-import Link from "next/link";
-import { ChevronRight, ArrowRight } from "lucide-react";
+"use client";
 
-interface AuthorItem {
-  name: string;
-  role: string;
-  initials: string;
+import Link from "next/link";
+import {
+  ArrowRight,
+  Award,
+  Tag,
+  BookOpen,
+  Truck,
+} from "lucide-react";
+
+import { SiteSettings } from "@/lib/api";
+
+interface HeroBannerProps {
+  settings?: SiteSettings | null;
+  featuredBook?: any;
 }
 
-const featuredAuthors: AuthorItem[] = [
-  { name: "M. Quraish Shihab", role: "Tafsir & Pemikiran", initials: "QS" },
-  { name: "Haidar Bagir", role: "Filsafat & Tasawuf", initials: "HB" },
-  { name: "Jalaluddin Rakhmat", role: "Komunikasi & Islam", initials: "JR" },
-  { name: "Buya Hamka", role: "Sastra & Sejarah", initials: "BH" },
-  { name: "Ibnu 'Arabi", role: "Spiritualitas Klasik", initials: "IA" },
-];
+/** Helper to format price as Rp135.150 */
+function formatDisplayPrice(price?: number | string | null): string {
+  if (!price && price !== 0) return "Rp135.150";
+  const num =
+    typeof price === "number"
+      ? price
+      : parseInt(String(price).replace(/[^\d]/g, ""), 10);
+  if (isNaN(num) || num <= 0) return "Rp135.150";
+  return `Rp${num.toLocaleString("id-ID")}`;
+}
 
-export default function HeroBanner() {
+/** Fallback parser if custom CMS headline is provided */
+function renderParsedHeadline(headlineText: string) {
+  if (!headlineText) return null;
+  const words = headlineText.trim().split(/\s+/);
+
+  if (words.length <= 1) {
+    return (
+      <span className="italic font-serif text-[#c12a26]">
+        {headlineText}
+      </span>
+    );
+  }
+
+  const bermaknaIndex = words.findIndex((w) =>
+    w.toLowerCase().includes("bermakna")
+  );
+  const highlightIndex = bermaknaIndex !== -1 ? bermaknaIndex : 1;
+
+  const before = words.slice(0, highlightIndex).join(" ");
+  const target = words[highlightIndex];
+  const after = words.slice(highlightIndex + 1).join(" ");
+
   return (
-    <section className="relative overflow-hidden bg-[#FAF8F3] pt-12 pb-16 lg:pt-16 lg:pb-20 border-b border-[#EAE5D9]">
+    <>
+      {before && <span className="block whitespace-nowrap">{before}</span>}
+      <span className="block">
+        <span className="italic font-serif text-[#c12a26]">{target}</span>
+      </span>
+      {after && <span className="block whitespace-nowrap">{after}</span>}
+    </>
+  );
+}
+
+export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) {
+  const headline = settings?.hero_headline || "Temukan Bacaan Bermakna untuk Jiwa";
+  const subheadline =
+    settings?.hero_subheadline ||
+    "Menghadirkan karya-karya pemikiran, spiritualitas, sejarah, dan literasi bermutu untuk mencerdaskan serta menutrisi kedalaman batin pembaca.";
+
+  // Book data for the Floating Card ('Pilihan Minggu Ini')
+  const cardBook =
+    featuredBook ||
+    settings?.featured_book || {
+      id: "c19f82ce-48ec-4b56-8af2-381c54134f61",
+      title: "Filsafat Literasi Islam",
+      author: "Prof. Dr. M. Quraish Shihab",
+      price: 135150,
+    };
+
+  const effectivePrice =
+    cardBook.is_promo && cardBook.promo_price
+      ? cardBook.promo_price
+      : cardBook.price || 135150;
+  const formattedPrice = formatDisplayPrice(effectivePrice);
+
+  const isDefaultHeadline =
+    headline.trim().toLowerCase() === "temukan bacaan bermakna untuk jiwa";
+
+  return (
+    <section className="relative overflow-hidden bg-white pt-12 pb-16 lg:pt-16 lg:pb-20 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-center">
           
-          {/* Left Column: Massive Serif Headline & Primary CTA */}
-          <div className="lg:col-span-6 space-y-6 text-left">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#F1E8D8] border border-[#EAE5D9]">
-              <span className="w-2 h-2 rounded-full bg-[#B67A2D]" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#8D5D20]">
-                Pustaka Iman — Paper Haven
-              </span>
+          {/* Left Column: 3-Line Headline, CTAs, Categories */}
+          <div className="lg:col-span-6 xl:col-span-6 space-y-6 text-left w-full min-w-0 z-10">
+            {/* Top Badge: Solid Red Pill */}
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#E52E2D] text-white text-xs font-semibold shadow-sm">
+              <span>★</span>
+              <span>PILIHAN UNTUKMU</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-serif leading-tight text-[#272522] tracking-tight">
-              Temukan Bacaan <br className="hidden sm:inline" />
-              <span className="italic font-normal text-[#B67A2D]">Bermakna</span> untuk Jiwa
+            {/* 1. Three-Line Headline Structure (Tepat 3 Baris) */}
+            <h1 className="text-4xl sm:text-5xl lg:text-[54px] xl:text-[62px] font-serif font-bold tracking-tight leading-[1.2] lg:leading-[1.22] text-[#272522]">
+              {isDefaultHeadline ? (
+                <>
+                  <span className="block whitespace-nowrap">Temukan Bacaan</span>
+                  <span className="block">
+                    <span className="italic font-serif text-[#c12a26] inline-block py-1">Bermakna</span>
+                  </span>
+                  <span className="block whitespace-nowrap">untuk Jiwa</span>
+                </>
+              ) : (
+                renderParsedHeadline(headline)
+              )}
             </h1>
 
-            <p className="text-base md:text-lg text-[#76716A] leading-relaxed max-w-xl font-sans">
-              Menghadirkan karya-karya pemikiran, spiritualitas, sejarah, dan literasi bermutu 
-              untuk mencerdaskan serta menutrisi kedalaman batin pembaca.
+            {/* Subtext Paragraph: Protected width to guarantee breathing room */}
+            <p className="text-base md:text-lg text-[#76716A] leading-relaxed max-w-md lg:max-w-lg font-sans">
+              {subheadline}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+            {/* Action Buttons (CTA) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-1">
               <Link
                 href="/katalog"
-                className="inline-flex items-center justify-center gap-2 bg-[#B67A2D] hover:bg-[#8D5D20] text-white px-8 py-3.5 rounded-md font-medium transition-all shadow-sm text-sm uppercase tracking-wider"
+                className="bg-[#E52E2D] hover:bg-[#c92423] text-white font-bold px-7 py-3.5 rounded-xl shadow-md uppercase text-sm tracking-wide inline-flex items-center justify-center gap-2 transition-all active:scale-98"
               >
-                <span>Jelajahi Katalog</span>
-                <ArrowRight size={16} />
+                <span>JELAJAHI KOLEKSI</span>
+                <ArrowRight size={17} strokeWidth={2.5} />
               </Link>
               <Link
-                href="/kirim-naskah"
-                className="inline-flex items-center justify-center bg-white hover:bg-[#F1E8D8] text-[#272522] px-6 py-3.5 rounded-md font-medium border border-[#EAE5D9] transition-all text-sm uppercase tracking-wider"
+                href="/katalog?filter=buku-baru"
+                className="bg-white border-2 border-[#E52E2D] text-[#E52E2D] hover:bg-red-50 font-bold px-7 py-3.5 rounded-xl uppercase text-sm tracking-wide inline-flex items-center justify-center transition-all active:scale-98"
               >
-                Kirim Naskah
+                BUKU TERBARU
+              </Link>
+            </div>
+
+            {/* Quick Category Pills */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-2">
+              <Link
+                href="/katalog?category=Fiksi+-+Romansa"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-rose-50 text-rose-800 border border-rose-100 hover:bg-rose-100 transition-colors shadow-2xs"
+              >
+                <span>❤️</span>
+                <span>Romansa</span>
+              </Link>
+              <Link
+                href="/katalog?category=Agama+%26+Filsafat+-+Agama+Islam"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-100 hover:bg-amber-100 transition-colors shadow-2xs"
+              >
+                <span>📖</span>
+                <span>Agama & Filsafat</span>
+              </Link>
+              <Link
+                href="/katalog?category=Buku+Anak+-+Cerita+Anak"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-cyan-50 text-cyan-800 border border-cyan-100 hover:bg-cyan-100 transition-colors shadow-2xs"
+              >
+                <span>🧒</span>
+                <span>Buku Anak</span>
               </Link>
             </div>
           </div>
 
-          {/* Right Column: Staggered Display of 3 Book Covers in Arch-Shaped Backgrounds */}
-          <div className="lg:col-span-6 flex justify-center items-center py-6">
-            <div className="relative flex items-center justify-center gap-4 sm:gap-6 w-full max-w-lg">
+          {/* Right Column: Enlarged Visual & Positioned Card */}
+          <div className="lg:col-span-6 xl:col-span-6 relative flex justify-center lg:justify-end items-center py-4">
+            <div className="relative w-full max-w-[800px] lg:max-w-[880px] flex items-center justify-center translate-x-0 lg:translate-x-2 xl:translate-x-3">
               
-              {/* Arch 1 (Left / Back Staggered) */}
-              <div className="w-1/3 rounded-t-full rounded-b-xl bg-[#F1E8D8] p-3 sm:p-4 shadow-sm border border-[#EAE5D9] transform -rotate-6 translate-y-6 hover:rotate-0 hover:translate-y-2 transition-all duration-300">
-                <div className="bg-white rounded-t-full rounded-b-lg p-2.5 sm:p-3 border border-[#EAE5D9] flex flex-col items-center text-center space-y-3">
-                  <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#8D5D20] to-[#B67A2D] flex items-center justify-center text-white font-serif font-bold text-xl shadow-sm">
-                    PI
+              {/* Clean Illustration: Enlarged (scale-125 lg:scale-130) shifted left slightly */}
+              {settings?.hero_banner_url ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={settings.hero_banner_url}
+                  alt={headline}
+                  className="w-full h-auto object-contain scale-140 lg:scale-145 origin-center transition-transform duration-300"
+                />
+              ) : (
+                <div className="relative flex items-center justify-center gap-4 sm:gap-6 w-full max-w-lg scale-105 lg:scale-110">
+                  {/* Fallback Arch 1 */}
+                  <div className="w-1/3 rounded-t-full rounded-b-xl bg-gray-50 p-3 sm:p-4 border border-gray-100 transform -rotate-6 translate-y-6">
+                    <div className="bg-white rounded-t-full rounded-b-lg p-2.5 sm:p-3 border border-gray-100 flex flex-col items-center text-center space-y-3">
+                      <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#C12A26] to-[#E52E2D] flex items-center justify-center text-white font-serif font-bold text-xl">
+                        PI
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold uppercase text-[#E52E2D] tracking-wider block">
+                          Tasawuf
+                        </span>
+                        <h4 className="font-serif text-xs font-bold text-[#272522] line-clamp-1">
+                          Lentera Hati
+                        </h4>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-semibold uppercase text-[#B67A2D] tracking-wider block">
-                      Tasawuf
-                    </span>
-                    <h4 className="font-serif text-xs font-bold text-[#272522] line-clamp-1">
-                      Lentera Hati
-                    </h4>
-                  </div>
-                </div>
-              </div>
 
-              {/* Arch 2 (Center / Main Featured Arch) */}
-              <div className="w-1/3 rounded-t-full rounded-b-xl bg-[#F1E8D8] p-4 sm:p-5 shadow-md border border-[#EAE5D9] z-10 transform -translate-y-2 hover:scale-105 transition-transform duration-300">
-                <div className="bg-white rounded-t-full rounded-b-lg p-3 sm:p-4 border border-[#EAE5D9] flex flex-col items-center text-center space-y-3">
-                  <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#272522] to-[#B67A2D] flex flex-center items-center justify-center text-white font-serif font-bold text-2xl shadow-md">
-                    PI
+                  {/* Fallback Arch 2 */}
+                  <div className="w-1/3 rounded-t-full rounded-b-xl bg-gray-50 p-4 sm:p-5 border border-gray-100 z-10 transform -translate-y-2">
+                    <div className="bg-white rounded-t-full rounded-b-lg p-3 sm:p-4 border border-gray-100 flex flex-col items-center text-center space-y-3">
+                      <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#272522] to-[#E52E2D] flex flex-center items-center justify-center text-white font-serif font-bold text-2xl">
+                        PI
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold uppercase text-[#E52E2D] tracking-widest block">
+                          Pilihan Editor
+                        </span>
+                        <h4 className="font-serif text-sm font-bold text-[#272522] line-clamp-1">
+                          Kedalaman Hikmah
+                        </h4>
+                        <p className="text-[10px] text-[#76716A] line-clamp-1">
+                          M. Quraish Shihab
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-semibold uppercase text-[#B67A2D] tracking-widest block">
-                      Pilihan Editor
-                    </span>
-                    <h4 className="font-serif text-sm font-bold text-[#272522] line-clamp-1">
-                      Kedalaman Hikmah
-                    </h4>
-                    <p className="text-[10px] text-[#76716A] line-clamp-1">M. Quraish Shihab</p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Arch 3 (Right / Back Staggered) */}
-              <div className="w-1/3 rounded-t-full rounded-b-xl bg-[#F1E8D8] p-3 sm:p-4 shadow-sm border border-[#EAE5D9] transform rotate-6 translate-y-6 hover:rotate-0 hover:translate-y-2 transition-all duration-300">
-                <div className="bg-white rounded-t-full rounded-b-lg p-2.5 sm:p-3 border border-[#EAE5D9] flex flex-col items-center text-center space-y-3">
-                  <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#76716A] to-[#8D5D20] flex items-center justify-center text-white font-serif font-bold text-xl shadow-sm">
-                    PI
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-semibold uppercase text-[#B67A2D] tracking-wider block">
-                      Filsafat
-                    </span>
-                    <h4 className="font-serif text-xs font-bold text-[#272522] line-clamp-1">
-                      Cinta & Akal
-                    </h4>
+                  {/* Fallback Arch 3 */}
+                  <div className="w-1/3 rounded-t-full rounded-b-xl bg-gray-50 p-3 sm:p-4 border border-gray-100 transform rotate-6 translate-y-6">
+                    <div className="bg-white rounded-t-full rounded-b-lg p-2.5 sm:p-3 border border-gray-100 flex flex-col items-center text-center space-y-3">
+                      <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#76716A] to-[#C12A26] flex items-center justify-center text-white font-serif font-bold text-xl">
+                        PI
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold uppercase text-[#E52E2D] tracking-wider block">
+                          Filsafat
+                        </span>
+                        <h4 className="font-serif text-xs font-bold text-[#272522] line-clamp-1">
+                          Cinta & Akal
+                        </h4>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* 3. Floating Price Badge ('Pilihan Minggu Ini'): Lowered to -bottom-8 lg:-bottom-10 */}
+              {cardBook && (
+                <Link
+                  href={`/katalog/${cardBook.id}`}
+                  className="absolute -bottom-8 lg:-bottom-10 right-2 sm:right-6 lg:right-4 xl:right-6 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xl max-w-[240px] sm:max-w-[260px] text-left hover:scale-105 transition-all duration-300 group block"
+                >
+                  <span className="text-[10px] font-bold uppercase text-[#E52E2D] tracking-wider block mb-1">
+                    ★ PILIHAN MINGGU INI
+                  </span>
+                  <h4 className="font-serif font-bold text-sm sm:text-base text-[#272522] line-clamp-1 group-hover:text-[#E52E2D] transition-colors">
+                    {cardBook.title}
+                  </h4>
+                  <p className="text-xs text-[#76716A] line-clamp-1 mb-2">
+                    {cardBook.author}
+                  </p>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <span className="text-xs text-[#76716A] font-semibold flex items-center gap-1">
+                      <span className="text-amber-500">★</span> 4.9
+                    </span>
+                    <span className="text-xl font-black text-[#E52E2D] tracking-tight">
+                      {formattedPrice}
+                    </span>
+                  </div>
+                </Link>
+              )}
 
             </div>
           </div>
 
         </div>
 
-        {/* Bottom Strip: Horizontal Scrolling / Flex Row Showing Featured Authors */}
-        <div className="mt-14 pt-8 border-t border-[#EAE5D9]">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs uppercase tracking-widest font-semibold text-[#B67A2D]">
-              Penulis Utama Pustaka Iman
-            </span>
-            <span className="text-xs text-[#76716A] font-medium hidden sm:inline">
-              Tokoh & Pemikir Karismatik
-            </span>
+        {/* Colorful 3D-Style Feature Badges (Value Proposition Bar) */}
+        <div className="bg-gray-50/80 border border-gray-100 rounded-2xl p-6 sm:p-7 mx-auto mt-16 lg:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 shadow-xs">
+          {/* Item 1: BUKU PILIHAN */}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 border border-pink-200/80 text-pink-600 flex items-center justify-center shadow-xs shrink-0">
+              <Award size={28} strokeWidth={2.2} className="text-pink-600" />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold uppercase tracking-wide text-[#272522]">
+                BUKU PILIHAN
+              </h4>
+              <p className="text-xs text-[#76716A] mt-1 leading-relaxed">
+                Kurasi terbaik untuk bacaan bermakna.
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
-            {featuredAuthors.map((author) => (
-              <Link
-                key={author.name}
-                href={`/katalog?penulis=${encodeURIComponent(author.name)}`}
-                className="group flex items-center gap-3 px-4 py-2.5 bg-white rounded-full border border-[#EAE5D9] shadow-sm hover:border-[#B67A2D] hover:shadow transition-all shrink-0"
-              >
-                <div className="w-8 h-8 rounded-full bg-[#F1E8D8] border border-[#EAE5D9] flex items-center justify-center font-serif text-xs font-bold text-[#B67A2D] group-hover:bg-[#B67A2D] group-hover:text-white transition-colors">
-                  {author.initials}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-[#272522] group-hover:text-[#B67A2D] transition-colors leading-tight">
-                    {author.name}
-                  </span>
-                  <span className="text-[10px] text-[#76716A]">{author.role}</span>
-                </div>
-                <ChevronRight size={14} className="text-[#76716A] group-hover:translate-x-0.5 group-hover:text-[#B67A2D] transition-all ml-1" />
-              </Link>
-            ))}
+          {/* Item 2: PROMO MINGGUAN */}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200/80 text-amber-600 flex items-center justify-center shadow-xs shrink-0">
+              <Tag size={28} strokeWidth={2.2} className="text-amber-600" />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold uppercase tracking-wide text-[#272522]">
+                PROMO MINGGUAN
+              </h4>
+              <p className="text-xs text-[#76716A] mt-1 leading-relaxed">
+                Penawaran spesial minggu ini, jangan terlewat!
+              </p>
+            </div>
+          </div>
+
+          {/* Item 3: BERAGAM GENRE */}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 border border-teal-200/80 text-teal-600 flex items-center justify-center shadow-xs shrink-0">
+              <BookOpen size={28} strokeWidth={2.2} className="text-teal-600" />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold uppercase tracking-wide text-[#272522]">
+                BERAGAM GENRE
+              </h4>
+              <p className="text-xs text-[#76716A] mt-1 leading-relaxed">
+                Temukan bacaan dari berbagai genre favoritmu.
+              </p>
+            </div>
+          </div>
+
+          {/* Item 4: PENGIRIMAN NASIONAL */}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-100 to-red-100 border border-rose-200/80 text-rose-600 flex items-center justify-center shadow-xs shrink-0">
+              <Truck size={28} strokeWidth={2.2} className="text-rose-600" />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold uppercase tracking-wide text-[#272522]">
+                PENGIRIMAN NASIONAL
+              </h4>
+              <p className="text-xs text-[#76716A] mt-1 leading-relaxed">
+                Kirim ke seluruh Indonesia dengan aman & cepat.
+              </p>
+            </div>
           </div>
         </div>
 

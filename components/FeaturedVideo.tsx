@@ -12,17 +12,17 @@ export default function FeaturedVideo({
   videoUrl = "https://www.youtube.com/embed/t_cWQkwBDps?start=73",
 }: FeaturedVideoProps) {
   return (
-    <section className="w-full bg-[#F7F4E9] py-12 md:py-16 border-t border-[#EAE5D9]">
+    <section className="w-full bg-white py-12 md:py-16 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Centered Serif Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-bold text-[#D32F2F]">
+          <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider font-bold text-[#E52E2D]">
             <Play size={13} strokeWidth={2} fill="currentColor" />
             Media & Video
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#272522] tracking-tight">
-            {title}
+            Agenda & <span className="text-[#C12A26] italic font-serif">Liputan Visual</span>
           </h2>
           <p className="text-sm text-[#76716A]">
             {subtitle}
@@ -31,7 +31,7 @@ export default function FeaturedVideo({
 
         {/* Constrained Centered Container & Styled Responsive Iframe */}
         <div className="max-w-4xl mx-auto mt-8">
-          <div className="aspect-video w-full rounded-2xl shadow-lg border border-[#EAE5D9] overflow-hidden bg-black">
+          <div className="aspect-video w-full rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-black">
             <iframe
               className="w-full h-full"
               src={videoUrl}

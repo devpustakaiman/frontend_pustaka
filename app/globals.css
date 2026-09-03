@@ -2,19 +2,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAF8F3;
+  --background: #FFFFFF;
   --surface: #FFFFFF;
-  --text-primary: #272522;
-  --text-secondary: #76716A;
-  --border: #E7E1D8;
-  --accent: #B67A2D;
-  --accent-dark: #8D5D20;
-  --accent-soft: #F1E8D8;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --border: #E5E7EB;
+
+  /* Primary Vibrant Red Brand Palette */
+  --primary: #E52E2D;
+  --primary-hover: #C12A26;
+  --primary-light: #FEF2F2;
+  --primary-border: #FCA5A5;
+
+  /* Legacy Accent Aliases redirecting to red */
+  --accent: #E52E2D;
+  --accent-dark: #C12A26;
+  --accent-soft: #FEF2F2;
   color-scheme: light;
 }
 
 @theme inline {
-  --color-pustaka-red: #D32F2F;
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-border: var(--primary-border);
+  --color-pustaka-red: #E52E2D;
   --color-pustaka-green: #388E3C;
   --color-pustaka-black: #1A1A1A;
   --color-background: var(--background);
@@ -22,22 +34,22 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-border-custom: var(--border);
-  --color-accent: var(--accent);
-  --color-accent-dark: var(--accent-dark);
-  --color-accent-soft: var(--accent-soft);
+  --color-accent: #E52E2D;
+  --color-accent-dark: #C12A26;
+  --color-accent-soft: #FEF2F2;
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-serif: "DM Serif Display", Georgia, serif;
 }
 
 html {
-  background-color: #FAF8F3;
-  color: #272522;
+  background-color: #FFFFFF;
+  color: #111827;
   color-scheme: light;
 }
 
 body {
-  background-color: #FAF8F3 !important;
-  color: #272522 !important;
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
   font-family: var(--font-sans);
   margin: 0;
 }
@@ -46,6 +58,7 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

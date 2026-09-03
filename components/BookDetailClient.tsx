@@ -39,28 +39,28 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
   }
 
   return (
-    <div className="bg-[#FAF8F3] min-h-screen py-10 text-[#272522]">
+    <div className="bg-white min-h-screen py-10 text-[#272522]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         
         {/* Back Navigation */}
         <div>
           <Link
             href="/katalog"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#272522] bg-white border border-[#EAE5D9] rounded-full hover:bg-white/80 hover:border-[#B67A2D]/40 shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#272522] bg-white border border-gray-200 rounded-full hover:bg-white hover:border-[#E52E2D] hover:text-[#E52E2D] shadow-2xs transition-all duration-200"
           >
-            <ArrowLeft size={16} strokeWidth={1.5} />
+            <ArrowLeft size={16} strokeWidth={2} />
             <span>Kembali ke Katalog</span>
           </Link>
         </div>
 
         {/* Top Section: 2 Columns Above the Fold */}
-        <div className="bg-white border border-[#EAE5D9] rounded-2xl p-6 sm:p-10 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-10 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-10 items-start">
             
             {/* Left Column: Book Cover + Multi-Image Gallery */}
             <div className="md:col-span-5 space-y-4">
               {/* Main Active Cover Image */}
-              <div className="w-full aspect-[3/4] bg-[#F1E8D8] rounded-xl border border-[#EAE5D9] overflow-hidden shadow flex items-center justify-center relative group">
+              <div className="w-full aspect-[3/4] bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden shadow flex items-center justify-center relative group">
                 {activeImage ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
@@ -75,7 +75,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                 )}
                 {hasActivePromo && (
                   <div className="absolute top-3 right-3">
-                    <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+                    <span className="inline-flex items-center gap-1.5 bg-[#E52E2D] text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
                       <Tag size={13} />
                       <span>PROMO</span>
                       {discountPct && <span>-{discountPct}%</span>}
@@ -86,7 +86,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
 
               {/* Multi-Image Gallery UI (4 Thumbnails) */}
               <div>
-                <p className="text-[11px] font-semibold text-[#76716A] uppercase tracking-wider mb-2">
+                <p className="text-[11px] font-bold text-[#76716A] uppercase tracking-wider mb-2">
                   Galeri Sampul & Detail
                 </p>
                 <div className="flex items-center gap-3 overflow-x-auto pb-1">
@@ -97,10 +97,10 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                         key={idx}
                         onClick={() => setActiveImage(img)}
                         type="button"
-                        className={`flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                        className={`flex-shrink-0 w-16 h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
                           isSelected
-                            ? "border-[#D32F2F] ring-2 ring-[#D32F2F]/20 shadow-md scale-105"
-                            : "border-[#EAE5D9] hover:border-[#B67A2D]/60 opacity-80 hover:opacity-100"
+                            ? "border-[#E52E2D] ring-2 ring-red-100 shadow-md scale-105"
+                            : "border-gray-200 hover:border-[#E52E2D]/60 opacity-80 hover:opacity-100"
                         }`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -119,7 +119,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
             {/* Right Column: Book Details & Prominent Pricing / CTA */}
             <div className="md:col-span-7 flex flex-col justify-between space-y-6">
               <div className="space-y-3">
-                <span className="inline-block px-3 py-1 bg-[#FAF8F3] border border-[#EAE5D9] text-xs font-bold text-[#D32F2F] rounded-md uppercase tracking-wider">
+                <span className="inline-block px-3 py-1 bg-red-50 border border-red-200/60 text-xs font-bold text-[#E52E2D] rounded-full uppercase tracking-wider">
                   {book.category || "Literasi Utama"}
                 </span>
 
@@ -133,14 +133,14 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
               </div>
 
               {/* Price & CTA Section (Instant Visibility Above Fold) */}
-              <div className="bg-[#FAF8F3] border border-[#EAE5D9] rounded-xl p-5 space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
                 
                 {/* FOMO Countdown Banner if Promo Active */}
                 {hasActivePromo && (
-                  <div className="bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-300/80 rounded-lg p-3 flex items-center gap-2.5 text-orange-900 text-xs sm:text-sm font-semibold shadow-xs">
+                  <div className="bg-red-50/80 border border-red-200/70 rounded-xl p-3 flex items-center gap-2.5 text-red-950 text-xs sm:text-sm font-semibold shadow-2xs">
                     <span className="text-lg animate-bounce">🔥</span>
                     <div className="flex items-center gap-1.5">
-                      <Clock size={16} className="text-orange-600 flex-shrink-0" />
+                      <Clock size={16} className="text-[#E52E2D] flex-shrink-0" />
                       <span>
                         {daysRemaining > 1
                           ? `Promo berakhir dalam ${daysRemaining} hari`
@@ -158,20 +158,20 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                   
                   {hasActivePromo ? (
                     <div className="flex items-baseline flex-wrap gap-2.5">
-                      <span className="text-3xl sm:text-4xl font-black text-[#D32F2F]">
+                      <span className="text-3xl sm:text-4xl font-black text-[#E52E2D]">
                         {formattedPromoPrice}
                       </span>
                       <span className="line-through text-gray-400 text-lg font-normal">
                         {formattedOriginalPrice}
                       </span>
                       {discountPct && (
-                        <span className="bg-red-600 text-white font-extrabold text-xs px-2.5 py-1 rounded-full shadow-sm">
+                        <span className="bg-[#E52E2D] text-white font-extrabold text-xs px-2.5 py-1 rounded-full shadow-sm">
                           -{discountPct}%
                         </span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-3xl font-black text-[#D32F2F]">
+                    <span className="text-3xl font-black text-[#E52E2D]">
                       {formattedOriginalPrice}
                     </span>
                   )}
@@ -188,10 +188,10 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                     href={mizanUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-6 py-3.5 bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-wider text-center"
+                    className="flex-1 px-6 py-4 bg-[#E52E2D] hover:bg-[#C12A26] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-wider text-center"
                   >
                     <span>Beli di Mizanstore</span>
-                    <ExternalLink size={16} strokeWidth={1.5} />
+                    <ExternalLink size={16} strokeWidth={2} />
                   </a>
 
                   {pdfUrl && (
@@ -199,9 +199,9 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                       href={pdfUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-5 py-3.5 bg-white hover:bg-gray-50 border border-[#EAE5D9] text-[#272522] font-semibold rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm text-center"
+                      className="px-5 py-4 bg-white hover:bg-red-50 border border-[#E52E2D] text-[#E52E2D] font-bold rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm text-center"
                     >
-                      <BookOpen size={16} strokeWidth={1.5} className="text-[#B67A2D]" />
+                      <BookOpen size={16} strokeWidth={2} className="text-[#E52E2D]" />
                       <span>Pratinjau Bab 1</span>
                     </a>
                   )}
@@ -210,7 +210,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
 
               {/* Synopsis Section with Toggle */}
               {book.synopsis && (
-                <div className="border-t border-[#EAE5D9] pt-5 space-y-3">
+                <div className="border-t border-gray-200 pt-5 space-y-3">
                   <h2 className="font-serif text-xl font-bold text-[#272522]">Sinopsis Buku</h2>
                   <div className="relative">
                     <p
@@ -224,7 +224,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                   <button
                     onClick={() => setIsSynopsisExpanded(!isSynopsisExpanded)}
                     type="button"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#D32F2F] hover:underline focus:outline-none pt-1"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E52E2D] hover:underline focus:outline-none pt-1"
                   >
                     <span>{isSynopsisExpanded ? "Tutup" : "Lihat Selengkapnya"}</span>
                     {isSynopsisExpanded ? (
@@ -241,13 +241,16 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
 
         {/* Related Books Section ('Buku Terkait') */}
         <div className="space-y-6 pt-4">
-          <div className="border-b border-[#EAE5D9] pb-4 flex items-center justify-between">
-            <h2 className="font-serif text-2xl font-bold text-[#272522]">Buku Terkait</h2>
+          <div className="border-b border-gray-200 pb-4 flex items-center justify-between">
+            <h2 className="font-serif text-2xl font-bold text-[#272522]">
+              Buku <span className="text-[#C12A26] italic font-serif">Terkait</span>
+            </h2>
             <Link
               href="/katalog"
-              className="text-xs font-bold text-[#D32F2F] hover:underline"
+              className="text-xs font-bold text-[#E52E2D] hover:underline flex items-center gap-1"
             >
-              Lihat Seluruh Katalog &rarr;
+              <span>Lihat Seluruh Katalog</span>
+              <span>&rarr;</span>
             </Link>
           </div>
 
@@ -258,4 +261,3 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
     </div>
   );
 }
-
