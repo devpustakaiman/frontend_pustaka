@@ -63,8 +63,6 @@ export async function getNewBooks() {
   return data || [];
 }
 
-
-
 export async function getBookById(id: string) {
   if (!id) return null;
 
@@ -116,6 +114,17 @@ export async function getBookById(id: string) {
   }
 }
 
+export interface Article {
+  id: string | number;
+  title: string;
+  date?: string;
+  created_at?: string;
+  content?: string;
+  summary?: string;
+  imageUrl?: string;
+  image_url?: string;
+  category?: string;
+}
 
 export async function getArticles() {
   const { data, error } = await supabase
@@ -128,7 +137,7 @@ export async function getArticles() {
     return [];
   }
 
-  return data || [];
+  return (data as Article[]) || [];
 }
 
 export async function getArticleById(id: string) {
@@ -153,6 +162,42 @@ export async function getArticleById(id: string) {
   }
 }
 
+export interface MediaVideo {
+  id: string | number;
+  title: string;
+  category?: string;
+  duration?: string;
+  video_url?: string;
+  youtube_url?: string;
+  thumbnail_url?: string;
+  image_url?: string;
+  is_featured?: boolean;
+  order_index?: number;
+  speaker_name?: string;
+  speaker_role?: string;
+  description?: string;
+  created_at?: string;
+}
+
+export async function getMediaVideos(): Promise<MediaVideo[]> {
+  try {
+    const { data, error } = await supabase
+      .from("media_videos")
+      .select("*")
+      .is("deleted_at", null)
+      .order("order_index", { ascending: true });
+
+    if (error) {
+      console.warn("Could not fetch media_videos from Supabase:", error.message);
+      return [];
+    }
+
+    return (data as MediaVideo[]) || [];
+  } catch (err) {
+    console.warn("Exception in getMediaVideos:", err);
+    return [];
+  }
+}
 
 export async function submitManuscript(
   formData: { senderName: string; email: string; synopsis: string },
@@ -234,5 +279,3 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
     return null;
   }
 }
-
-

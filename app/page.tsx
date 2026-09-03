@@ -3,17 +3,24 @@ import PromoSection from "@/components/PromoSection";
 import RecommendedSection from "@/components/RecommendedSection";
 import RecentlyAddedSection from "@/components/RecentlyAddedSection";
 import CategorySection from "@/components/CategorySection";
-import FeaturedVideo from "@/components/FeaturedVideo";
-import NewsGrid from "@/components/NewsGrid";
-import { getPromoBooks, getRecommendedBooks, getNewBooks, getArticles, getSiteSettings } from "@/lib/api";
+import WartaSection from "@/components/WartaSection";
+import {
+  getPromoBooks,
+  getRecommendedBooks,
+  getNewBooks,
+  getArticles,
+  getMediaVideos,
+  getSiteSettings,
+} from "@/lib/api";
 
 export default async function Home() {
   // Fetch real backend data from Supabase
-  const [promoBooks, recommendedBooks, newBooks, articles, settings] = await Promise.all([
+  const [promoBooks, recommendedBooks, newBooks, articles, videos, settings] = await Promise.all([
     getPromoBooks(),
     getRecommendedBooks(),
     getNewBooks(),
     getArticles(),
+    getMediaVideos(),
     getSiteSettings(),
   ]);
 
@@ -46,11 +53,9 @@ export default async function Home() {
 
       {/* Secondary Sections */}
       <CategorySection />
-      <FeaturedVideo />
-      <NewsGrid articles={articles.slice(0, 3)} />
+      
+      {/* 5. Warta & Media Preview Section */}
+      <WartaSection articles={articles} videos={videos} />
     </main>
   );
 }
-
-
-

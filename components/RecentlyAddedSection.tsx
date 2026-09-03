@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Sparkle, ChevronRight, ChevronLeft, Clock } from "lucide-react";
 import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
-import { usePromoTimer } from "@/lib/promoTimer";
+import { useCountdown } from "@/hooks/useCountdown";
 import { useScrollCarousel } from "./ScrollCarousel";
 
 interface RecentlyAddedSectionProps {
@@ -90,14 +90,16 @@ export default function RecentlyAddedSection({ books = [] }: RecentlyAddedSectio
 /** Individual New Arrival Card with Red Brand Palette */
 function NewArrivalCard({ book, idx }: { book: Book; idx: number }) {
   const isPromo = isActivePromo(book);
-  const timer = usePromoTimer(book.created_at, book.promo_end_date);
+  const countdown = useCountdown();
   const formattedOrig = formatBookPrice(book.price);
   const formattedPromo = formatBookPrice(book.promo_price);
   const isEven = idx % 2 === 0;
 
+  const numPrice = Number(book.price) || 0;
+  const numPromo = Number(book.promo_price) || 0;
   let discountPct = book.promo_percentage || 15;
-  if (!book.promo_percentage && isPromo && typeof book.price === "number" && typeof book.promo_price === "number" && book.price > 0) {
-    discountPct = Math.round(((book.price - book.promo_price) / book.price) * 100);
+  if (!book.promo_percentage && isPromo && numPrice > 0 && numPromo > 0) {
+    discountPct = Math.round(((numPrice - numPromo) / numPrice) * 100);
   }
 
   const coverImage =
@@ -167,18 +169,17 @@ function NewArrivalCard({ book, idx }: { book: Book; idx: number }) {
                 {formattedOrig}
               </span>
 
-              {/* Compact Countdown Bar */}
+              {/* Compact Synchronized Countdown Bar */}
               <div className="mt-1.5 bg-red-50/70 border border-red-100 rounded-lg p-2">
                 <div className="flex items-center justify-between text-[9px] font-bold text-gray-700">
                   <span className="flex items-center gap-1 truncate" suppressHydrationWarning>
                     <Clock size={11} className="text-[#E52E2D] shrink-0" />
-                    <span>{timer.formattedText}</span>
+                    <span>{countdown.formatted || "Promo Berakhir"}</span>
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-amber-100 rounded-full overflow-hidden mt-2">
                   <div
-                    className="bg-[#E52E2D] h-full rounded-full transition-all duration-500"
-                    style={{ width: `${timer.progressPercent}%` }}
+                    className="bg-[#E52E2D] h-full rounded-full transition-all duration-500 w-[65%]"
                   />
                 </div>
               </div>

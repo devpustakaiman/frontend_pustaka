@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, BookOpen, Clock, Tag } from "lucide-react";
 import BookGrid from "./BookGrid";
@@ -12,20 +12,36 @@ interface BookDetailClientProps {
 }
 
 export default function BookDetailClient({ book, relatedBooks = [] }: BookDetailClientProps) {
-  const mainCover = book.coverUrl || book.cover_url || "";
+  const mainCover = book.cover_url || book.coverUrl || "/placeholder-book.png";
   const pdfUrl = book.pdfPreviewUrl || book.pdf_preview_url;
   const mizanUrl = book.mizanstoreUrl || book.mizanstore_url || "https://www.mizanstore.com";
 
-  // Gallery state
-  const galleryImages = [
-    mainCover,
-    mainCover,
-    mainCover,
-    mainCover,
-  ];
+  // Support all possible gallery column names from Supabase
+  const rawGallery = Array.isArray(book.gallery_urls) && book.gallery_urls.length > 0
+    ? book.gallery_urls
+    : Array.isArray(book.gallery_images) && book.gallery_images.length > 0
+    ? book.gallery_images
+    : Array.isArray(book.galleryUrls) && book.galleryUrls.length > 0
+    ? book.galleryUrls
+    : Array.isArray(book.galleryImages) && book.galleryImages.length > 0
+    ? book.galleryImages
+    : [book.gallery_url_1, book.gallery_url_2, book.gallery_url_3, book.gallery_url_4].filter(
+        (url): url is string => typeof url === "string" && url.trim().length > 0
+      );
+
+  // Combine cover and gallery items, filter nulls/empties, and remove duplicates
+  const allImages = Array.from(
+    new Set([mainCover, ...rawGallery].filter((img): img is string => typeof img === "string" && img.trim().length > 0))
+  );
 
   const [activeImage, setActiveImage] = useState<string>(mainCover);
   const [isSynopsisExpanded, setIsSynopsisExpanded] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (mainCover) {
+      setActiveImage(mainCover);
+    }
+  }, [book, mainCover]);
 
   // Active promo calculations
   const hasActivePromo = isActivePromo(book);
@@ -59,14 +75,14 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
             
             {/* Left Column: Book Cover + Multi-Image Gallery */}
             <div className="md:col-span-5 space-y-4">
-              {/* Main Active Cover Image */}
-              <div className="w-full aspect-[3/4] bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden shadow flex items-center justify-center relative group">
+              {/* Main Active Cover Image Showcase */}
+              <div className="relative w-full aspect-[3/4] max-w-[340px] mx-auto rounded-3xl overflow-hidden shadow-xl bg-gray-50 flex items-center justify-center p-4">
                 {activeImage ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={activeImage}
                     alt={book.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-contain drop-shadow-md transition-all duration-300"
                   />
                 ) : (
                   <div className="p-6 text-center text-[#76716A] text-sm font-semibold">
@@ -74,7 +90,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                   </div>
                 )}
                 {hasActivePromo && (
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3 z-10">
                     <span className="inline-flex items-center gap-1.5 bg-[#E52E2D] text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
                       <Tag size={13} />
                       <span>PROMO</span>
@@ -84,36 +100,35 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                 )}
               </div>
 
-              {/* Multi-Image Gallery UI (4 Thumbnails) */}
-              <div>
-                <p className="text-[11px] font-bold text-[#76716A] uppercase tracking-wider mb-2">
-                  Galeri Sampul & Detail
-                </p>
-                <div className="flex items-center gap-3 overflow-x-auto pb-1">
-                  {galleryImages.map((img, idx) => {
-                    const isSelected = activeImage === img && idx === 0;
-                    return (
+              {/* Multi-Image Gallery Thumbnail Strip */}
+              {allImages.length > 1 && (
+                <div className="mt-4">
+                  <p className="text-[11px] font-bold text-[#76716A] uppercase tracking-wider mb-2">
+                    PRATINJAU SAMPUL & DETAIL GALERI
+                  </p>
+                  <div className="flex items-center gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {allImages.map((imgUrl, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setActiveImage(img)}
                         type="button"
-                        className={`flex-shrink-0 w-16 h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
-                          isSelected
-                            ? "border-[#E52E2D] ring-2 ring-red-100 shadow-md scale-105"
-                            : "border-gray-200 hover:border-[#E52E2D]/60 opacity-80 hover:opacity-100"
+                        onClick={() => setActiveImage(imgUrl)}
+                        className={`relative w-16 h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 flex-shrink-0 bg-gray-50 cursor-pointer ${
+                          activeImage === imgUrl
+                            ? "border-[#E52E2D] ring-2 ring-red-200 shadow-sm scale-105"
+                            : "border-gray-200 hover:border-gray-400 opacity-70 hover:opacity-100"
                         }`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={img}
-                          alt={`${book.title} view ${idx + 1}`}
-                          className="w-full h-full object-cover"
+                          src={imgUrl}
+                          alt={`${book.title} preview ${idx + 1}`}
+                          className="w-full h-full object-contain p-1"
                         />
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right Column: Book Details & Prominent Pricing / CTA */}
