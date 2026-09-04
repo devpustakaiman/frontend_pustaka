@@ -267,8 +267,8 @@ export default function Navbar() {
           <Image
             src="/logo500x200_1.png"
             alt="PUSTAKA IMaN"
-            width={160}
-            height={44}
+            width={500}
+            height={200}
             priority
             className="h-9 sm:h-10 lg:h-11 w-auto object-contain transition-transform group-hover:scale-105"
           />

@@ -15,8 +15,8 @@ export default function Footer() {
                 <Image
                   src="/logo500x200_1.png"
                   alt="PUSTAKA IMaN"
-                  width={140}
-                  height={36}
+                  width={500}
+                  height={200}
                   loading="lazy"
                   className="h-9 w-auto object-contain"
                 />
