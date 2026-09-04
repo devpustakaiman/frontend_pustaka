@@ -376,10 +376,9 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
             </span>
             <span className="text-[#E53935] font-semibold text-[10px]">Stok Terbatas</span>
           </div>
-          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
             <div
-              className="bg-[#E53935] h-full rounded-full transition-all duration-500"
-              style={{ width: countdown.hasMounted ? `${countdown.progressPercent || 45}%` : '0%' }}
+              className="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full w-full"
             />
           </div>
         </div>
@@ -459,13 +458,20 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
               <span>{countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}</span>
             </span>
           </div>
+
+          {/* Stock Urgency Progress Bar */}
+          <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 mb-3 overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full w-full" 
+            />
+          </div>
         </div>
       </div>
 
       {/* Buy Button */}
       <Link
         href={`/katalog/${book.id}`}
-        className="w-full bg-[#E53935] hover:bg-red-700 text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1 mt-2.5 transition-colors shadow-2xs cursor-pointer"
+        className="w-full bg-[#E53935] hover:bg-red-700 text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1 transition-colors shadow-2xs cursor-pointer"
       >
         <ShoppingCart size={13} />
         <span>Beli Sekarang</span>
