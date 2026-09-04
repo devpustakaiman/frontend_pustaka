@@ -23,16 +23,25 @@ import { supabase } from "@/lib/supabase";
 import { submitPreorder } from "@/lib/api";
 import { Book, formatBookPrice } from "@/lib/utils";
 
-const BANK_ACCOUNTS = [
+interface BankAccount {
+  bank_name?: string;
+  bankName?: string;
+  account_number?: string;
+  accountNumber?: string;
+  account_holder?: string;
+  accountHolder?: string;
+}
+
+const DEFAULT_BANK_ACCOUNTS: BankAccount[] = [
   {
-    bankName: "BCA (Bank Central Asia)",
-    accountNumber: "8830918237",
-    accountHolder: "PT Pustaka Iman Utama",
+    bank_name: "BCA (Bank Central Asia)",
+    account_number: "8830918237",
+    account_holder: "PT Pustaka Iman Utama",
   },
   {
-    bankName: "Bank Mandiri",
-    accountNumber: "1270098765432",
-    accountHolder: "PT Pustaka Iman Utama",
+    bank_name: "Bank Mandiri",
+    account_number: "1270098765432",
+    account_holder: "PT Pustaka Iman Utama",
   },
 ];
 
@@ -56,6 +65,10 @@ export default function PreOrderPage() {
   const [availableBooks, setAvailableBooks] = useState<Book[]>([]);
   const [isLoadingBooks, setIsLoadingBooks] = useState(true);
 
+  // Dynamic Bank Accounts State
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(DEFAULT_BANK_ACCOUNTS);
+  const [isLoadingBankAccounts, setIsLoadingBankAccounts] = useState(true);
+
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -64,6 +77,28 @@ export default function PreOrderPage() {
 
   // Copy Feedback State
   const [copiedBankIndex, setCopiedBankIndex] = useState<number | null>(null);
+
+  // Fetch dynamic bank accounts from Supabase site_settings
+  useEffect(() => {
+    async function fetchBankAccounts() {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("bank_accounts")
+          .eq("id", "default")
+          .maybeSingle();
+
+        if (!error && data && Array.isArray(data.bank_accounts) && data.bank_accounts.length > 0) {
+          setBankAccounts(data.bank_accounts);
+        }
+      } catch (err) {
+        console.error("Error fetching bank accounts from site_settings:", err);
+      } finally {
+        setIsLoadingBankAccounts(false);
+      }
+    }
+    fetchBankAccounts();
+  }, []);
 
   // Fetch available books from Supabase for book selector dropdown
   useEffect(() => {
@@ -601,19 +636,23 @@ export default function PreOrderPage() {
               </p>
 
               <div className="space-y-3 pt-2">
-                {BANK_ACCOUNTS.map((acc, idx) => {
+                {bankAccounts.map((acc, idx) => {
+                  const bankName = acc.bank_name || acc.bankName || "Bank";
+                  const accountNumber = acc.account_number || acc.accountNumber || "";
+                  const accountHolder = acc.account_holder || acc.accountHolder || "-";
                   const isCopied = copiedBankIndex === idx;
+
                   return (
                     <div
-                      key={acc.accountNumber}
+                      key={accountNumber ? `${accountNumber}-${idx}` : idx}
                       className="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-2 hover:border-[#E52E2D] transition-colors"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-900">{acc.bankName}</span>
+                        <span className="text-xs font-bold text-gray-900">{bankName}</span>
                         <button
                           type="button"
-                          onClick={() => handleCopyAccount(acc.accountNumber, idx)}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E52E2D] hover:bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200 transition-colors"
+                          onClick={() => handleCopyAccount(accountNumber, idx)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E52E2D] hover:bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200 transition-colors cursor-pointer"
                         >
                           {isCopied ? (
                             <>
@@ -629,10 +668,10 @@ export default function PreOrderPage() {
                         </button>
                       </div>
                       <div className="font-mono text-base font-black text-[#272522] tracking-wider">
-                        {acc.accountNumber}
+                        {accountNumber}
                       </div>
                       <p className="text-[11px] text-gray-500 font-medium">
-                        a.n. <strong className="text-gray-800">{acc.accountHolder}</strong>
+                        a.n. <strong className="text-gray-800">{accountHolder}</strong>
                       </p>
                     </div>
                   );

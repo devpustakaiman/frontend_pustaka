@@ -248,6 +248,24 @@ export interface SiteSettings {
   hero_subheadline?: string;
   hero_banner_url?: string;
   featured_book_id?: string;
+  contact_address?: string;
+  contact_phone?: string;
+  contact_whatsapp?: string;
+  contact_emails?: string[] | string;
+  about_headline?: string;
+  about_description?: string;
+  about_stats?: any[];
+  about_vision?: string;
+  about_mission?: string;
+  about_pillars?: any[];
+  bank_accounts?: Array<{
+    bank_name?: string;
+    bankName?: string;
+    account_number?: string;
+    accountNumber?: string;
+    account_holder?: string;
+    accountHolder?: string;
+  }>;
   featured_book?: {
     id: string;
     title: string;

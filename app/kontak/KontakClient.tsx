@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Article } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 interface KontakClientProps {
   articles: Article[];
@@ -38,6 +39,13 @@ const FAQS = [
   },
 ];
 
+const DEFAULT_CONTACT_INFO = {
+  address: "Jl. Purnawarman Blok A No. 37 Bukit Cirendeu, Pondok Cabe Ciputat, Tangerang Selatan",
+  phone: "085100007692",
+  whatsapp: "6285100007692",
+  emails: ["Pt_iiman@yahoo.com", "Etera_imania@yahoo.com"],
+};
+
 export default function KontakClient({ articles = [] }: KontakClientProps) {
   const [formData, setFormData] = useState({
     nama: "",
@@ -49,7 +57,59 @@ export default function KontakClient({ articles = [] }: KontakClientProps) {
   const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  const pageUrl = typeof window !== "undefined" ? window.location.href : "https://pustakaiiman.com/kontak";
+  const [contactInfo, setContactInfo] = useState(DEFAULT_CONTACT_INFO);
+  const [isLoadingContact, setIsLoadingContact] = useState(true);
+
+  // Fetch dynamic contact details from Supabase site_settings
+  useEffect(() => {
+    async function fetchContactSettings() {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("contact_address, contact_phone, contact_whatsapp, contact_emails")
+          .eq("id", "default")
+          .maybeSingle();
+
+        if (!error && data) {
+          let parsedEmails: string[] = DEFAULT_CONTACT_INFO.emails;
+          if (Array.isArray(data.contact_emails) && data.contact_emails.length > 0) {
+            parsedEmails = data.contact_emails;
+          } else if (typeof data.contact_emails === "string" && data.contact_emails.trim()) {
+            parsedEmails = data.contact_emails
+              .split(/[,;\n]+/)
+              .map((e: string) => e.trim())
+              .filter(Boolean);
+          }
+
+          setContactInfo({
+            address: data.contact_address || DEFAULT_CONTACT_INFO.address,
+            phone: data.contact_phone || DEFAULT_CONTACT_INFO.phone,
+            whatsapp: data.contact_whatsapp || DEFAULT_CONTACT_INFO.whatsapp,
+            emails: parsedEmails.length > 0 ? parsedEmails : DEFAULT_CONTACT_INFO.emails,
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching contact info from site_settings:", err);
+      } finally {
+        setIsLoadingContact(false);
+      }
+    }
+    fetchContactSettings();
+  }, []);
+
+  const rawWhatsapp = contactInfo.whatsapp || contactInfo.phone || "6285100007692";
+  let cleanWhatsappPhone = rawWhatsapp.replace(/\D/g, "");
+  if (cleanWhatsappPhone.startsWith("0")) {
+    cleanWhatsappPhone = "62" + cleanWhatsappPhone.slice(1);
+  }
+
+  const [pageUrl, setPageUrl] = useState<string>("https://pustakaiiman.com/kontak");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setPageUrl(window.location.href);
+    }
+  }, []);
   const shareText = "Hubungi Pustaka IIMaN - Penerbit Buku Berkualitas di Indonesia";
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -110,7 +170,7 @@ export default function KontakClient({ articles = [] }: KontakClientProps) {
             </div>
             <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Alamat Redaksi & Kantor</h4>
             <p className="text-xs text-gray-600 leading-relaxed font-medium">
-              Jl. Purnawarman Blok A No. 37 Bukit Cirendeu, Pondok Cabe Ciputat, Tangerang Selatan
+              {contactInfo.address}
             </p>
           </div>
 
@@ -121,7 +181,7 @@ export default function KontakClient({ articles = [] }: KontakClientProps) {
             <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">WhatsApp & Telepon</h4>
             <p className="text-xs text-gray-600 leading-relaxed font-medium">
               Nomor Kontak Resmi:<br />
-              <strong className="text-gray-900 font-mono text-sm">085100007692</strong>
+              <strong className="text-gray-900 font-mono text-sm">{contactInfo.phone}</strong>
             </p>
           </div>
 
@@ -130,10 +190,17 @@ export default function KontakClient({ articles = [] }: KontakClientProps) {
               <Mail size={20} />
             </div>
             <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Email Resmi</h4>
-            <p className="text-xs text-gray-600 leading-relaxed font-medium break-all">
-              Pt_iiman@yahoo.com<br />
-              Etera_imania@yahoo.com
-            </p>
+            <div className="text-xs text-gray-600 leading-relaxed font-medium break-all space-y-0.5">
+              {contactInfo.emails.map((email, idx) => (
+                <a
+                  key={idx}
+                  href={`mailto:${email}`}
+                  className="block text-gray-700 hover:text-[#E52E2D] hover:underline transition-colors"
+                >
+                  {email}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -269,10 +336,10 @@ export default function KontakClient({ articles = [] }: KontakClientProps) {
                   </div>
                 </div>
                 <a
-                  href="https://wa.me/6285100007692?text=Halo%20Pustaka%20Iman,%20saya%20ingin%20bertanya%20mengenai..."
+                  href={`https://wa.me/${cleanWhatsappPhone}?text=Halo%20Pustaka%20Iman,%20saya%20ingin%20bertanya%20mengenai...`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition-colors shrink-0 shadow-2xs whitespace-nowrap"
+                  className="px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition-colors shrink-0 shadow-2xs whitespace-nowrap cursor-pointer"
                 >
                   Chat WhatsApp &rarr;
                 </a>
