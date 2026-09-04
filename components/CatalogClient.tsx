@@ -68,11 +68,18 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Sync state with URL search parameters (?category=, ?sort=, ?filter=)
+  // Sync state with URL search parameters (?category=, ?sort=, ?filter=, ?search=)
   useEffect(() => {
     const categoryParam = searchParams.get("category");
     const sortParam = searchParams.get("sort");
     const filterParam = searchParams.get("filter");
+    const searchParam = searchParams.get("search") || searchParams.get("q");
+
+    if (searchParam) {
+      const decoded = decodeURIComponent(searchParam);
+      setSearchQuery(decoded);
+      setDebouncedQuery(decoded);
+    }
 
     if (
       sortParam === "terbaru" ||

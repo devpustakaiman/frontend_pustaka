@@ -57,7 +57,7 @@ export default function RecentlyAddedSection({ books = [] }: RecentlyAddedSectio
           {/* Scrollable track */}
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory"
+            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory items-stretch"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {books.map((book, idx) => (
@@ -90,7 +90,7 @@ export default function RecentlyAddedSection({ books = [] }: RecentlyAddedSectio
 /** Individual New Arrival Card with Red Brand Palette */
 function NewArrivalCard({ book, idx }: { book: Book; idx: number }) {
   const isPromo = isActivePromo(book);
-  const countdown = useCountdown();
+  const countdown = useCountdown(book.promo_end_date || undefined);
   const formattedOrig = formatBookPrice(book.price);
   const formattedPromo = formatBookPrice(book.promo_price);
   const isEven = idx % 2 === 0;
@@ -109,14 +109,12 @@ function NewArrivalCard({ book, idx }: { book: Book; idx: number }) {
 
   return (
     <div
-      className={`snap-start flex-shrink-0 w-[152px] sm:w-[184px] lg:w-[214px] bg-white border border-gray-100 rounded-2xl overflow-hidden group flex flex-col hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all duration-300 ${
-        isEven ? "mt-0" : "mt-3"
-      }`}
+      className="snap-start flex-shrink-0 w-44 sm:w-56 bg-white border border-gray-100 rounded-2xl overflow-hidden group flex flex-col justify-between hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all duration-300 h-full self-stretch"
     >
       {/* Cover */}
       <Link
         href={`/katalog/${book.id}`}
-        className="block relative overflow-hidden bg-gray-50"
+        className="block relative overflow-hidden bg-gray-100 aspect-[3/4] rounded-t-2xl sm:rounded-2xl flex-shrink-0"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -126,75 +124,90 @@ function NewArrivalCard({ book, idx }: { book: Book; idx: number }) {
             (e.currentTarget as HTMLImageElement).src =
               "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
           }}
-          className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         
         {/* Top Left "Baru" Badge */}
-        <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#E52E2D] text-white text-[9px] font-bold uppercase tracking-wider rounded-full shadow-sm z-10">
+        <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-[#E52E2D] text-white text-[9px] font-bold uppercase tracking-wider rounded-full shadow-sm z-10">
           Baru
         </span>
 
         {/* Top Right Red Discount Badge if Promo */}
         {isPromo && (
-          <span className="absolute top-2.5 right-2.5 bg-[#E52E2D] text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-md z-10 animate-pulse">
+          <span className="absolute top-2 right-2 bg-[#E52E2D] text-white font-extrabold text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full shadow-md z-10 animate-pulse">
             -{discountPct}%
           </span>
         )}
       </Link>
 
       {/* Card body */}
-      <div className="p-3.5 flex flex-col flex-1 justify-between">
+      <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between">
         <div>
-          <span className="text-[9px] font-bold text-[#E52E2D] uppercase tracking-wider block">
-            {book.category || "Literasi"}
-          </span>
-          <h3 className="font-serif font-bold text-[13px] text-[#272522] mt-1 leading-snug line-clamp-2 group-hover:text-[#E52E2D] transition-colors">
-            <Link href={`/katalog/${book.id}`}>{book.title}</Link>
-          </h3>
-          <p className="text-[11px] text-[#76716A] mt-0.5 truncate">{book.author}</p>
+          <div className="h-7 sm:h-8 flex items-start">
+            <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider line-clamp-2 leading-tight">
+              {book.category || "Literasi"}
+            </span>
+          </div>
+          <div className="h-9 sm:h-10 flex items-start mt-0.5">
+            <h4 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors line-clamp-2 leading-tight">
+              <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+            </h4>
+          </div>
+          <div className="h-4 sm:h-5 mt-0.5">
+            <p className="text-[11px] text-[#76716A] truncate">{book.author}</p>
+          </div>
         </div>
 
-        <div className="mt-3 pt-2.5 border-t border-gray-100">
-          {isPromo ? (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-extrabold text-[#E52E2D] text-xs sm:text-sm">
-                  {formattedPromo}
-                </span>
-                <span className="bg-[#E52E2D] text-white font-black text-[9px] px-1.5 py-0.5 rounded-full shadow-2xs">
+        <div className="mt-auto pt-2 border-t border-gray-100 flex flex-col justify-between">
+          {/* Equalized Price & Strikethrough Row Height */}
+          <div className="min-h-[44px] flex flex-col justify-center">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`text-sm sm:text-base font-black ${isPromo ? 'text-[#E52E2D]' : 'text-gray-900'}`}>
+                {isPromo ? formattedPromo : (book.price ? formatBookPrice(book.price) : "Hubungi Kami")}
+              </span>
+              {isPromo && discountPct ? (
+                <span className="bg-[#E52E2D] text-white font-black text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full shadow-2xs">
                   HEMAT {discountPct}%
                 </span>
-              </div>
-              <span className="line-through text-gray-400 text-[10px]">
-                {formattedOrig}
-              </span>
+              ) : null}
+            </div>
+            <div className="h-4 flex items-center">
+              {isPromo ? (
+                <span className="line-through text-gray-400 text-[10px] sm:text-[11px]">
+                  {formattedOrig}
+                </span>
+              ) : (
+                <span className="invisible text-[11px] select-none">-</span>
+              )}
+            </div>
+          </div>
 
-              {/* Compact Synchronized Countdown Bar */}
-              <div className="mt-1.5 bg-red-50/70 border border-red-100 rounded-lg p-2">
-                <div className="flex items-center justify-between text-[9px] font-bold text-gray-700">
+          {/* Preserve Timer Slot Height */}
+          <div className="min-h-[38px] sm:min-h-[42px] flex items-center my-1 w-full">
+            {isPromo ? (
+              <div className="w-full bg-red-50/70 border border-red-100 rounded-lg p-1.5 sm:p-2">
+                <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-gray-700">
                   <span className="flex items-center gap-1 truncate" suppressHydrationWarning>
-                    <Clock size={11} className="text-[#E52E2D] shrink-0" />
-                    <span>{countdown.formatted || "Promo Berakhir"}</span>
+                    <Clock size={10} className="text-[#E52E2D] shrink-0 sm:w-3 sm:h-3" />
+                    <span>{countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}</span>
                   </span>
                 </div>
-                <div className="h-1.5 w-full bg-amber-100 rounded-full overflow-hidden mt-2">
+                <div className="h-1 sm:h-1.5 w-full bg-amber-100 rounded-full overflow-hidden mt-1">
                   <div
-                    className="bg-[#E52E2D] h-full rounded-full transition-all duration-500 w-[65%]"
+                    className="bg-[#E52E2D] h-full rounded-full transition-all duration-500"
+                    style={{ width: countdown.hasMounted ? `${countdown.progressPercent || 65}%` : '0%' }}
                   />
                 </div>
               </div>
-            </div>
-          ) : book.price ? (
-            <span className="font-extrabold text-[#E52E2D] text-sm block">
-              {formatBookPrice(book.price)}
-            </span>
-          ) : (
-            <span className="text-xs text-[#76716A] italic">Hubungi Kami</span>
-          )}
+            ) : (
+              <div className="w-full h-full invisible select-none pointer-events-none" />
+            )}
+          </div>
 
+          {/* Pinned Button at Absolute Bottom */}
           <Link
             href={`/katalog/${book.id}`}
-            className="mt-2.5 w-full block text-center px-3 py-2 text-[11px] font-bold border border-[#E52E2D] text-[#E52E2D] hover:bg-[#E52E2D] hover:text-white rounded-xl transition-all duration-200 active:scale-95 uppercase tracking-wide shadow-2xs"
+            className="w-full block text-center px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold border border-[#E52E2D] text-[#E52E2D] hover:bg-[#E52E2D] hover:text-white rounded-xl transition-all duration-200 active:scale-95 uppercase tracking-wide shadow-2xs"
           >
             Lihat Detail
           </Link>

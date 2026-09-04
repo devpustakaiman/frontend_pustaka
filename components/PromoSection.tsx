@@ -18,24 +18,19 @@ interface PromoSectionProps {
 }
 
 export default function PromoSection({ books = [] }: PromoSectionProps) {
-  const [isMounted, setIsMounted] = useState(false);
-  const countdown = useCountdown();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Filter active promos
-  const activePromoBooks = books.filter(isActivePromo);
-  const displayBooks = activePromoBooks.length > 0 ? activePromoBooks : books;
-
-  if (!displayBooks || displayBooks.length === 0) {
+  // Filter active promos strictly - unmount if empty
+  const activePromoBooks = (books || []).filter(isActivePromo);
+  if (activePromoBooks.length === 0) {
     return null;
   }
 
-  const featuredBook = displayBooks[0];
-  const sideBooks = displayBooks.slice(1, 4);
-  const dealStripBooks = displayBooks.slice(0, 4);
+  // Synchronize header countdown to the earliest active promo end date
+  const earliestTargetDate = activePromoBooks[0]?.promo_end_date || undefined;
+  const countdown = useCountdown(earliestTargetDate);
+
+  const featuredBook = activePromoBooks[0];
+  const sideBooks = activePromoBooks.slice(1, 4);
+  const dealStripBooks = activePromoBooks.slice(0, 4);
 
   // Ref & Scroll Handler for DEAL HARI INI slider
   const dealSliderRef = useRef<HTMLDivElement>(null);
@@ -69,30 +64,30 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
               </div>
 
               {/* Title & Subtitle */}
-              <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[#E52E2D] tracking-tight flex items-center gap-2">
+              <h2 className="font-serif text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[#E52E2D] tracking-tight flex items-center gap-2">
                 <span>🔥 FLASH SALE &amp; PROMO SPESIAL</span>
               </h2>
-              <p className="text-xs sm:text-sm text-[#76716A] mt-1 font-medium">
+              <p className="text-xs sm:text-sm text-[#76716A] mt-1 font-medium hidden sm:block">
                 Harga spesial untuk buku pilihan. Jangan sampai kehabisan!
               </p>
             </div>
 
             {/* Right Side: Countdown UI & CTA */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+            <div className="flex flex-row items-center justify-between gap-2 mt-3 sm:mt-0 w-full md:w-auto">
               {/* Compact Horizontal Countdown Card */}
-              <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm h-auto">
-                <div className="w-8 h-8 rounded-xl bg-red-50 text-[#E52E2D] flex items-center justify-center flex-shrink-0">
-                  <Timer size={16} className="text-[#E52E2D] animate-pulse" />
+              <div className="flex items-center gap-2 sm:gap-3 bg-white border border-gray-200 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm h-auto flex-1 sm:flex-none">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-red-50 text-[#E52E2D] flex items-center justify-center flex-shrink-0">
+                  <Timer size={14} className="text-[#E52E2D] animate-pulse sm:w-4 sm:h-4" />
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="text-[9px] sm:text-[10px] uppercase font-bold text-gray-500 tracking-wider truncate">
                     ⚡ BERAKHIR DALAM
                   </span>
                   <span
-                    className="text-xs sm:text-sm font-extrabold text-[#E52E2D] whitespace-nowrap"
+                    className="text-xs sm:text-sm font-extrabold text-[#E52E2D] whitespace-nowrap truncate"
                     suppressHydrationWarning
                   >
-                    {isMounted ? (countdown.formatted || "Promo Berakhir") : "–"}
+                    {countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
                   </span>
                 </div>
               </div>
@@ -100,10 +95,10 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
               {/* Action Link Button */}
               <Link
                 href="/katalog?category=promo"
-                className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-4 py-2.5 rounded-full border border-red-200 shadow-2xs hover:shadow-xs shrink-0 justify-center"
+                className="group inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-3 sm:px-4 py-2.5 rounded-full border border-red-200 shadow-2xs hover:shadow-xs shrink-0 justify-center whitespace-nowrap"
               >
-                <span>Lihat Semua Promo</span>
-                <ChevronRight size={15} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
+                <span>Lihat Semua</span>
+                <ChevronRight size={14} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
               </Link>
             </div>
           </div>
@@ -118,12 +113,12 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
               {featuredBook && <FeaturedRedDealTicket book={featuredBook} />}
             </div>
 
-            {/* Right Column: 3 Stacked Side Cards (lg:col-span-5) */}
-            <div className="lg:col-span-5 flex lg:flex-col overflow-x-auto lg:overflow-visible gap-3.5 pt-2 pb-4 lg:py-0 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 h-full justify-between">
+            {/* Right Column: 3 Stacked Side Cards (lg:col-span-5) - Desktop Only */}
+            <div className="hidden lg:flex lg:col-span-5 flex-col gap-3.5 h-full justify-between">
               {sideBooks.map((book, idx) => (
                 <div
                   key={book.id}
-                  className="min-w-[85vw] sm:min-w-[340px] lg:min-w-0 flex-1 flex-shrink-0 snap-center h-full flex flex-col"
+                  className="flex-1 flex flex-col"
                 >
                   <SideCouponCard book={book} index={idx} />
                 </div>
@@ -191,7 +186,7 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
  * FEATURED HERO DEAL TICKET (Left Column lg:col-span-7)
  */
 function FeaturedRedDealTicket({ book }: { book: Book }) {
-  const countdown = useCountdown();
+  const countdown = useCountdown(book.promo_end_date || undefined);
   const hasPromo = isActivePromo(book);
   const formattedOrig = formatBookPrice(book.price);
   const formattedPromo = formatBookPrice(book.promo_price);
@@ -212,82 +207,83 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-[#c12a26] to-[#a01e1a] rounded-[2.5rem] p-6 sm:p-7 text-white relative flex flex-col justify-between overflow-hidden shadow-xl h-full group border border-red-500/30">
+    <div className="bg-gradient-to-br from-[#c12a26] to-[#a01e1a] rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-7 text-white relative flex flex-col justify-between overflow-hidden shadow-xl h-full group border border-red-500/30">
 
       {/* Ticket Cutout Notches */}
-      <div className="absolute top-1/4 -left-4 w-7 h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
-      <div className="absolute top-1/2 -left-4 w-7 h-7 bg-[#FFF7F5] rounded-full -translate-y-1/2 z-20 shadow-inner" />
-      <div className="absolute top-3/4 -left-4 w-7 h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
-      <div className="absolute top-1/4 -right-4 w-7 h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
-      <div className="absolute top-1/2 -right-4 w-7 h-7 bg-[#FFF7F5] rounded-full -translate-y-1/2 z-20 shadow-inner" />
-      <div className="absolute top-3/4 -right-4 w-7 h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
+      <div className="absolute top-1/4 -left-3.5 sm:-left-4 w-6 sm:w-7 h-6 sm:h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
+      <div className="absolute top-1/2 -left-3.5 sm:-left-4 w-6 sm:w-7 h-6 sm:h-7 bg-[#FFF7F5] rounded-full -translate-y-1/2 z-20 shadow-inner" />
+      <div className="absolute top-3/4 -left-3.5 sm:-left-4 w-6 sm:w-7 h-6 sm:h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
+      <div className="absolute top-1/4 -right-3.5 sm:-right-4 w-6 sm:w-7 h-6 sm:h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
+      <div className="absolute top-1/2 -right-3.5 sm:-right-4 w-6 sm:w-7 h-6 sm:h-7 bg-[#FFF7F5] rounded-full -translate-y-1/2 z-20 shadow-inner" />
+      <div className="absolute top-3/4 -right-3.5 sm:-right-4 w-6 sm:w-7 h-6 sm:h-7 bg-[#FFF7F5] rounded-full z-20 shadow-inner" />
 
       {/* Ambient Radial Glow */}
       <div className="absolute -top-24 -left-24 w-80 h-80 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
 
       {/* ─── Top Row: Badge + Discount Callout ─── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 z-10 relative">
-        <span className="bg-amber-400 text-gray-950 font-extrabold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5 shadow-xs border border-amber-300">
-          <Flame size={14} className="fill-gray-950 text-gray-950" />
-          FEATURED DEAL
+      <div className="flex items-center justify-between gap-2 z-10 relative mb-1.5 sm:mb-0">
+        <span className="bg-amber-400 text-gray-950 font-extrabold text-[10px] sm:text-xs px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full uppercase tracking-wider inline-flex items-center gap-1 sm:gap-1.5 shadow-xs border border-amber-300">
+          <Flame size={12} className="fill-gray-950 text-gray-950 sm:w-3.5 sm:h-3.5" />
+          <span>FEATURED DEAL</span>
         </span>
-        <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-300 tracking-tight font-sans drop-shadow-md">
+        <span className="text-lg sm:text-3xl lg:text-4xl font-black text-amber-300 tracking-tight font-sans drop-shadow-md">
           DISKON HINGGA {discountPct}%
         </span>
       </div>
 
       {/* ─── Middle Row: Centered 2-Column Showcase (Cover + Book Details) ─── */}
-      <div className="my-auto py-2 flex flex-col sm:flex-row items-center gap-5 flex-1 z-10 relative">
-        {/* Left Sub-column: Prominent Book Cover Asset */}
+      <div className="my-auto py-2 flex flex-row items-center gap-3.5 sm:gap-5 flex-1 z-10 relative">
+        {/* Left Sub-column: Book Cover Asset */}
         <Link
           href={`/katalog/${book.id}`}
-          className="w-44 sm:w-48 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 mx-auto sm:mx-0 border border-white/20 block"
+          className="w-24 sm:w-44 md:w-48 aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl flex-shrink-0 border border-white/20 block"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={coverImage}
             alt={book.title}
-            className="w-full h-full object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover rounded-lg sm:rounded-xl hover:scale-105 transition-transform duration-300"
           />
         </Link>
 
         {/* Right Sub-column: Category, Title, Author, Price & Bonus Snippet */}
-        <div className="flex flex-col justify-center text-center sm:text-left min-w-0 flex-1">
-          <span className="text-red-200 text-xs font-bold uppercase tracking-wider">
+        <div className="flex flex-col justify-center text-left min-w-0 flex-1">
+          <span className="text-amber-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
             {book.category || "ROMANSA"}
           </span>
-          <h3 className="text-2xl font-serif font-black leading-tight mt-1 text-white line-clamp-2 group-hover:text-amber-200 transition-colors">
+          <h3 className="text-base sm:text-2xl font-serif font-black leading-snug sm:leading-tight mt-0.5 text-white line-clamp-2 group-hover:text-amber-200 transition-colors">
             <Link href={`/katalog/${book.id}`}>{book.title}</Link>
           </h3>
-          <p className="text-red-100 text-sm mt-1 truncate">{book.author}</p>
+          <p className="text-red-100/90 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">{book.author}</p>
           
-          <div className="text-2xl sm:text-3xl font-extrabold text-white mt-3 flex items-baseline justify-center sm:justify-start gap-2 flex-wrap">
+          <div className="text-lg sm:text-3xl font-extrabold text-white mt-1.5 sm:mt-3 flex items-baseline justify-start gap-2 flex-wrap">
             <span>{formattedPromo}</span>
-            <span className="text-red-200/80 line-through text-base font-normal">
+            <span className="text-red-200/80 line-through text-xs sm:text-base font-normal">
               {formattedOrig}
             </span>
           </div>
 
-          {/* Micro-Description / Value Highlight */}
-          <p className="mt-3 text-xs text-red-100/90 line-clamp-2 leading-relaxed">
+          {/* Micro-Description / Value Highlight (Hidden on Mobile) */}
+          <p className="mt-3 text-xs sm:text-sm text-red-100/90 line-clamp-2 leading-relaxed hidden sm:block">
             Dapatkan penawaran eksklusif edisi bertanda tangan penulis dan bonus stiker selama persediaan masih ada.
           </p>
         </div>
       </div>
 
       {/* ─── Bottom Row: Countdown Progress Bar + CTA Button ─── */}
-      <div className="bg-black/25 backdrop-blur-md rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 border border-white/10 mt-auto z-10 relative">
+      <div className="bg-black/25 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border border-white/10 mt-2 sm:mt-auto z-10 relative">
         {/* Countdown + Progress Bar */}
         <div className="flex-1 min-w-0 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 text-xs text-white/80 font-medium mb-1">
-            <Clock size={14} className="text-amber-300 shrink-0" />
-            <span className="truncate whitespace-nowrap" suppressHydrationWarning>
-              Sisa Waktu: {countdown.formatted || "Promo Berakhir"}
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-white/80 font-medium mb-1">
+            <Clock size={13} className="text-amber-300 shrink-0 sm:w-3.5 sm:h-3.5" />
+            <span className="truncate whitespace-nowrap font-semibold" suppressHydrationWarning>
+              Sisa Waktu: {countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
             </span>
           </div>
-          <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 sm:h-2 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-amber-400 rounded-full transition-all duration-500 w-[65%]"
+              className="h-full bg-amber-400 rounded-full transition-all duration-500"
+              style={{ width: countdown.hasMounted ? `${countdown.progressPercent || 65}%` : '0%' }}
             />
           </div>
         </div>
@@ -295,10 +291,10 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
         {/* CTA Button */}
         <Link
           href={`/katalog/${book.id}`}
-          className="bg-amber-400 hover:bg-amber-300 text-gray-950 font-bold px-5 py-3 rounded-xl whitespace-nowrap text-sm flex items-center gap-2 transition-colors shrink-0 justify-center"
+          className="bg-amber-400 hover:bg-amber-300 text-gray-950 font-bold px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl whitespace-nowrap text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-colors shrink-0 justify-center w-full sm:w-auto"
         >
           <span>Ambil Promo Sekarang</span>
-          <ChevronRight size={16} strokeWidth={3} className="text-gray-950" />
+          <ChevronRight size={14} strokeWidth={3} className="text-gray-950 sm:w-4 sm:h-4" />
         </Link>
       </div>
 
@@ -310,7 +306,7 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
  * SIDE COUPON CARD ITEM (Right Column lg:col-span-5)
  */
 function SideCouponCard({ book, index }: { book: Book; index: number }) {
-  const countdown = useCountdown();
+  const countdown = useCountdown(book.promo_end_date || undefined);
   const hasPromo = isActivePromo(book);
   const formattedOrig = formatBookPrice(book.price);
   const formattedPromo = formatBookPrice(book.promo_price);
@@ -375,13 +371,16 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
         {/* Dynamic Countdown & Stock Progress */}
         <div className="mt-2.5 pt-2 border-t border-gray-100/80">
           <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-            <span className="flex items-center gap-1 font-medium">
-              <Clock className="w-3 h-3 text-[#E53935]" /> {countdown.formatted || "Promo Berakhir"}
+            <span className="flex items-center gap-1 font-medium font-semibold" suppressHydrationWarning>
+              <Clock className="w-3 h-3 text-[#E53935]" /> {countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
             </span>
             <span className="text-[#E53935] font-semibold text-[10px]">Stok Terbatas</span>
           </div>
           <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#E53935] h-full w-[45%] rounded-full" />
+            <div
+              className="bg-[#E53935] h-full rounded-full transition-all duration-500"
+              style={{ width: countdown.hasMounted ? `${countdown.progressPercent || 45}%` : '0%' }}
+            />
           </div>
         </div>
       </div>
@@ -394,7 +393,7 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
  * TEAR-OFF TICKET CARD ITEM (DEAL HARI INI Strip)
  */
 function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
-  const countdown = useCountdown();
+  const countdown = useCountdown(book.promo_end_date || undefined);
   const hasPromo = isActivePromo(book);
   const formattedOrig = formatBookPrice(book.price);
   const formattedPromo = formatBookPrice(book.promo_price);
@@ -455,9 +454,9 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
           </div>
 
           <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500">
-            <span className="flex items-center gap-1 font-medium">
+            <span className="flex items-center gap-1 font-medium font-semibold" suppressHydrationWarning>
               <Clock size={10} className="text-[#E53935]" />
-              <span>{countdown.formatted || "Promo Berakhir"}</span>
+              <span>{countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}</span>
             </span>
           </div>
         </div>

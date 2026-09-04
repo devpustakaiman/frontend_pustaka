@@ -313,7 +313,7 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
 
               {/* Synopsis Section: line-clamp-4 with toggle */}
               <div className="border-t border-gray-200 pt-5 space-y-3">
-                <h2 className="font-serif text-xl font-bold text-[#272522]">Sinopsis Buku</h2>
+                <h2 className="font-serif text-xl font-bold text-[#272522]">Deskripsi Buku</h2>
                 <div className="relative">
                   <p
                     className={`text-[#272522]/90 text-sm leading-relaxed whitespace-pre-line transition-all ${

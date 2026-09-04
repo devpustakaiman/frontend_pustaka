@@ -28,10 +28,40 @@ export interface Book {
   is_promo?: boolean;
   promo_price?: number | string | null;
   promo_percentage?: number | null;
+  promo_start_date?: string | null;
+  promo_start_at?: string | null;
   promo_end_date?: string | null;
   is_recommended?: boolean;
   is_featured?: boolean;
   is_bestseller?: boolean;
+}
+
+/**
+ * Converts a selected date string (YYYY-MM-DD) to an end-of-day ISO string (23:59:59.999 WIB).
+ * Ensures a promo set for a date (e.g. 04/09/2026) remains active until 23:59:59 WIB tonight.
+ */
+export function formatPromoEndDateToIso(selectedDate: string): string {
+  if (!selectedDate) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+    return new Date(`${selectedDate}T23:59:59.999+07:00`).toISOString();
+  }
+  const dateObj = new Date(selectedDate);
+  if (isNaN(dateObj.getTime())) return selectedDate;
+  dateObj.setHours(23, 59, 59, 999);
+  return dateObj.toISOString();
+}
+
+/**
+ * Formats date string to DD/MM/YY format.
+ */
+export function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return String(dateStr);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
 }
 
 /**
@@ -48,17 +78,11 @@ export function isActivePromo(book?: Book | null): boolean {
   }
   const endDate = new Date(book.promo_end_date);
   if (isNaN(endDate.getTime())) return false;
-
-  // Lock target date to 23:59:59.999 local time
-  endDate.setHours(23, 59, 59, 999);
-
-  const now = new Date();
-  return endDate > now;
+  return endDate.getTime() > Date.now();
 }
 
-
 /**
- * Calculates remaining days until promo_end_date (locked to 23:59:59 local time).
+ * Calculates remaining days until promo_end_date.
  * Returns 0 if expired or invalid.
  */
 export function getPromoDaysRemaining(promoEndDate?: string | null): number {
@@ -66,11 +90,7 @@ export function getPromoDaysRemaining(promoEndDate?: string | null): number {
   const endDate = new Date(promoEndDate);
   if (isNaN(endDate.getTime())) return 0;
 
-  // Lock target date to 23:59:59.999 local time
-  endDate.setHours(23, 59, 59, 999);
-
-  const now = new Date();
-  const diffTime = endDate.getTime() - now.getTime();
+  const diffTime = endDate.getTime() - Date.now();
   if (diffTime <= 0) return 0;
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
@@ -87,7 +107,7 @@ export interface PromoCountdownDetails {
 }
 
 /**
- * Calculates exact real-time countdown breakdown from backend promo_end_date timestamptz (locked to 23:59:59 local time).
+ * Calculates exact real-time countdown breakdown from backend promo_end_date timestamptz.
  */
 export function getPromoCountdownDetails(promoEndDate?: string | null): PromoCountdownDetails {
   const now = new Date();
@@ -101,9 +121,6 @@ export function getPromoCountdownDetails(promoEndDate?: string | null): PromoCou
   } else {
     endDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
   }
-
-  // Force Local End of Day: lock to 23:59:59.999 local time
-  endDate.setHours(23, 59, 59, 999);
 
   const diff = endDate.getTime() - now.getTime();
 

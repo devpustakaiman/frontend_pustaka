@@ -144,6 +144,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [activeMobileSub, setActiveMobileSub] = useState<string | null>(null);
 
   // Search state
@@ -180,6 +181,7 @@ export default function Navbar() {
   useEffect(() => {
     setMobileMenuOpen(false);
     setMobileShopOpen(false);
+    setMobileSearchOpen(false);
     setActiveMobileSub(null);
     setShowDropdown(false);
   }, [pathname]);
@@ -233,9 +235,12 @@ export default function Navbar() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
       setShowDropdown(false);
-      router.push(`/katalog?q=${encodeURIComponent(searchQuery.trim())}`);
+      setMobileSearchOpen(false);
+      setMobileMenuOpen(false);
+      router.push(`/katalog?search=${encodeURIComponent(trimmed)}`);
     }
   };
 
@@ -460,7 +465,7 @@ export default function Navbar() {
                 </div>
 
                 <Link
-                  href={`/katalog?q=${encodeURIComponent(searchQuery.trim())}`}
+                  href={`/katalog?search=${encodeURIComponent(searchQuery.trim())}`}
                   onClick={() => setShowDropdown(false)}
                   className="mt-1 w-full py-2 px-3 text-xs font-bold text-center text-[#E52E2D] bg-red-50/60 hover:bg-red-50 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
                 >
@@ -479,9 +484,25 @@ export default function Navbar() {
             KIRIM NASKAH
           </Link>
 
+          {/* Mobile Search Toggle Button */}
+          <button
+            onClick={() => {
+              setMobileSearchOpen(!mobileSearchOpen);
+              if (mobileMenuOpen) setMobileMenuOpen(false);
+            }}
+            type="button"
+            className="p-1.5 text-gray-700 hover:text-black rounded-full md:hidden hover:bg-gray-100 transition-colors"
+            aria-label="Cari Buku"
+          >
+            <Search size={20} />
+          </button>
+
           {/* Mobile Menu Button */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              setMobileMenuOpen(!mobileMenuOpen);
+              if (mobileSearchOpen) setMobileSearchOpen(false);
+            }}
             type="button"
             className="p-1.5 text-gray-700 hover:text-black rounded-full lg:hidden hover:bg-gray-100 transition-colors"
             aria-label="Buka Menu"
@@ -491,6 +512,40 @@ export default function Navbar() {
         </div>
 
       </div>
+
+      {/* Expandable Mobile Search Input Bar */}
+      {mobileSearchOpen && (
+        <div className="md:hidden mt-2 max-w-7xl mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari judul buku atau penulis..."
+                className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 focus:border-[#E52E2D] rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none"
+                autoFocus
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-[#E52E2D] hover:bg-[#C12A26] text-white text-xs font-bold rounded-xl transition-colors shadow-2xs shrink-0"
+            >
+              Cari
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (

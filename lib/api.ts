@@ -16,11 +16,13 @@ export async function getBooks() {
 }
 
 export async function getPromoBooks() {
+  const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("books")
     .select("*")
     .is("deleted_at", null)
     .eq("is_promo", true)
+    .gt("promo_end_date", now)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -278,4 +280,108 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
     console.warn("Exception caught in getSiteSettings:", err);
     return null;
   }
+}
+
+export async function submitPreorder(
+  formData: {
+    customer_name: string;
+    customer_email: string;
+    customer_phone: string;
+    book_title: string;
+    quantity: number;
+    notes?: string;
+  },
+  receiptFile?: File | null
+) {
+  let receiptUrl: string | null = null;
+
+  if (receiptFile) {
+    const sanitizedName = receiptFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const fileName = `${Date.now()}_${sanitizedName}`;
+
+    // 1. Upload payment proof to 'preorder-receipts' storage bucket
+    const { error: uploadError } = await supabase.storage
+      .from("preorder-receipts")
+      .upload(fileName, receiptFile);
+
+    if (uploadError) {
+      console.warn("Upload to preorder-receipts failed:", JSON.stringify(uploadError, null, 2));
+      // Fallback bucket attempt
+      const { error: fallbackError } = await supabase.storage
+        .from("naskah")
+        .upload(`receipts/${fileName}`, receiptFile);
+
+      if (!fallbackError) {
+        const { data: urlData } = supabase.storage
+          .from("naskah")
+          .getPublicUrl(`receipts/${fileName}`);
+        receiptUrl = urlData.publicUrl;
+      }
+    } else {
+      const { data: urlData } = supabase.storage
+        .from("preorder-receipts")
+        .getPublicUrl(fileName);
+      receiptUrl = urlData.publicUrl;
+    }
+  }
+
+  // 2. Insert into 'preorders' database table matching public.preorders schema
+  const insertPayload = {
+    customer_name: formData.customer_name,
+    customer_email: formData.customer_email,
+    customer_phone: formData.customer_phone,
+    book_title: formData.book_title,
+    quantity: Number(formData.quantity),
+    transfer_receipt: receiptUrl,
+    status: "pending",
+  };
+
+  const { data, error } = await supabase
+    .from("preorders")
+    .insert([insertPayload])
+    .select();
+
+  if (error) {
+    console.error("Error inserting preorder into Supabase:", JSON.stringify(error, null, 2));
+    
+    // Fallback insert if extra column constraints cause issues
+    const { data: fallbackData, error: simpleError } = await supabase
+      .from("preorders")
+      .insert([{
+        customer_name: formData.customer_name,
+        customer_email: formData.customer_email,
+        customer_phone: formData.customer_phone,
+        book_title: formData.book_title,
+        quantity: Number(formData.quantity),
+        status: "pending"
+      }])
+      .select();
+
+    if (simpleError) {
+      console.error("Fallback insert failed:", JSON.stringify(simpleError, null, 2));
+      throw error;
+    }
+    return { success: true, data: fallbackData };
+  }
+
+  // 3. Dispatch background notification email to /api/preorder/notify
+  try {
+    fetch("/api/preorder/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer_name: formData.customer_name,
+        customer_email: formData.customer_email,
+        customer_phone: formData.customer_phone,
+        book_title: formData.book_title,
+        quantity: formData.quantity,
+        transfer_receipt: receiptUrl,
+        receiptUrl,
+      }),
+    }).catch((err) => console.warn("Failed to dispatch preorder notification:", err));
+  } catch (err) {
+    // Ignore notification error gracefully
+  }
+
+  return { success: true, data };
 }

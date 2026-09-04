@@ -33,11 +33,11 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all duration-200 group flex flex-col h-full relative">
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all duration-200 group flex flex-col justify-between h-full self-stretch relative">
       {/* Cover image & top-right promo badge overlay */}
       <Link
         href={`/katalog/${currentBook.id}`}
-        className="block overflow-hidden bg-gray-50 aspect-[3/4] relative"
+        className="block overflow-hidden bg-gray-100 aspect-[3/4] rounded-t-2xl sm:rounded-2xl relative flex-shrink-0"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -48,79 +48,87 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
 
         {/* Cover Image Overlay Badge (-X%) */}
         {hasActivePromo && (
-          <div className="absolute top-2.5 right-2.5 z-10">
-            <span className="inline-flex items-center bg-[#E52E2D] text-white font-extrabold text-xs px-2.5 py-0.5 rounded-full shadow-md">
+          <div className="absolute top-2 right-2 z-10">
+            <span className="inline-flex items-center bg-[#E52E2D] text-white font-extrabold text-[9px] sm:text-xs px-2 py-0.5 rounded-full shadow-md">
               {discountPct ? `-${discountPct}%` : "PROMO"}
             </span>
           </div>
         )}
       </Link>
 
-      <div className="flex flex-col flex-1 p-3">
-        <span className="text-[9px] font-bold text-[#E52E2D] uppercase tracking-wider">
-          {currentBook.category || "Literasi"}
-        </span>
-        <h3 className="font-serif font-bold text-[13px] text-[#272522] mt-0.5 group-hover:text-[#E52E2D] transition-colors leading-snug line-clamp-2">
-          <Link href={`/katalog/${currentBook.id}`}>{currentBook.title}</Link>
-        </h3>
-        <p className="text-[11px] text-[#76716A] mt-0.5 font-medium truncate">
-          {currentBook.author}
-        </p>
-
-        {/* Dynamic FOMO Deadline Indicator (Only rendered if isActivePromo is true) */}
-        {hasActivePromo && (
-          <div className="mt-3 bg-red-50/80 border border-red-200/60 rounded-xl p-2 space-y-1">
-            {/* Compact rounded progress bar */}
-            <div className="w-full h-1.5 bg-red-100 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#E52E2D] via-rose-500 to-orange-500 rounded-full w-[75%]" />
-            </div>
-            
-            <div className="flex items-center justify-between text-[11px]">
-              {daysRemaining <= 1 ? (
-                <span className="text-[#E52E2D] font-extrabold text-xs flex items-center gap-1 animate-pulse">
-                  <span>⚡</span>
-                  <span>Berakhir HARI INI!</span>
-                </span>
-              ) : (
-                <span className="text-xs text-red-900 font-semibold flex items-center gap-1">
-                  <span>⏳</span>
-                  <span>Berakhir dalam {daysRemaining} hari</span>
-                </span>
-              )}
-            </div>
+      <div className="flex flex-col flex-1 p-2.5 sm:p-4 justify-between">
+        <div>
+          <div className="h-7 sm:h-8 flex items-start">
+            <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider line-clamp-2 leading-tight">
+              {currentBook.category || "Literasi"}
+            </span>
           </div>
-        )}
+          <div className="h-9 sm:h-10 flex items-start mt-0.5">
+            <h4 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors line-clamp-2 leading-tight">
+              <Link href={`/katalog/${currentBook.id}`}>{currentBook.title}</Link>
+            </h4>
+          </div>
+          <div className="h-4 sm:h-5 mt-0.5">
+            <p className="text-[11px] text-[#76716A] truncate">
+              {currentBook.author}
+            </p>
+          </div>
+        </div>
 
-        <div className="mt-2 flex-1 flex items-end">
-          {hasActivePromo ? (
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="font-extrabold text-[#E52E2D] text-sm tracking-tight">
-                {formattedPromoPrice}
+        <div className="mt-auto pt-2 border-t border-gray-100 flex flex-col justify-between">
+          {/* Equalized Price & Strikethrough Row Height */}
+          <div className="min-h-[44px] flex flex-col justify-center">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`text-sm sm:text-base font-black ${hasActivePromo ? 'text-[#E52E2D]' : 'text-gray-900'}`}>
+                {hasActivePromo ? formattedPromoPrice : formattedOriginalPrice}
               </span>
-              <span className="line-through text-gray-400 text-[10px] font-normal">
-                {formattedOriginalPrice}
-              </span>
-              {discountPct ? (
-                <span className="bg-[#E52E2D] text-white font-black text-[9px] px-2 py-0.5 rounded-full shadow-sm -rotate-1 inline-block tracking-tight">
+              {hasActivePromo && discountPct ? (
+                <span className="bg-[#E52E2D] text-white font-black text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full shadow-2xs">
                   HEMAT {discountPct}%
                 </span>
               ) : null}
             </div>
-          ) : isFallbackPrice ? (
-            <span className="text-[11px] text-[#E52E2D] font-semibold italic">
-              {formattedOriginalPrice}
-            </span>
-          ) : (
-            <span className="font-extrabold text-[#E52E2D] text-sm tracking-tight">
-              {formattedOriginalPrice}
-            </span>
-          )}
-        </div>
+            <div className="h-4 flex items-center">
+              {hasActivePromo ? (
+                <span className="line-through text-gray-400 text-[10px] sm:text-[11px]">
+                  {formattedOriginalPrice}
+                </span>
+              ) : (
+                <span className="invisible text-[11px] select-none">-</span>
+              )}
+            </div>
+          </div>
 
-        <div className="mt-auto pt-2 border-t border-gray-100">
+          {/* Preserve Timer Slot Height */}
+          <div className="min-h-[38px] sm:min-h-[42px] flex items-center my-1 w-full">
+            {hasActivePromo ? (
+              <div className="w-full bg-red-50/80 border border-red-200/60 rounded-xl p-1.5 sm:p-2 space-y-1">
+                <div className="w-full h-1 sm:h-1.5 bg-red-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#E52E2D] via-rose-500 to-orange-500 rounded-full w-[75%]" />
+                </div>
+                <div className="flex items-center justify-between text-[10px] sm:text-[11px]">
+                  {daysRemaining <= 1 ? (
+                    <span className="text-[#E52E2D] font-extrabold text-[10px] sm:text-xs flex items-center gap-1 animate-pulse">
+                      <span>⚡</span>
+                      <span>Berakhir HARI INI!</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] sm:text-xs text-red-900 font-semibold flex items-center gap-1">
+                      <span>⏳</span>
+                      <span>Berakhir dalam {daysRemaining} hari</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="w-full h-full invisible select-none pointer-events-none" />
+            )}
+          </div>
+
+          {/* Pinned Button at Absolute Bottom */}
           <Link
             href={`/katalog/${currentBook.id}`}
-            className="w-full block text-center px-3 py-2 text-[11px] font-bold bg-[#E52E2D] hover:bg-[#C12A26] rounded-lg text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md uppercase tracking-wider"
+            className="w-full block text-center px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold bg-[#E52E2D] hover:bg-[#C12A26] rounded-xl text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md uppercase tracking-wider"
           >
             Lihat Detail
           </Link>

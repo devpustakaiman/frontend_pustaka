@@ -11,6 +11,7 @@ export interface CountdownState {
   formattedTime: string;
   naturalTime: string;
   progressPercent: number;
+  hasMounted: boolean;
 }
 
 /**
@@ -38,17 +39,52 @@ export function formatNaturalIndonesianCountdown(
 }
 
 export function useCountdown(targetDate?: string | null): CountdownState {
-  const calculate = (): CountdownState => {
-    const now = new Date();
-    let endDate: Date;
+  const [hasMounted, setHasMounted] = useState(false);
+  const [countdown, setCountdown] = useState<CountdownState>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isExpired: false,
+    formattedTime: "00:00:00",
+    naturalTime: "Memuat promo...",
+    progressPercent: 0,
+    hasMounted: false,
+  });
 
-    if (!targetDate) {
-      // Fallback default: 2 days from now, locked to 23:59:59 local time
-      endDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
-      endDate.setHours(23, 59, 59, 999);
-    } else {
-      endDate = new Date(targetDate);
-      if (isNaN(endDate.getTime())) {
+  useEffect(() => {
+    setHasMounted(true);
+
+    const calculate = (): CountdownState => {
+      const now = new Date();
+      let endDate: Date;
+
+      if (!targetDate) {
+        // Fallback default: 2 days from now, locked to 23:59:59 local time
+        endDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        endDate = new Date(targetDate);
+        if (isNaN(endDate.getTime())) {
+          return {
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            isExpired: true,
+            formattedTime: "00:00:00",
+            naturalTime: "Promo Berakhir",
+            progressPercent: 0,
+            hasMounted: true,
+          };
+        }
+        // Force Local End of Day: lock to 23:59:59.999 local time
+        endDate.setHours(23, 59, 59, 999);
+      }
+
+      const difference = endDate.getTime() - now.getTime();
+
+      if (difference <= 0) {
         return {
           days: 0,
           hours: 0,
@@ -58,72 +94,55 @@ export function useCountdown(targetDate?: string | null): CountdownState {
           formattedTime: "00:00:00",
           naturalTime: "Promo Berakhir",
           progressPercent: 0,
+          hasMounted: true,
         };
       }
-      // Force Local End of Day: lock to 23:59:59.999 local time
-      endDate.setHours(23, 59, 59, 999);
-    }
 
-    const difference = endDate.getTime() - now.getTime();
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
 
-    if (difference <= 0) {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const formattedTime =
+        days > 0
+          ? `${pad(days)}d ${pad(hours)}h ${pad(minutes)}m`
+          : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+      const naturalTime = formatNaturalIndonesianCountdown(
+        days,
+        hours,
+        minutes,
+        seconds,
+        false
+      );
+
+      // Active promo progress calculation (remaining time against promo cycle, clamped 8% - 95%)
+      const promoCycleMs = 7 * 24 * 60 * 60 * 1000;
+      const totalMs = Math.max(difference, promoCycleMs);
+      const progressPercent = Math.min(95, Math.max(8, Math.round((difference / totalMs) * 100)));
+
       return {
-        days: 0,
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-        isExpired: true,
-        formattedTime: "00:00:00",
-        naturalTime: "Promo Berakhir",
-        progressPercent: 0,
+        days,
+        hours,
+        minutes,
+        seconds,
+        isExpired: false,
+        formattedTime,
+        naturalTime,
+        progressPercent,
+        hasMounted: true,
       };
-    }
-
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((difference / 1000 / 60) % 60);
-    const seconds = Math.floor((difference / 1000) % 60);
-
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const formattedTime =
-      days > 0
-        ? `${pad(days)}d ${pad(hours)}h ${pad(minutes)}m`
-        : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-
-    const naturalTime = formatNaturalIndonesianCountdown(
-      days,
-      hours,
-      minutes,
-      seconds,
-      false
-    );
-
-    // Active promo progress calculation (remaining time against promo cycle, clamped 8% - 95%)
-    const promoCycleMs = 7 * 24 * 60 * 60 * 1000;
-    const totalMs = Math.max(difference, promoCycleMs);
-    const progressPercent = Math.min(95, Math.max(8, Math.round((difference / totalMs) * 100)));
-
-    return {
-      days,
-      hours,
-      minutes,
-      seconds,
-      isExpired: false,
-      formattedTime,
-      naturalTime,
-      progressPercent,
     };
-  };
 
-  const [countdown, setCountdown] = useState<CountdownState>(calculate);
-
-  useEffect(() => {
+    setCountdown(calculate());
     const interval = setInterval(() => {
       setCountdown(calculate());
-    }, 1000); // 1-second tick - NO MILLISECONDS FLICKER
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  return countdown;
+  return { ...countdown, hasMounted };
 }
+

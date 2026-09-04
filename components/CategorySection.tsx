@@ -132,13 +132,13 @@ export default function CategorySection() {
                 <img
                   src={mainCategory.covers[0]}
                   alt="Book 1"
-                  className="w-14 sm:w-18 aspect-[3/4] object-contain rounded-lg shadow-xl transform -rotate-6 border border-white/20"
+                  className="w-14 sm:w-18 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] transform -rotate-6"
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={mainCategory.covers[1]}
                   alt="Book 2"
-                  className="w-14 sm:w-18 aspect-[3/4] object-contain rounded-lg shadow-2xl transform rotate-3 border border-white/20"
+                  className="w-14 sm:w-18 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] transform rotate-3"
                 />
               </div>
             </Link>
@@ -210,7 +210,7 @@ export default function CategorySection() {
                     <img
                       src={mainCategory.covers[0]}
                       alt="Buku Utama 1"
-                      className="absolute bottom-2 right-16 sm:right-20 w-28 sm:w-32 aspect-[3/4] object-contain rounded-xl shadow-xl -rotate-12 z-10 transition-transform duration-300 origin-bottom-left hover:-translate-y-2 hover:-rotate-16 border border-white/20 ring-1 ring-black/10"
+                      className="absolute bottom-2 right-16 sm:right-20 w-28 sm:w-32 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] -rotate-12 z-10 transition-transform duration-300 origin-bottom-left hover:-translate-y-2 hover:-rotate-16"
                     />
 
                     {/* Book 2 (Middle) */}
@@ -218,7 +218,7 @@ export default function CategorySection() {
                     <img
                       src={mainCategory.covers[1]}
                       alt="Buku Utama 2"
-                      className="absolute bottom-1 right-8 sm:right-10 w-28 sm:w-32 aspect-[3/4] object-contain rounded-xl shadow-2xl -rotate-2 z-20 transition-transform duration-300 origin-bottom hover:-translate-y-3 border border-white/20 ring-1 ring-black/10"
+                      className="absolute bottom-1 right-8 sm:right-10 w-28 sm:w-32 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] -rotate-2 z-20 transition-transform duration-300 origin-bottom hover:-translate-y-3"
                     />
 
                     {/* Book 3 (Front / Rightmost) */}
@@ -226,7 +226,7 @@ export default function CategorySection() {
                     <img
                       src={mainCategory.covers[2]}
                       alt="Buku Utama 3"
-                      className="absolute bottom-0 right-0 w-28 sm:w-32 aspect-[3/4] object-contain rounded-xl shadow-2xl rotate-8 z-30 transition-transform duration-300 origin-bottom-right hover:-translate-y-2 hover:rotate-12 border border-white/20 ring-1 ring-black/10"
+                      className="absolute bottom-0 right-0 w-28 sm:w-32 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] rotate-8 z-30 transition-transform duration-300 origin-bottom-right hover:-translate-y-2 hover:rotate-12"
                     />
                   </div>
                 </div>
@@ -267,14 +267,14 @@ export default function CategorySection() {
                       <img
                         src={cat.covers[0]}
                         alt={`${cat.name} 1`}
-                        className="w-14 aspect-[3/4] object-contain rounded-md shadow-md absolute right-6 rotate-[-6deg] border border-white/40"
+                        className="w-14 aspect-[3/4] object-cover rounded-sm drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)] absolute right-6 rotate-[-6deg]"
                       />
                       {/* Book 2 (front) */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={cat.covers[1]}
                         alt={`${cat.name} 2`}
-                        className="w-15 aspect-[3/4] object-contain rounded-md shadow-lg absolute right-0 rotate-[4deg] hover:rotate-0 transition-transform border border-white/60"
+                        className="w-15 aspect-[3/4] object-cover rounded-sm drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)] absolute right-0 rotate-[4deg] hover:rotate-0 transition-transform"
                       />
                     </div>
                   </Link>
