@@ -175,7 +175,9 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                   height={500}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 750px"
                   priority
-                  className="w-full h-auto object-contain scale-100 lg:scale-105 xl:scale-110 origin-center transition-transform duration-300"
+                  loading="eager"
+                  style={{ height: "auto" }}
+                  className="w-full object-contain scale-100 lg:scale-105 xl:scale-110 origin-center transition-transform duration-300"
                 />
               ) : (
                 <div className="relative flex items-center justify-center gap-3 sm:gap-6 w-full scale-100 lg:scale-105 xl:scale-110">

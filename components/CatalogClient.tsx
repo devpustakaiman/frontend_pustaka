@@ -337,7 +337,9 @@ export default function CatalogClient({ books }: CatalogClientProps) {
                 height={300}
                 sizes="(max-width: 1200px) 100vw, 1200px"
                 priority
-                className="w-full h-auto max-h-[260px] object-cover"
+                loading="eager"
+                style={{ height: "auto" }}
+                className="w-full max-h-[260px] object-cover"
               />
             </a>
           ) : (
@@ -348,7 +350,9 @@ export default function CatalogClient({ books }: CatalogClientProps) {
               height={300}
               sizes="(max-width: 1200px) 100vw, 1200px"
               priority
-              className="w-full h-auto max-h-[260px] object-cover"
+              loading="eager"
+              style={{ height: "auto" }}
+              className="w-full max-h-[260px] object-cover"
             />
           )}
         </div>

@@ -18,7 +18,8 @@ export default function Footer() {
                   width={500}
                   height={200}
                   loading="lazy"
-                  className="h-9 w-auto object-contain"
+                  style={{ width: "auto" }}
+                  className="h-9 object-contain"
                 />
               </div>
             </div>

@@ -62,7 +62,7 @@ export default function NewsGrid({ articles = [] }: NewsGridProps) {
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         loading="lazy"
-                        className="w-full h-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="aspect-video w-full rounded-t-2xl bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center border-b border-gray-100">

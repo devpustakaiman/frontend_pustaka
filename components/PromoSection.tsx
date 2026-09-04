@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
+import PromoStockBar from "@/components/PromoStockBar";
 
 interface PromoSectionProps {
   books?: Book[];
@@ -237,15 +238,16 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
         {/* Left Sub-column: Book Cover Asset */}
         <Link
           href={`/katalog/${book.id}`}
-          className="w-24 sm:w-44 md:w-48 aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl flex-shrink-0 border border-white/20 block relative"
+          className="w-24 sm:w-44 md:w-48 aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl flex-shrink-0 border border-white/20 block relative"
         >
           <Image
             src={coverImage}
             alt={book.title}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            loading="lazy"
-            className="w-full h-full object-cover rounded-lg sm:rounded-xl hover:scale-105 transition-transform duration-300"
+            priority
+            loading="eager"
+            sizes="(max-width: 768px) 100vw, 400px"
+            className="object-cover rounded-lg sm:rounded-xl hover:scale-105 transition-transform duration-300"
           />
         </Link>
 
@@ -277,18 +279,12 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
       <div className="bg-black/25 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 border border-white/10 mt-2 sm:mt-auto z-10 relative">
         {/* Countdown + Progress Bar */}
         <div className="flex-1 min-w-0 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-white/80 font-medium mb-1">
-            <Clock size={13} className="text-amber-300 shrink-0 sm:w-3.5 sm:h-3.5" />
-            <span className="truncate whitespace-nowrap font-semibold" suppressHydrationWarning>
-              Sisa Waktu: {countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
-            </span>
-          </div>
-          <div className="w-full h-1.5 sm:h-2 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-amber-400 rounded-full transition-all duration-500"
-              style={{ width: countdown.hasMounted ? `${countdown.progressPercent || 65}%` : '0%' }}
-            />
-          </div>
+          <PromoStockBar
+            timeLeft={`Sisa Waktu: ${countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}`}
+            stockLabel="Bonus Stiker"
+            progressPercent={50}
+            theme="dark"
+          />
         </div>
 
         {/* CTA Button */}
@@ -337,14 +333,14 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
       <div className="absolute top-1/2 -right-3.5 w-7 h-7 bg-[#FFF7F5] border border-gray-100 rounded-full -translate-y-1/2 z-20 shadow-inner" />
 
       {/* Discount Badge */}
-      <span className="absolute top-3.5 right-4 bg-[#E53935] text-white font-black text-[10px] px-2.5 py-0.5 rounded-md shadow-2xs z-10">
+      <span className="absolute top-3 right-3 z-10 bg-[#E53935] text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-0.5 rounded-md shadow-xs uppercase tracking-wider">
         -{discountPct}%
       </span>
 
       {/* Cover Thumbnail */}
       <Link
         href={`/katalog/${book.id}`}
-        className="w-20 h-28 flex-shrink-0 object-contain rounded-xl bg-gray-50 p-1 border border-gray-100 overflow-hidden block group-hover:scale-105 transition-transform relative"
+        className="w-20 aspect-[2/3] flex-shrink-0 rounded-xl bg-gray-50 p-1 border border-gray-100 overflow-hidden block group-hover:scale-105 transition-transform relative"
       >
         <Image
           src={coverImage}
@@ -352,7 +348,7 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
           fill
           sizes="80px"
           loading="lazy"
-          className="w-full h-full object-cover rounded-lg"
+          className="object-cover rounded-lg"
         />
       </Link>
 
@@ -375,17 +371,12 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
 
         {/* Dynamic Countdown & Stock Progress */}
         <div className="mt-2.5 pt-2 border-t border-gray-100/80">
-          <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-            <span className="flex items-center gap-1 font-medium font-semibold" suppressHydrationWarning>
-              <Clock className="w-3 h-3 text-[#E53935]" /> {countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
-            </span>
-            <span className="text-[#E53935] font-semibold text-[10px]">Stok Terbatas</span>
-          </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
-            <div
-              className="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full w-full"
-            />
-          </div>
+          <PromoStockBar
+            timeLeft={countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+            stockLabel="Stok Terbatas"
+            progressPercent={50}
+            theme="light"
+          />
         </div>
       </div>
 
@@ -421,14 +412,14 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
     <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-red-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between h-full group relative overflow-hidden">
       
       {/* Discount Tag */}
-      <div className="absolute top-2 right-2 bg-gradient-to-r from-red-600 to-[#E53935] text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-2xs z-10">
+      <span className="absolute top-2.5 right-2.5 z-10 bg-[#E53935] text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-0.5 rounded-md shadow-xs uppercase tracking-wider">
         -{discountPct}%
-      </div>
+      </span>
 
       {/* Cover Image */}
       <Link
         href={`/katalog/${book.id}`}
-        className="w-full aspect-[3/4] max-h-36 sm:max-h-40 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden mb-2.5 border border-gray-100 group-hover:scale-102 transition-transform block relative"
+        className="w-full aspect-[2/3] max-h-36 sm:max-h-40 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden mb-2.5 border border-gray-100 group-hover:scale-102 transition-transform block relative"
       >
         <Image
           src={coverImage}
@@ -436,7 +427,7 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           loading="lazy"
-          className="h-full w-full object-cover rounded-lg"
+          className="object-cover rounded-lg"
         />
       </Link>
 
@@ -454,36 +445,32 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
 
         {/* Price & Stock */}
         <div className="mt-2 pt-2 border-t border-gray-100">
-          <div className="flex items-baseline justify-between gap-1 flex-wrap">
+          <div className="flex items-baseline justify-between gap-1 flex-wrap mb-1.5">
             <span className="font-black text-[#E53935] text-sm">{formattedPromo}</span>
             <span className="line-through text-gray-400 text-[10px] font-normal">{formattedOrig}</span>
           </div>
 
-          <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500">
-            <span className="flex items-center gap-1 font-medium font-semibold" suppressHydrationWarning>
-              <Clock size={10} className="text-[#E53935]" />
-              <span>{countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}</span>
-            </span>
-          </div>
-
-          {/* Stock Urgency Progress Bar */}
-          <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 mb-3 overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full w-full" 
+          {/* Standardized Stock / Time Progress Bar */}
+          <div className="mb-3">
+            <PromoStockBar
+              timeLeft={countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+              stockLabel="Stok Terbatas"
+              progressPercent={65}
+              theme="light"
             />
           </div>
         </div>
       </div>
 
-      {/* Buy Button */}
+      {/* Action Button */}
       <Link
         href={`/katalog/${book.id}`}
-        className="w-full bg-[#E53935] hover:bg-red-700 text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1 transition-colors shadow-2xs cursor-pointer"
+        className="w-full bg-[#E53935] hover:bg-[#C12A26] text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer uppercase tracking-wider"
       >
-        <ShoppingCart size={13} />
-        <span>Beli Sekarang</span>
+        <span>Lihat Detail</span>
       </Link>
 
     </div>
   );
 }
+

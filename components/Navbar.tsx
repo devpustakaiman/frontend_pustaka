@@ -270,7 +270,8 @@ export default function Navbar() {
             width={500}
             height={200}
             priority
-            className="h-9 sm:h-10 lg:h-11 w-auto object-contain transition-transform group-hover:scale-105"
+            style={{ width: "auto" }}
+            className="h-9 sm:h-10 lg:h-11 object-contain transition-transform group-hover:scale-105"
           />
         </Link>
 

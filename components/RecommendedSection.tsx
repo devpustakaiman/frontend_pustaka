@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Star, ChevronRight, ChevronLeft, Bookmark, Clock } from "lucide-react";
 import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
+import PromoStockBar from "./PromoStockBar";
 
 interface RecommendedSectionProps {
   books?: Book[];
@@ -52,15 +53,16 @@ function FeaturedHeroCard({ book }: { book: Book }) {
         <div className="w-24 sm:w-auto sm:col-span-5 flex-shrink-0 flex justify-center">
           <Link
             href={`/katalog/${book.id}`}
-            className="w-full max-w-[220px] aspect-[3/4] rounded-xl sm:rounded-2xl drop-shadow-md sm:drop-shadow-xl hover:scale-105 transition-transform overflow-hidden shadow-md sm:shadow-lg block bg-gray-50 border border-gray-100 relative"
+            className="w-full max-w-[220px] aspect-[2/3] rounded-xl sm:rounded-2xl drop-shadow-md sm:drop-shadow-xl hover:scale-105 transition-transform overflow-hidden shadow-md sm:shadow-lg block bg-gray-50 border border-gray-100 relative"
           >
             <Image
               src={coverImage}
               alt={book.title}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              loading="lazy"
-              className="w-full h-full object-cover"
+              priority
+              loading="eager"
+              sizes="(max-width: 768px) 100vw, 400px"
+              className="object-cover"
             />
           </Link>
         </div>
@@ -104,48 +106,26 @@ function FeaturedHeroCard({ book }: { book: Book }) {
         </div>
       </div>
 
-      {/* Integrated Synchronized Timer & Action Bottom Bar (Conditional on hasDiscount) */}
-      <div className="mt-3 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
-        {hasDiscount ? (
-          <>
-            {/* Left: Timer & Stock Progress Bar */}
-            <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl p-2.5 sm:p-3">
-              <div className="flex items-center justify-between text-[11px] sm:text-xs mb-1 sm:mb-1.5">
-                <span className="flex items-center gap-1 sm:gap-1.5 text-gray-700 font-semibold" suppressHydrationWarning>
-                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E52E2D]" />
-                  Sisa Waktu: <strong className="text-gray-900 font-extrabold whitespace-nowrap">{countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}</strong>
-                </span>
-                <span className="text-[10px] sm:text-[11px] font-bold text-[#E52E2D] bg-red-50 px-1.5 sm:px-2 py-0.5 rounded">
-                  Promo Kurator
-                </span>
-              </div>
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-200 h-1.5 sm:h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-amber-500 to-[#E52E2D] h-full rounded-full transition-all duration-500"
-                  style={{ width: countdown.hasMounted ? `${countdown.progressPercent || 65}%` : '0%' }}
-                />
-              </div>
-            </div>
-
-            {/* Right: CTA Button */}
-            <Link
-              href={`/katalog/${book.id}`}
-              className="bg-[#E52E2D] hover:bg-[#C12A26] text-white font-bold px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 whitespace-nowrap text-xs sm:text-sm group/btn w-full sm:w-auto"
-            >
-              <span>Lihat Detail Buku</span>
-              <span className="group-hover/btn:translate-x-1 transition-transform">&rarr;</span>
-            </Link>
-          </>
-        ) : (
-          <Link
-            href={`/katalog/${book.id}`}
-            className="w-full bg-[#E52E2D] hover:bg-[#C12A26] text-white font-bold py-2.5 sm:py-3.5 px-4 sm:px-6 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm text-xs sm:text-sm group/btn"
-          >
-            <span>Lihat Detail Buku</span>
-            <span className="group-hover/btn:translate-x-1 transition-transform">&rarr;</span>
-          </Link>
+      {/* Integrated Synchronized Timer & Action Bottom Bar */}
+      <div className="mt-3 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        {hasDiscount && (
+          <div className="flex-1 min-w-0">
+            <PromoStockBar
+              timeLeft={`Sisa Waktu: ${countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}`}
+              stockLabel="Promo Kurator"
+              progressPercent={50}
+              theme="light"
+            />
+          </div>
         )}
+
+        <Link
+          href={`/katalog/${book.id}`}
+          className="w-full sm:w-auto self-end px-6 py-2.5 text-sm font-semibold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm flex items-center justify-center gap-2 uppercase tracking-wider shrink-0 cursor-pointer group/btn"
+        >
+          <span>Lihat Detail Buku</span>
+          <span className="group-hover/btn:translate-x-1 transition-transform">&rarr;</span>
+        </Link>
       </div>
 
     </div>
@@ -175,42 +155,42 @@ function RightHorizontalCard({ book }: { book: Book }) {
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-between hover:shadow-md hover:border-red-100 transition-all group relative overflow-hidden h-full flex-1">
-      <div className="flex items-center gap-4">
+    <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm transition-all group relative overflow-hidden h-full flex-1">
+      {/* Top Right Discount Badge Overlay */}
+      {hasDiscount && (
+        <span className="absolute top-2.5 right-2.5 z-10 bg-[#E53935] text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-0.5 rounded-md shadow-xs uppercase tracking-wider">
+          -{discountPercent}%
+        </span>
+      )}
+
+      {/* Top Content: Thumbnail & Details */}
+      <Link href={`/katalog/${book.id}`} className="flex items-center gap-4 group/item">
         {/* Thumbnail */}
-        <Link
-          href={`/katalog/${book.id}`}
-          className="w-20 h-28 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100 block group-hover:scale-105 transition-transform relative"
-        >
+        <div className="w-20 aspect-[2/3] rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100 relative group-hover/item:scale-105 transition-transform block">
           <Image
             src={coverImage}
             alt={book.title}
             fill
             sizes="80px"
             loading="lazy"
-            className="w-full h-full object-cover"
+            className="object-cover"
           />
-        </Link>
+        </div>
 
         {/* Details */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <div className="flex items-center justify-between gap-1">
+        <div className="flex-1 min-w-0 flex flex-col justify-center pr-10 sm:pr-12">
+          <div className="flex items-center justify-between gap-1 mb-0.5">
             <span className="text-xs font-bold text-[#E52E2D] uppercase tracking-wider truncate">
               {book.category || "LITERASI"}
             </span>
-            {hasDiscount && (
-              <span className="bg-red-50 text-[#E52E2D] font-bold text-[10px] px-1.5 py-0.5 rounded border border-red-100 shrink-0">
-                -{discountPercent}%
-              </span>
-            )}
           </div>
 
-          <h4 className="line-clamp-2 text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors mt-0.5 leading-snug">
-            <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+          <h4 className="line-clamp-2 text-sm font-bold text-gray-900 group-hover/item:text-[#E52E2D] transition-colors leading-snug">
+            {book.title}
           </h4>
           <p className="text-xs text-gray-500 truncate mt-0.5">{book.author}</p>
 
-          <div className={`text-sm sm:text-base font-black mt-1 flex items-baseline gap-2 ${hasDiscount ? "text-[#E52E2D]" : "text-gray-900"}`}>
+          <div className={`text-sm sm:text-base font-black mt-1.5 flex items-baseline gap-2 ${hasDiscount ? "text-[#E52E2D]" : "text-gray-900"}`}>
             <span>{currentPrice}</span>
             {hasDiscount && (
               <span className="line-through text-gray-400 text-xs font-normal">
@@ -219,25 +199,30 @@ function RightHorizontalCard({ book }: { book: Book }) {
             )}
           </div>
         </div>
-      </div>
+      </Link>
 
-      {/* Minimalist Stock & Timer Bar under price (Conditional on hasDiscount) */}
-      {hasDiscount && (
-        <div className="mt-2.5 pt-2 border-t border-gray-100/80">
-          <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-            <span className="flex items-center gap-1 font-medium" suppressHydrationWarning>
-              <Clock className="w-3 h-3 text-[#E52E2D]" /> {countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
-            </span>
-            <span className="text-red-500 font-semibold text-[10px]">Stok Terbatas</span>
-          </div>
-          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-            <div
-              className="bg-[#E52E2D] h-full rounded-full transition-all duration-500"
-              style={{ width: countdown.hasMounted ? `${countdown.progressPercent || 45}%` : '0%' }}
+      {/* Bottom Container: Timer/Stock Bar (if promo) + Action Button on small screens */}
+      <div className="mt-3 flex flex-col justify-end">
+        {/* Standardized Stock & Timer Bar */}
+        {hasDiscount && (
+          <div className="pt-2 border-t border-gray-100/80">
+            <PromoStockBar
+              timeLeft={countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+              stockLabel="Stok Terbatas"
+              progressPercent={50}
+              theme="light"
             />
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Action Button: Red background with white font, shown on small screens / mobile */}
+        <Link
+          href={`/katalog/${book.id}`}
+          className="mt-3 block lg:hidden w-full text-center py-2 px-3 bg-[#E53935] hover:bg-[#C12A26] text-white font-bold text-xs rounded-xl tracking-wider uppercase transition-colors shadow-xs shrink-0 cursor-pointer"
+        >
+          LIHAT DETAIL
+        </Link>
+      </div>
     </div>
   );
 }

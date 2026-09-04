@@ -2,6 +2,7 @@ import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining } from "@/lib/utils";
+import PromoStockBar from "@/components/PromoStockBar";
 
 export type { Book };
 
@@ -38,7 +39,7 @@ const BookCard = memo(function BookCard({ book = DEFAULT_BOOK, priority = false 
       {/* Cover image & top-right promo badge overlay */}
       <Link
         href={`/katalog/${currentBook.id}`}
-        className="block overflow-hidden bg-gray-100 aspect-[3/4] rounded-t-2xl sm:rounded-2xl relative flex-shrink-0"
+        className="block overflow-hidden bg-gray-100 aspect-[2/3] rounded-t-2xl sm:rounded-2xl relative flex-shrink-0"
       >
         <Image
           src={coverImage}
@@ -47,16 +48,14 @@ const BookCard = memo(function BookCard({ book = DEFAULT_BOOK, priority = false 
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           loading={priority ? "eager" : "lazy"}
           priority={priority}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
         />
 
         {/* Cover Image Overlay Badge (-X%) */}
         {hasActivePromo && (
-          <div className="absolute top-2 right-2 z-10">
-            <span className="inline-flex items-center bg-[#E52E2D] text-white font-extrabold text-[9px] sm:text-xs px-2 py-0.5 rounded-full shadow-md">
-              {discountPct ? `-${discountPct}%` : "PROMO"}
-            </span>
-          </div>
+          <span className="absolute top-2.5 right-2.5 z-10 bg-[#E53935] text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-0.5 rounded-md shadow-xs uppercase tracking-wider">
+            {discountPct ? `-${discountPct}%` : "PROMO"}
+          </span>
         )}
       </Link>
 
@@ -86,7 +85,7 @@ const BookCard = memo(function BookCard({ book = DEFAULT_BOOK, priority = false 
                 {hasActivePromo ? formattedPromoPrice : formattedOriginalPrice}
               </span>
               {hasActivePromo && discountPct ? (
-                <span className="bg-[#E52E2D] text-white font-black text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full shadow-2xs">
+                <span className="bg-red-50 text-[#E53935] border border-red-200 font-extrabold text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-md uppercase tracking-wider">
                   HEMAT {discountPct}%
                 </span>
               ) : null}
@@ -102,26 +101,14 @@ const BookCard = memo(function BookCard({ book = DEFAULT_BOOK, priority = false 
             </div>
           </div>
 
-          <div className="min-h-[38px] sm:min-h-[42px] flex items-center my-1 w-full">
+          <div className="min-h-[38px] sm:min-h-[42px] flex items-center my-1.5 w-full">
             {hasActivePromo ? (
-              <div className="w-full bg-red-50/80 border border-red-200/60 rounded-xl p-1.5 sm:p-2 space-y-1">
-                <div className="w-full h-1 sm:h-1.5 bg-red-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#E52E2D] via-rose-500 to-orange-500 rounded-full w-[75%]" />
-                </div>
-                <div className="flex items-center justify-between text-[10px] sm:text-[11px]">
-                  {daysRemaining <= 1 ? (
-                    <span className="text-[#E52E2D] font-extrabold text-[10px] sm:text-xs flex items-center gap-1 animate-pulse">
-                      <span>⚡</span>
-                      <span>Berakhir HARI INI!</span>
-                    </span>
-                  ) : (
-                    <span className="text-[10px] sm:text-xs text-red-900 font-semibold flex items-center gap-1">
-                      <span>⏳</span>
-                      <span>Berakhir dalam {daysRemaining} hari</span>
-                    </span>
-                  )}
-                </div>
-              </div>
+              <PromoStockBar
+                timeLeft={daysRemaining <= 1 ? "Berakhir HARI INI!" : `Berakhir ${daysRemaining} hari`}
+                stockLabel={daysRemaining <= 1 ? "HARI INI!" : "Stok Terbatas"}
+                progressPercent={daysRemaining <= 1 ? 95 : 70}
+                theme="light"
+              />
             ) : (
               <div className="w-full h-full invisible select-none pointer-events-none" />
             )}
@@ -129,7 +116,7 @@ const BookCard = memo(function BookCard({ book = DEFAULT_BOOK, priority = false 
 
           <Link
             href={`/katalog/${currentBook.id}`}
-            className="w-full block text-center px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold bg-[#E52E2D] hover:bg-[#C12A26] rounded-xl text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md uppercase tracking-wider"
+            className="w-full block text-center px-2.5 py-2 text-xs font-bold bg-[#E53935] hover:bg-[#C12A26] rounded-xl text-white transition-all duration-200 active:scale-95 uppercase tracking-wider shadow-xs"
           >
             Lihat Detail
           </Link>

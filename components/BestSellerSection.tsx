@@ -81,7 +81,7 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
                     <div className="relative">
                       <Link
                         href={`/katalog/${book.id}`}
-                        className="block overflow-hidden aspect-[3/4] bg-gray-50 relative"
+                        className="block overflow-hidden aspect-[2/3] bg-gray-50 relative"
                       >
                         <Image
                           src={book.coverUrl || book.cover_url || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600"}
@@ -89,7 +89,7 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                           loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </Link>
                       <span className="absolute top-2.5 left-2.5 w-7 h-7 rounded-full bg-[#E52E2D] text-white text-[11px] font-black flex items-center justify-center shadow-lg">
