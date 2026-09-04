@@ -23,21 +23,7 @@ export default async function KatalogPage() {
           </Link>
         </div>
 
-        {/* Page header */}
-        <div className="border-b border-gray-100 pb-6">
-          <span className="text-xs uppercase tracking-wider font-bold text-[#E52E2D]">
-            Katalog Lengkap
-          </span>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#272522] tracking-tight mt-1">
-            Katalog Buku <span className="text-[#C12A26] italic font-serif">Pustaka Iman</span>
-          </h1>
-          <p className="text-sm text-[#76716A] mt-2">
-            Jelajahi seluruh koleksi publikasi dan penerbitan bermakna dari
-            Pustaka Iman.
-          </p>
-        </div>
-
-        {/* CatalogClient wraps category filter pills, sorting dropdown, and BookGrid */}
+        {/* CatalogClient handles Dynamic Header, Promo Banner, Filters & BookGrid on Client */}
         <Suspense fallback={<BookCardSkeletonGrid count={8} />}>
           <CatalogClient books={books} />
         </Suspense>

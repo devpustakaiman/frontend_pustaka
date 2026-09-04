@@ -201,11 +201,21 @@ export async function getMediaVideos(): Promise<MediaVideo[]> {
   }
 }
 
+export interface ManuscriptSubmissionData {
+  senderName: string;
+  email: string;
+  synopsis: string;
+  whatsapp?: string;
+  title?: string;
+  genre?: string;
+}
+
 export async function submitManuscript(
-  formData: { senderName: string; email: string; synopsis: string },
+  formData: ManuscriptSubmissionData,
   file: File
 ) {
-  const fileName = `${Date.now()}_${file.name}`;
+  const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const fileName = `${Date.now()}_${sanitizedFileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from("naskah")
@@ -222,24 +232,43 @@ export async function submitManuscript(
 
   const pdfDocumentUrl = urlData.publicUrl;
 
+  const fullPayload: Record<string, any> = {
+    senderName: formData.senderName,
+    email: formData.email,
+    synopsis: formData.synopsis,
+    pdfDocumentUrl,
+    status: "pending",
+  };
+
+  if (formData.whatsapp) fullPayload.whatsapp = formData.whatsapp;
+  if (formData.title) fullPayload.title = formData.title;
+  if (formData.genre) fullPayload.genre = formData.genre;
+
   const { error: insertError } = await supabase
     .from("submissions")
-    .insert([
-      {
-        senderName: formData.senderName,
-        email: formData.email,
-        synopsis: formData.synopsis,
-        pdfDocumentUrl,
-        status: "pending",
-      },
-    ]);
+    .insert([fullPayload]);
 
   if (insertError) {
-    console.error("Error inserting manuscript submission:", insertError);
-    throw insertError;
+    console.warn("Full payload insert failed, trying base submission payload:", insertError.message);
+    const { error: fallbackError } = await supabase
+      .from("submissions")
+      .insert([
+        {
+          senderName: formData.senderName,
+          email: formData.email,
+          synopsis: formData.synopsis,
+          pdfDocumentUrl,
+          status: "pending",
+        },
+      ]);
+
+    if (fallbackError) {
+      console.error("Error inserting manuscript submission:", fallbackError);
+      throw fallbackError;
+    }
   }
 
-  return { success: true };
+  return { success: true, pdfDocumentUrl };
 }
 
 export interface SiteSettings {
@@ -258,6 +287,17 @@ export interface SiteSettings {
   about_vision?: string;
   about_mission?: string;
   about_pillars?: any[];
+  manuscript_steps?: any[];
+  manuscript_criteria?: string[];
+  manuscript_contact_desc?: string;
+  manuscript_whatsapp?: string;
+  catalog_title?: string;
+  catalog_subtitle?: string;
+  catalog_promo_banner_active?: boolean;
+  catalog_promo_banner_url?: string;
+  catalog_promo_banner_target_url?: string;
+  catalog_promo_banner_link?: string;
+  catalog_featured_categories?: string[];
   bank_accounts?: Array<{
     bank_name?: string;
     bankName?: string;

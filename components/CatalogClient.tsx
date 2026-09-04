@@ -17,6 +17,7 @@ import {
 import BookGrid, { Book } from "@/components/BookGrid";
 import { CATEGORY_TREE, MizanCategoryGroup } from "@/components/Navbar";
 import { isActivePromo } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 interface CatalogClientProps {
   books: Book[];
@@ -44,6 +45,18 @@ function parsePrice(price: string | number | undefined): number {
   return parseFloat(cleaned) || 0;
 }
 
+function parseCategories(input: any): string[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input.map((c) => String(c).trim()).filter(Boolean);
+  if (typeof input === "string") {
+    try {
+      const parsed = JSON.parse(input);
+      if (Array.isArray(parsed)) return parsed.map((c) => String(c).trim()).filter(Boolean);
+    } catch (e) {}
+  }
+  return [];
+}
+
 export default function CatalogClient({ books }: CatalogClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -52,13 +65,55 @@ export default function CatalogClient({ books }: CatalogClientProps) {
   const [sort, setSort] = useState<SortOption>("all");
   const [isOpen, setIsOpen] = useState(false);
 
-  // 1. Smart Search State with Debounce
+  // Smart Search State with Debounce
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
-  // 2. Tri-State Toggles (0 = All/Default, 1 = Active Only, 2 = Inactive Only)
+  // Tri-State Toggles (0 = All/Default, 1 = Active Only, 2 = Inactive Only)
   const [promoFilter, setPromoFilter] = useState<number>(0);
   const [recommendedFilter, setRecommendedFilter] = useState<number>(0);
+
+  // Dynamic Catalog Header & Banner State
+  const [catalogTitle, setCatalogTitle] = useState("Katalog Buku Pustaka Iman");
+  const [catalogSubtitle, setCatalogSubtitle] = useState(
+    "Jelajahi seluruh koleksi publikasi dan penerbitan bermakna dari Pustaka Iman."
+  );
+  const [promoBanner, setPromoBanner] = useState<{ active: boolean; url: string; link?: string } | null>(null);
+  const [catalogSettings, setCatalogSettings] = useState<any>(null);
+
+  // Fetch site_settings from Supabase on mount
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("*")
+          .eq("id", "default")
+          .single();
+
+        console.log("[DEBUG-CATALOG] Data from Supabase:", data);
+        if (error) console.error("[DEBUG-CATALOG] Error:", error);
+
+        if (data) {
+          if (data.catalog_title) setCatalogTitle(data.catalog_title);
+          if (data.catalog_subtitle) setCatalogSubtitle(data.catalog_subtitle);
+          if (data.catalog_promo_banner_active && data.catalog_promo_banner_url) {
+            setPromoBanner({
+              active: data.catalog_promo_banner_active,
+              url: data.catalog_promo_banner_url,
+              link: data.catalog_promo_banner_link || data.catalog_promo_banner_target_url,
+            });
+          } else {
+            setPromoBanner(null);
+          }
+          setCatalogSettings(data);
+        }
+      } catch (err) {
+        console.error("[DEBUG-CATALOG] Error loading settings:", err);
+      }
+    }
+    loadSettings();
+  }, []);
 
   // Debounce search input (300ms)
   useEffect(() => {
@@ -139,6 +194,28 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     setSort("all");
     router.push("/katalog", { scroll: false });
   };
+
+  // Sort Categories by catalog_featured_categories
+  const featured = parseCategories(catalogSettings?.catalog_featured_categories);
+  const allCategories = CATEGORY_TREE.map((c) => c.name);
+
+  const isMatched = (cat: string, featuredList: string[]) => {
+    return featuredList.some((f) => 
+      f.toLowerCase().trim() === cat.toLowerCase().trim() ||
+      (f.includes("Fiksi") && cat.includes("Fiksi")) ||
+      (f.includes("Filsafat") && cat.includes("Filsafat")) ||
+      (f.includes("Parenting") && cat.includes("Parenting")) ||
+      (f.includes("Pengembangan Diri") && cat.includes("Pengembangan Diri"))
+    );
+  };
+
+  const priorityCategories = allCategories.filter((cat) => featured.includes(cat) || isMatched(cat, featured));
+  const remainingCategories = allCategories.filter((cat) => !priorityCategories.includes(cat));
+  const orderedCategoryNames = [...priorityCategories, ...remainingCategories];
+
+  const orderedCategories = orderedCategoryNames
+    .map((name) => CATEGORY_TREE.find((c) => c.name === name))
+    .filter((c): c is MizanCategoryGroup => c !== undefined);
 
   // Find active parent category group if selectedCategory is a parent OR a subcategory
   const activeParentGroup: MizanCategoryGroup | undefined = CATEGORY_TREE.find((parent) => {
@@ -231,7 +308,36 @@ export default function CatalogClient({ books }: CatalogClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Top Filter Card */}
+      
+      {/* 1. Dynamic Header */}
+      <div className="border-b border-gray-100 pb-6">
+        <span className="text-xs uppercase tracking-wider font-bold text-[#E52E2D]">
+          Katalog Lengkap
+        </span>
+        <h1 className="text-3xl sm:text-4xl font-serif font-bold text-slate-900 tracking-tight mt-1">
+          {catalogTitle}
+        </h1>
+        <p className="text-slate-600 mt-2 text-base">
+          {catalogSubtitle}
+        </p>
+      </div>
+
+      {/* 2. Promo Banner Card (Permanent display when catalog_promo_banner_active === true and catalog_promo_banner_url exists) */}
+      {promoBanner && promoBanner.url && (
+        <div className="mt-6 mb-8 w-full overflow-hidden rounded-2xl border border-slate-200 shadow-sm relative">
+          {promoBanner.link ? (
+            <a href={promoBanner.link} target={promoBanner.link.startsWith("http") ? "_blank" : "_self"} rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={promoBanner.url} alt="Promo Banner" className="w-full h-auto max-h-[260px] object-cover" />
+            </a>
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={promoBanner.url} alt="Promo Banner" className="w-full h-auto max-h-[260px] object-cover" />
+          )}
+        </div>
+      )}
+
+      {/* 3. Top Filter Card (Search Bar + Tri-State Toggles + Category Pills) */}
       <div className="bg-white border border-gray-200 rounded-3xl p-4 sm:p-6 shadow-sm space-y-4">
         
         {/* Row 1: Smart Search + Tri-State Toggle Filters */}
@@ -348,7 +454,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
             )}
           </div>
 
-          {/* Top Level Category Pills */}
+          {/* Top Level Category Pills (Prioritizing orderedCategories directly after 'Semua Kategori') */}
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => handleCategorySelect("Semua Kategori")}
@@ -363,9 +469,10 @@ export default function CatalogClient({ books }: CatalogClientProps) {
               <span>Semua Kategori</span>
             </button>
 
-            {CATEGORY_TREE.map((cat) => {
+            {orderedCategories.map((cat) => {
               const isParentActive =
                 activeParentGroup?.name.toLowerCase() === cat.name.toLowerCase();
+              const isFeaturedPill = isMatched(cat.name, featured);
               return (
                 <button
                   key={cat.name}
@@ -374,6 +481,8 @@ export default function CatalogClient({ books }: CatalogClientProps) {
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
                     isParentActive
                       ? "bg-[#E52E2D] text-white shadow-md scale-105"
+                      : isFeaturedPill
+                      ? "bg-red-50 text-[#E52E2D] border border-red-200 hover:bg-red-100/60"
                       : "bg-gray-50 text-[#272522] border border-gray-200 hover:border-[#E52E2D]/60 hover:bg-white"
                   }`}
                 >
