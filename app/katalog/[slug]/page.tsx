@@ -8,7 +8,7 @@ export async function generateStaticParams() {
     return [{ slug: "1" }, { slug: "default" }];
   }
 
-  return books.map((book) => ({
+  return books.map((book: any) => ({
     slug: String(book.id),
   }));
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,10 +12,12 @@ export default function Footer() {
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center">
               <div className="bg-white px-3.5 py-2 rounded-2xl shadow-sm inline-flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src="/logo500x200_1.png"
                   alt="PUSTAKA IMaN"
+                  width={140}
+                  height={36}
+                  loading="lazy"
                   className="h-9 w-auto object-contain"
                 />
               </div>

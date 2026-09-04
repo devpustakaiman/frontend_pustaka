@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   ChevronDown,
   SlidersHorizontal,
@@ -87,9 +88,11 @@ export default function CatalogClient({ books }: CatalogClientProps) {
       try {
         const { data, error } = await supabase
           .from("site_settings")
-          .select("*")
+          .select(
+            "catalog_title, catalog_subtitle, catalog_promo_banner_active, catalog_promo_banner_url, catalog_promo_banner_link, catalog_featured_categories"
+          )
           .eq("id", "default")
-          .single();
+          .maybeSingle();
 
         console.log("[DEBUG-CATALOG] Data from Supabase:", data);
         if (error) console.error("[DEBUG-CATALOG] Error:", error);
@@ -101,7 +104,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
             setPromoBanner({
               active: data.catalog_promo_banner_active,
               url: data.catalog_promo_banner_url,
-              link: data.catalog_promo_banner_link || data.catalog_promo_banner_target_url,
+              link: data.catalog_promo_banner_link,
             });
           } else {
             setPromoBanner(null);
@@ -327,12 +330,26 @@ export default function CatalogClient({ books }: CatalogClientProps) {
         <div className="mt-6 mb-8 w-full overflow-hidden rounded-2xl border border-slate-200 shadow-sm relative">
           {promoBanner.link ? (
             <a href={promoBanner.link} target={promoBanner.link.startsWith("http") ? "_blank" : "_self"} rel="noopener noreferrer">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={promoBanner.url} alt="Promo Banner" className="w-full h-auto max-h-[260px] object-cover" />
+              <Image
+                src={promoBanner.url}
+                alt="Promo Banner"
+                width={1200}
+                height={300}
+                sizes="(max-width: 1200px) 100vw, 1200px"
+                priority
+                className="w-full h-auto max-h-[260px] object-cover"
+              />
             </a>
           ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={promoBanner.url} alt="Promo Banner" className="w-full h-auto max-h-[260px] object-cover" />
+            <Image
+              src={promoBanner.url}
+              alt="Promo Banner"
+              width={1200}
+              height={300}
+              sizes="(max-width: 1200px) 100vw, 1200px"
+              priority
+              className="w-full h-auto max-h-[260px] object-cover"
+            />
           )}
         </div>
       )}

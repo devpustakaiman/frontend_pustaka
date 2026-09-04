@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import SectionHeader from "./SectionHeader";
 import { parseRichTextToPlainText, formatIndonesianDate } from "@/lib/utils";
 
@@ -53,13 +54,15 @@ export default function NewsGrid({ articles = [] }: NewsGridProps) {
                   className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all overflow-hidden flex flex-col"
                 >
                   {/* Thumbnail */}
-                  <Link href={`/warta/${item.id}`} className="block overflow-hidden bg-gray-50">
+                  <Link href={`/warta/${item.id}`} className="block overflow-hidden bg-gray-50 aspect-video relative">
                     {imgUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
+                      <Image
                         src={imgUrl}
                         alt={item.title}
-                        className="aspect-video w-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        loading="lazy"
+                        className="w-full h-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="aspect-video w-full rounded-t-2xl bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center border-b border-gray-100">

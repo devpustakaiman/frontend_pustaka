@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Award,
@@ -167,10 +168,13 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
               
               {/* Illustration / Image Visual */}
               {settings?.hero_banner_url ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
+                <Image
                   src={settings.hero_banner_url}
                   alt={headline}
+                  width={750}
+                  height={500}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 750px"
+                  priority
                   className="w-full h-auto object-contain scale-100 lg:scale-105 xl:scale-110 origin-center transition-transform duration-300"
                 />
               ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -263,10 +264,12 @@ export default function Navbar() {
           href="/"
           className="flex items-center shrink-0 focus:outline-none rounded-md group py-1"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/logo500x200_1.png"
             alt="PUSTAKA IMaN"
+            width={160}
+            height={44}
+            priority
             className="h-9 sm:h-10 lg:h-11 w-auto object-contain transition-transform group-hover:scale-105"
           />
         </Link>
@@ -436,10 +439,12 @@ export default function Navbar() {
                       className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group"
                     >
                       {book.cover_url ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
+                        <Image
                           src={book.cover_url}
                           alt={book.title}
+                          width={36}
+                          height={48}
+                          loading="lazy"
                           className="w-9 h-12 object-cover rounded shadow-2xs shrink-0"
                         />
                       ) : (

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Star, ChevronRight, ChevronLeft, Bookmark, Clock } from "lucide-react";
 import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
@@ -51,12 +52,14 @@ function FeaturedHeroCard({ book }: { book: Book }) {
         <div className="w-24 sm:w-auto sm:col-span-5 flex-shrink-0 flex justify-center">
           <Link
             href={`/katalog/${book.id}`}
-            className="w-full max-w-[220px] aspect-[3/4] rounded-xl sm:rounded-2xl drop-shadow-md sm:drop-shadow-xl hover:scale-105 transition-transform overflow-hidden shadow-md sm:shadow-lg block bg-gray-50 border border-gray-100"
+            className="w-full max-w-[220px] aspect-[3/4] rounded-xl sm:rounded-2xl drop-shadow-md sm:drop-shadow-xl hover:scale-105 transition-transform overflow-hidden shadow-md sm:shadow-lg block bg-gray-50 border border-gray-100 relative"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={coverImage}
               alt={book.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           </Link>
@@ -179,10 +182,12 @@ function RightHorizontalCard({ book }: { book: Book }) {
           href={`/katalog/${book.id}`}
           className="w-20 h-28 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100 block group-hover:scale-105 transition-transform relative"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={coverImage}
             alt={book.title}
+            fill
+            sizes="80px"
+            loading="lazy"
             className="w-full h-full object-cover"
           />
         </Link>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Clock, Tag } from "lucide-react";
 import BookCard from "@/components/BookCard";
 import { getBookById, getBooks } from "@/lib/api";
@@ -70,7 +71,7 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
         const allBooks = await getBooks();
         if (allBooks && allBooks.length > 0) {
           const related = allBooks
-            .filter((b) => String(b.id) !== String(slug))
+            .filter((b: any) => String(b.id) !== String(slug))
             .slice(0, 4);
           setRelatedBooks(related);
         }
@@ -168,14 +169,13 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
             {/* Left Column: Book Cover + Mockup Gallery Row */}
             <div className="md:col-span-5 space-y-4">
               <div className="relative w-full aspect-[3/4] max-w-[340px] mx-auto rounded-3xl overflow-hidden shadow-xl bg-gray-50 flex items-center justify-center p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={currentDisplayImage}
                   alt={book?.title || "Sampul Buku"}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 340px"
+                  priority
                   className="w-full h-full object-contain drop-shadow-md transition-all duration-300"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = mainCover;
-                  }}
                 />
                 {hasActivePromo && (
                   <div className="absolute top-3 right-3 z-10">
@@ -205,14 +205,13 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                             : "border-gray-200 hover:border-gray-400 opacity-70 hover:opacity-100"
                         }`}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={imgUrl}
                           alt={`${book?.title || "Buku"} preview ${idx + 1}`}
+                          fill
+                          sizes="64px"
+                          loading="lazy"
                           className="w-full h-full object-contain p-1"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = mainCover;
-                          }}
                         />
                       </button>
                     ))}

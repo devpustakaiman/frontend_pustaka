@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Sparkle, ChevronRight, ChevronLeft, Clock } from "lucide-react";
 import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
@@ -116,14 +117,12 @@ function NewArrivalCard({ book, idx }: { book: Book; idx: number }) {
         href={`/katalog/${book.id}`}
         className="block relative overflow-hidden bg-gray-100 aspect-[3/4] rounded-t-2xl sm:rounded-2xl flex-shrink-0"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={coverImage}
           alt={book.title || "Cover Buku"}
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src =
-              "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
-          }}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         

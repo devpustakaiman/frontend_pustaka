@@ -1,10 +1,13 @@
+import { memo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining } from "@/lib/utils";
 
 export type { Book };
 
 interface BookCardProps {
   book?: Book;
+  priority?: boolean;
 }
 
 const DEFAULT_BOOK: Book = {
@@ -16,17 +19,15 @@ const DEFAULT_BOOK: Book = {
   price: 95000,
 };
 
-export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
+const BookCard = memo(function BookCard({ book = DEFAULT_BOOK, priority = false }: BookCardProps) {
   const currentBook = book || DEFAULT_BOOK;
-  const coverImage = currentBook.coverUrl || currentBook.cover_url || DEFAULT_BOOK.coverUrl;
+  const coverImage = currentBook.coverUrl || currentBook.cover_url || DEFAULT_BOOK.coverUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
   const hasActivePromo = isActivePromo(currentBook);
   const formattedOriginalPrice = formatBookPrice(currentBook.price);
   const formattedPromoPrice = formatBookPrice(currentBook.promo_price);
-  const isFallbackPrice = formattedOriginalPrice === "Lihat Harga di Mizanstore";
   const daysRemaining = getPromoDaysRemaining(currentBook.promo_end_date);
 
-  // Calculate discount percentage badge value if not provided directly
   let discountPct = currentBook.promo_percentage;
   if (!discountPct && hasActivePromo && typeof currentBook.price === "number" && typeof currentBook.promo_price === "number" && currentBook.price > 0) {
     discountPct = Math.round(((currentBook.price - currentBook.promo_price) / currentBook.price) * 100);
@@ -39,10 +40,13 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
         href={`/katalog/${currentBook.id}`}
         className="block overflow-hidden bg-gray-100 aspect-[3/4] rounded-t-2xl sm:rounded-2xl relative flex-shrink-0"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={coverImage}
-          alt={currentBook.title}
+          alt={currentBook.title || "Cover Buku"}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          loading={priority ? "eager" : "lazy"}
+          priority={priority}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
 
@@ -76,7 +80,6 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
         </div>
 
         <div className="mt-auto pt-2 border-t border-gray-100 flex flex-col justify-between">
-          {/* Equalized Price & Strikethrough Row Height */}
           <div className="min-h-[44px] flex flex-col justify-center">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className={`text-sm sm:text-base font-black ${hasActivePromo ? 'text-[#E52E2D]' : 'text-gray-900'}`}>
@@ -99,7 +102,6 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
             </div>
           </div>
 
-          {/* Preserve Timer Slot Height */}
           <div className="min-h-[38px] sm:min-h-[42px] flex items-center my-1 w-full">
             {hasActivePromo ? (
               <div className="w-full bg-red-50/80 border border-red-200/60 rounded-xl p-1.5 sm:p-2 space-y-1">
@@ -125,7 +127,6 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
             )}
           </div>
 
-          {/* Pinned Button at Absolute Bottom */}
           <Link
             href={`/katalog/${currentBook.id}`}
             className="w-full block text-center px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold bg-[#E52E2D] hover:bg-[#C12A26] rounded-xl text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md uppercase tracking-wider"
@@ -136,4 +137,6 @@ export default function BookCard({ book = DEFAULT_BOOK }: BookCardProps) {
       </div>
     </div>
   );
-}
+});
+
+export default BookCard;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Flame,
   ChevronRight,
@@ -236,12 +237,14 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
         {/* Left Sub-column: Book Cover Asset */}
         <Link
           href={`/katalog/${book.id}`}
-          className="w-24 sm:w-44 md:w-48 aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl flex-shrink-0 border border-white/20 block"
+          className="w-24 sm:w-44 md:w-48 aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl flex-shrink-0 border border-white/20 block relative"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={coverImage}
             alt={book.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            loading="lazy"
             className="w-full h-full object-cover rounded-lg sm:rounded-xl hover:scale-105 transition-transform duration-300"
           />
         </Link>
@@ -341,12 +344,14 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
       {/* Cover Thumbnail */}
       <Link
         href={`/katalog/${book.id}`}
-        className="w-20 h-28 flex-shrink-0 object-contain rounded-xl bg-gray-50 p-1 border border-gray-100 overflow-hidden block group-hover:scale-105 transition-transform"
+        className="w-20 h-28 flex-shrink-0 object-contain rounded-xl bg-gray-50 p-1 border border-gray-100 overflow-hidden block group-hover:scale-105 transition-transform relative"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={coverImage}
           alt={book.title}
+          fill
+          sizes="80px"
+          loading="lazy"
           className="w-full h-full object-cover rounded-lg"
         />
       </Link>
@@ -423,12 +428,14 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
       {/* Cover Image */}
       <Link
         href={`/katalog/${book.id}`}
-        className="w-full aspect-[3/4] max-h-36 sm:max-h-40 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden mb-2.5 border border-gray-100 group-hover:scale-102 transition-transform block"
+        className="w-full aspect-[3/4] max-h-36 sm:max-h-40 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden mb-2.5 border border-gray-100 group-hover:scale-102 transition-transform block relative"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={coverImage}
           alt={book.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          loading="lazy"
           className="h-full w-full object-cover rounded-lg"
         />
       </Link>

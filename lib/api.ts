@@ -1,11 +1,19 @@
 import { supabase } from "./supabase";
 
-export async function getBooks() {
-  const { data, error } = await supabase
+const BOOK_LIST_FIELDS = "id, title, author, category, price, promo_price, is_promo, promo_end_date, promo_percentage, is_recommended, coverUrl, created_at";
+
+export async function getBooks(limit?: number) {
+  let query = supabase
     .from("books")
-    .select("*")
+    .select(BOOK_LIST_FIELDS)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching books:", error);
@@ -19,7 +27,7 @@ export async function getPromoBooks() {
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("books")
-    .select("*")
+    .select(BOOK_LIST_FIELDS)
     .is("deleted_at", null)
     .eq("is_promo", true)
     .gt("promo_end_date", now)
@@ -36,7 +44,7 @@ export async function getPromoBooks() {
 export async function getRecommendedBooks() {
   const { data, error } = await supabase
     .from("books")
-    .select("*")
+    .select(BOOK_LIST_FIELDS)
     .is("deleted_at", null)
     .eq("is_recommended", true)
     .order("created_at", { ascending: false });
@@ -52,7 +60,7 @@ export async function getRecommendedBooks() {
 export async function getNewBooks() {
   const { data, error } = await supabase
     .from("books")
-    .select("*")
+    .select(BOOK_LIST_FIELDS)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(12);
@@ -101,7 +109,7 @@ export async function getBookById(id: string) {
       
     if (allBooks && allBooks.length > 0) {
       const match = allBooks.find(
-        (b) =>
+        (b: any) =>
           String(b.id) === String(id) ||
           b.slug === id ||
           b.title?.toLowerCase() === decodeURIComponent(id).toLowerCase()

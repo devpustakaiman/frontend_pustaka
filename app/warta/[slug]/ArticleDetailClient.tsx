@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { getArticleById } from "@/lib/api";
 import { formatIndonesianDate, parseQuillJsonToParagraphs } from "@/lib/utils";
@@ -94,10 +95,12 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
           
           {/* Large Hero Image at the Top */}
           <div className="w-full aspect-[16/9] max-h-[480px] bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 relative shadow-inner">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={heroImage}
               alt={article?.title || "Warta Pustaka Iman"}
+              fill
+              sizes="(max-width: 1024px) 100vw, 1000px"
+              priority
               className="w-full h-full object-cover"
             />
           </div>

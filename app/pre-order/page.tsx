@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Sparkle,
   UploadCloud,
@@ -543,10 +544,12 @@ export default function PreOrderPage() {
                       <div className="flex items-center justify-between gap-3 p-2 bg-white rounded-xl border border-emerald-200 shadow-2xs">
                         <div className="flex items-center gap-3 min-w-0">
                           {receiptPreview ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
+                            <Image
                               src={receiptPreview}
                               alt="Bukti Transfer"
+                              width={48}
+                              height={48}
+                              unoptimized
                               className="w-12 h-12 object-cover rounded-lg border border-gray-200 shrink-0"
                             />
                           ) : (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Play, ChevronRight, BookOpen, X, Clock } from "lucide-react";
 import { parseRichTextToPlainText, formatIndonesianDate } from "@/lib/utils";
 import { Article, MediaVideo } from "@/lib/api";
@@ -104,14 +105,16 @@ export default function WartaSection({ articles = [], videos = [] }: WartaSectio
               className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-md bg-black group cursor-pointer border border-gray-100"
             >
               {/* Thumbnail Image */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={
                   featuredVideo.image_url ||
                   featuredVideo.thumbnail_url ||
                   "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&q=80&w=800"
                 }
                 alt={featuredVideo.title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                loading="lazy"
                 className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500"
               />
 
@@ -196,11 +199,13 @@ export default function WartaSection({ articles = [], videos = [] }: WartaSectio
                     className="bg-white border border-gray-200/80 rounded-3xl p-5 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-4 sm:gap-5 group block"
                   >
                     {/* Thumbnail Left */}
-                    <div className="w-full sm:w-36 h-24 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                    <div className="w-full sm:w-36 h-24 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 relative">
+                      <Image
                         src={imgUrl}
                         alt={item.title}
+                        fill
+                        sizes="144px"
+                        loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>

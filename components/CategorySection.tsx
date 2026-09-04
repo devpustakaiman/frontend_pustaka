@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   BookOpen,
   Feather,
@@ -128,16 +129,20 @@ export default function CategorySection() {
 
               {/* Peeking 2 Book Covers */}
               <div className="flex items-center -space-x-4 shrink-0 z-10">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={mainCategory.covers[0]}
                   alt="Book 1"
+                  width={60}
+                  height={80}
+                  loading="lazy"
                   className="w-14 sm:w-18 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] transform -rotate-6"
                 />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={mainCategory.covers[1]}
                   alt="Book 2"
+                  width={60}
+                  height={80}
+                  loading="lazy"
                   className="w-14 sm:w-18 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] transform rotate-3"
                 />
               </div>
@@ -206,26 +211,32 @@ export default function CategorySection() {
                   {/* Right: Dedicated Fanned 3-Book Deck Container anchored to Bottom-Right */}
                   <div className="relative h-56 sm:h-64 w-44 sm:w-52 ml-auto mt-auto flex items-end justify-end pointer-events-auto z-10">
                     {/* Book 1 (Back / Leftmost) */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={mainCategory.covers[0]}
                       alt="Buku Utama 1"
+                      width={128}
+                      height={170}
+                      loading="lazy"
                       className="absolute bottom-2 right-16 sm:right-20 w-28 sm:w-32 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] -rotate-12 z-10 transition-transform duration-300 origin-bottom-left hover:-translate-y-2 hover:-rotate-16"
                     />
 
                     {/* Book 2 (Middle) */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={mainCategory.covers[1]}
                       alt="Buku Utama 2"
+                      width={128}
+                      height={170}
+                      loading="lazy"
                       className="absolute bottom-1 right-8 sm:right-10 w-28 sm:w-32 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] -rotate-2 z-20 transition-transform duration-300 origin-bottom hover:-translate-y-3"
                     />
 
                     {/* Book 3 (Front / Rightmost) */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={mainCategory.covers[2]}
                       alt="Buku Utama 3"
+                      width={128}
+                      height={170}
+                      loading="lazy"
                       className="absolute bottom-0 right-0 w-28 sm:w-32 aspect-[3/4] object-cover rounded-sm drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] rotate-8 z-30 transition-transform duration-300 origin-bottom-right hover:-translate-y-2 hover:rotate-12"
                     />
                   </div>
@@ -263,17 +274,21 @@ export default function CategorySection() {
                     {/* Right: Display 2 Overlapping Mini Book Covers */}
                     <div className="relative w-28 h-24 flex items-center justify-end flex-shrink-0 z-10">
                       {/* Book 1 (back) */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={cat.covers[0]}
                         alt={`${cat.name} 1`}
+                        width={60}
+                        height={80}
+                        loading="lazy"
                         className="w-14 aspect-[3/4] object-cover rounded-sm drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)] absolute right-6 rotate-[-6deg]"
                       />
                       {/* Book 2 (front) */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={cat.covers[1]}
                         alt={`${cat.name} 2`}
+                        width={60}
+                        height={80}
+                        loading="lazy"
                         className="w-15 aspect-[3/4] object-cover rounded-sm drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)] absolute right-0 rotate-[4deg] hover:rotate-0 transition-transform"
                       />
                     </div>

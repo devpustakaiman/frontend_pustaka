@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, BookOpen, Clock, Tag } from "lucide-react";
 import BookGrid from "./BookGrid";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining } from "@/lib/utils";
@@ -78,10 +79,12 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
               {/* Main Active Cover Image Showcase */}
               <div className="relative w-full aspect-[3/4] max-w-[340px] mx-auto rounded-3xl overflow-hidden shadow-xl bg-gray-50 flex items-center justify-center p-4">
                 {activeImage ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                  <Image
                     src={activeImage}
                     alt={book.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 340px"
+                    priority
                     className="w-full h-full object-contain drop-shadow-md transition-all duration-300"
                   />
                 ) : (
@@ -118,10 +121,12 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                             : "border-gray-200 hover:border-gray-400 opacity-70 hover:opacity-100"
                         }`}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={imgUrl}
                           alt={`${book.title} preview ${idx + 1}`}
+                          fill
+                          sizes="64px"
+                          loading="lazy"
                           className="w-full h-full object-contain p-1"
                         />
                       </button>

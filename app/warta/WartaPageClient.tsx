@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Play,
@@ -168,14 +169,16 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
             className="w-full max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-lg border border-gray-100 bg-black aspect-video relative my-4 flex items-center justify-center cursor-pointer group"
           >
             {/* Thumbnail Image */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={
                 featuredVideo.image_url ||
                 featuredVideo.thumbnail_url ||
                 "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&q=80&w=1200"
               }
               alt={featuredVideo.title}
+              fill
+              sizes="(max-width: 1024px) 100vw, 896px"
+              priority
               className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500"
             />
 
@@ -225,14 +228,16 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
                   className="bg-white border border-gray-200/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-red-200 transition-all cursor-pointer group"
                 >
                   <div className="relative w-full aspect-video rounded-xl bg-gray-950 overflow-hidden mb-3 border border-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={
                         vid.image_url ||
                         vid.thumbnail_url ||
                         "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400"
                       }
                       alt={vid.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                     {vid.duration && (
@@ -289,15 +294,17 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
               >
                 <div>
                   {/* Large Image */}
-                  <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-50 mb-5 border border-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                  <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-50 mb-5 border border-gray-100 relative">
+                    <Image
                       src={
                         featuredArticle.imageUrl ||
                         featuredArticle.image_url ||
                         "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=800"
                       }
                       alt={featuredArticle.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -355,11 +362,13 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
                     className="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-4 sm:gap-5 group block"
                   >
                     {/* Left: Prominent Thumbnail */}
-                    <div className="w-full sm:w-36 md:w-40 aspect-[4/3] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 shadow-2xs">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                    <div className="w-full sm:w-36 md:w-40 aspect-[4/3] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 shadow-2xs relative">
+                      <Image
                         src={imgUrl}
                         alt={art.title}
+                        fill
+                        sizes="160px"
+                        loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
