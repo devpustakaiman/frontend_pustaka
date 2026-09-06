@@ -36,22 +36,22 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-xs text-gray-300">
               <li>
-                <Link href="/" className="hover:text-[#E52E2D] transition-colors">
+                <Link href="/" prefetch={false} className="hover:text-[#E52E2D] transition-colors">
                   Beranda
                 </Link>
               </li>
               <li>
-                <Link href="/katalog" className="hover:text-[#E52E2D] transition-colors">
+                <Link href="/katalog/" prefetch={false} className="hover:text-[#E52E2D] transition-colors">
                   Semua Produk
                 </Link>
               </li>
               <li>
-                <Link href="/katalog?filter=pre-order" className="hover:text-[#E52E2D] transition-colors">
+                <Link href="/pre-order/" prefetch={false} className="hover:text-[#E52E2D] transition-colors">
                   Pre-Order Buku
                 </Link>
               </li>
               <li>
-                <Link href="/warta" className="hover:text-[#E52E2D] transition-colors">
+                <Link href="/warta/" prefetch={false} className="hover:text-[#E52E2D] transition-colors">
                   Warta Buku
                 </Link>
               </li>
@@ -65,17 +65,17 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-xs text-gray-300">
               <li>
-                <Link href="/kirim-naskah" className="hover:text-[#E52E2D] transition-colors">
+                <Link href="/kirim-naskah/" prefetch={false} className="hover:text-[#E52E2D] transition-colors">
                   Kirim Naskah
                 </Link>
               </li>
               <li>
-                <Link href="/tentang-kami" className="hover:text-[#E52E2D] transition-colors">
+                <Link href="/tentang-kami/" prefetch={false} className="hover:text-[#E52E2D] transition-colors">
                   Tentang Kami
                 </Link>
               </li>
               <li>
-                <Link href="/kontak" className="hover:text-[#E52E2D] transition-colors">
+                <Link href="/kontak/" prefetch={false} className="hover:text-[#E52E2D] transition-colors">
                   Kontak Kami
                 </Link>
               </li>

@@ -66,29 +66,86 @@ export function formatDate(dateStr?: string | null): string {
 
 /**
  * Checks whether a book's promotion is currently active.
- * A promo is ONLY valid if:
+ * A promo is valid if:
  * 1. is_promo === true
- * 2. promo_end_date exists and is strictly greater than current local time (new Date()).
- * 
- * Note: promo_end_date is locked to 23:59:59.999 local time so promos don't expire prematurely at 00:00 UTC (7:00 AM local).
+ * 2. promo_end_date is null/empty (Promo Forever / Lifetime) OR promo_end_date > now().
  */
 export function isActivePromo(book?: Book | null): boolean {
-  if (!book || !book.is_promo || !book.promo_end_date) {
+  if (!book || !book.is_promo) {
     return false;
   }
+  // Null, undefined, or empty string -> Promo Forever / Lifetime
+  if (!book.promo_end_date || String(book.promo_end_date).trim() === "") {
+    return true;
+  }
   const endDate = new Date(book.promo_end_date);
-  if (isNaN(endDate.getTime())) return false;
+  if (isNaN(endDate.getTime())) return true;
   return endDate.getTime() > Date.now();
+}
+
+export interface EffectiveBookPrice {
+  isPromo: boolean;
+  originalPrice: string;
+  promoPrice: string;
+  displayPrice: string;
+  discountPercentage: number | null;
+  hasFallbackPrice: boolean;
+  numOriginalPrice: number;
+  numPromoPrice: number;
+}
+
+/**
+ * Robust pricing calculation helper for books across the application.
+ * Correctly calculates discount percentages and promo display prices for numeric or string inputs,
+ * including Forever/Lifetime promos.
+ */
+export function getEffectiveBookPrice(book?: Book | null): EffectiveBookPrice {
+  if (!book) {
+    return {
+      isPromo: false,
+      originalPrice: "Lihat Harga di Mizanstore",
+      promoPrice: "Lihat Harga di Mizanstore",
+      displayPrice: "Lihat Harga di Mizanstore",
+      discountPercentage: null,
+      hasFallbackPrice: true,
+      numOriginalPrice: 0,
+      numPromoPrice: 0,
+    };
+  }
+
+  const isPromo = isActivePromo(book);
+  const numOriginalPrice = typeof book.price === "number" ? book.price : parseFloat(String(book.price || "0").replace(/[^\d.]/g, "")) || 0;
+  const numPromoPrice = typeof book.promo_price === "number" ? book.promo_price : parseFloat(String(book.promo_price || "0").replace(/[^\d.]/g, "")) || 0;
+
+  const originalPriceStr = formatBookPrice(book.price);
+  const promoPriceStr = formatBookPrice(book.promo_price);
+  const hasFallbackPrice = originalPriceStr === "Lihat Harga di Mizanstore";
+
+  let discountPercentage: number | null = book.promo_percentage || null;
+  if (!discountPercentage && isPromo && numOriginalPrice > 0 && numPromoPrice > 0 && numPromoPrice < numOriginalPrice) {
+    discountPercentage = Math.round(((numOriginalPrice - numPromoPrice) / numOriginalPrice) * 100);
+  }
+
+  return {
+    isPromo: isPromo && numPromoPrice > 0 && promoPriceStr !== "Lihat Harga di Mizanstore",
+    originalPrice: originalPriceStr,
+    promoPrice: promoPriceStr,
+    displayPrice: isPromo && numPromoPrice > 0 && promoPriceStr !== "Lihat Harga di Mizanstore" ? promoPriceStr : originalPriceStr,
+    discountPercentage,
+    hasFallbackPrice,
+    numOriginalPrice,
+    numPromoPrice,
+  };
 }
 
 /**
  * Calculates remaining days until promo_end_date.
- * Returns 0 if expired or invalid.
+ * Returns 999 if Forever or invalid.
  */
 export function getPromoDaysRemaining(promoEndDate?: string | null): number {
-  if (!promoEndDate) return 0;
+  if (!promoEndDate || String(promoEndDate).trim() === "") return 999;
   const endDate = new Date(promoEndDate);
-  if (isNaN(endDate.getTime())) return 0;
+  if (isNaN(endDate.getTime())) return 999;
 
   const diffTime = endDate.getTime() - Date.now();
   if (diffTime <= 0) return 0;

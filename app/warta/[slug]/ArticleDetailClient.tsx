@@ -44,16 +44,7 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
         if (data) {
           setArticle(data);
         } else {
-          // Fallback mock article if not found in database
-          setArticle({
-            id: slug,
-            title: "Peluncuran Inisiatif Literasi Digital Pustaka Iman Membuka Akses Ilmu untuk Nusantara",
-            author: "Redaksi Pustaka Iman",
-            category: "Warta Utama",
-            created_at: "2026-08-13T09:00:00.000Z",
-            image_url: DEFAULT_HERO_IMAGE,
-            content: MOCK_QUILL_JSON,
-          });
+          setArticle(null);
         }
       } catch (err) {
         console.error("Error loading article:", err);

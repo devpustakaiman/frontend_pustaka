@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { TrendingUp, ChevronRight, ChevronLeft } from "lucide-react";
-import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
+import { Book, formatBookPrice, isActivePromo, getEffectiveBookPrice } from "@/lib/utils";
 import { useScrollCarousel } from "./ScrollCarousel";
 
 interface BestSellerSectionProps {
@@ -70,8 +70,11 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {books.map((book, idx) => {
-                const price = formatPrice(book.price);
-                const hasPromo = isActivePromo(book);
+                const priceInfo = getEffectiveBookPrice(book);
+                const hasPromo = priceInfo.isPromo;
+                const bookIdentifier = book.id || book.slug || "";
+                const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
+
                 return (
                   <div
                     key={book.id}
@@ -80,7 +83,8 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
                     {/* Cover + badges */}
                     <div className="relative">
                       <Link
-                        href={`/katalog/${book.id}`}
+                        href={targetUrl}
+                        prefetch={false}
                         className="block overflow-hidden aspect-[2/3] bg-gray-50 relative"
                       >
                         <Image
@@ -106,23 +110,24 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
                         {book.category || "Literasi"}
                       </span>
                       <h3 className="font-serif font-bold text-[13px] text-[#272522] mt-1 leading-snug line-clamp-2 group-hover:text-[#E52E2D] transition-colors flex-1">
-                        <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+                        <Link href={targetUrl} prefetch={false}>{book.title}</Link>
                       </h3>
                       <p className="text-[10px] text-[#76716A] mt-0.5 truncate">{book.author}</p>
 
                       <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-1">
                         {hasPromo ? (
                           <div className="flex flex-col">
-                            <span className="font-extrabold text-[#E52E2D] text-xs sm:text-sm leading-none">{formatBookPrice(book.promo_price)}</span>
-                            <span className="line-through text-gray-400 text-[10px]">{formatBookPrice(book.price)}</span>
+                            <span className="font-extrabold text-[#E52E2D] text-xs sm:text-sm leading-none">{priceInfo.promoPrice}</span>
+                            <span className="line-through text-gray-400 text-[10px]">{priceInfo.originalPrice}</span>
                           </div>
-                        ) : price ? (
-                          <span className="font-extrabold text-[#E52E2D] text-sm leading-none">{price}</span>
+                        ) : !priceInfo.hasFallbackPrice ? (
+                          <span className="font-extrabold text-[#E52E2D] text-sm leading-none">{priceInfo.originalPrice}</span>
                         ) : (
                           <span className="text-[10px] text-[#76716A] italic">Hubungi Kami</span>
                         )}
                         <Link
-                          href={`/katalog/${book.id}`}
+                          href={targetUrl}
+                          prefetch={false}
                           className="flex-shrink-0 px-3 py-1.5 text-[10px] font-bold bg-[#E52E2D] hover:bg-[#C12A26] rounded-xl text-white transition-all duration-200 active:scale-95 uppercase tracking-wide shadow-2xs"
                         >
                           Detail

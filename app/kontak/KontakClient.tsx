@@ -417,6 +417,7 @@ export default function KontakClient({ articles = [] }: KontakClientProps) {
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/warta/${art.id}`}
+                          prefetch={false}
                           className="text-xs font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors leading-snug line-clamp-2 block"
                         >
                           {art.title}

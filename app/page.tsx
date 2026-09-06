@@ -14,33 +14,39 @@ import {
 } from "@/lib/api";
 
 export default async function Home() {
-  // Fetch real backend data from Supabase
+  // Fetch real backend data from Supabase with safe catch fallbacks
   const [promoBooks, recommendedBooks, newBooks, articles, videos, settings] = await Promise.all([
-    getPromoBooks(),
-    getRecommendedBooks(),
-    getNewBooks(),
-    getArticles(),
-    getMediaVideos(),
-    getSiteSettings(),
+    getPromoBooks().catch(() => []),
+    getRecommendedBooks().catch(() => []),
+    getNewBooks().catch(() => []),
+    getArticles().catch(() => []),
+    getMediaVideos().catch(() => []),
+    getSiteSettings().catch(() => null),
   ]);
 
+  const safePromo = Array.isArray(promoBooks) ? promoBooks : [];
+  const safeRecommended = Array.isArray(recommendedBooks) ? recommendedBooks : [];
+  const safeNew = Array.isArray(newBooks) ? newBooks : [];
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const safeVideos = Array.isArray(videos) ? videos : [];
+
   // Fallbacks if database table records for promo or recommended are not populated yet
-  const displayPromo = promoBooks.length > 0 ? promoBooks : newBooks;
+  const displayPromo = safePromo.length > 0 ? safePromo : safeNew;
   const displayRecommended =
-    recommendedBooks.length > 0 ? recommendedBooks : newBooks.slice(0, 4);
+    safeRecommended.length > 0 ? safeRecommended : safeNew.slice(0, 4);
 
   // Featured book for Hero Floating Badge ('Pilihan Minggu Ini')
   const featuredBook =
     settings?.featured_book ||
     displayRecommended[0] ||
     displayPromo[0] ||
-    newBooks[0] ||
+    safeNew[0] ||
     null;
 
   return (
     <main className="w-full min-h-screen bg-white">
       {/* 1. Hero / Banner Section */}
-      <HeroBanner settings={settings} featuredBook={featuredBook} />
+      <HeroBanner settings={settings || null} featuredBook={featuredBook} />
 
       {/* 2. Promo Section: 🔥 FLASH SALE & PROMO SPESIAL */}
       <PromoSection books={displayPromo} />
@@ -49,13 +55,13 @@ export default async function Home() {
       <RecommendedSection books={displayRecommended} title="⭐ Pilihan Editor" />
 
       {/* 4. New Arrivals Section: ✨ Buku Baru Terbit */}
-      <RecentlyAddedSection books={newBooks} />
+      <RecentlyAddedSection books={safeNew} />
 
       {/* Secondary Sections */}
       <CategorySection />
       
       {/* 5. Warta & Media Preview Section */}
-      <WartaSection articles={articles} videos={videos} />
+      <WartaSection articles={safeArticles} videos={safeVideos} />
     </main>
   );
 }

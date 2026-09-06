@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -10,7 +11,8 @@ import {
   Truck,
 } from "lucide-react";
 
-import { SiteSettings } from "@/lib/api";
+import { getEffectiveBookPrice } from "@/lib/utils";
+import { SiteSettings, getSiteSettings } from "@/lib/api";
 
 interface HeroBannerProps {
   settings?: SiteSettings | null;
@@ -25,7 +27,11 @@ function formatDisplayPrice(price?: number | string | null): string {
       ? price
       : parseInt(String(price).replace(/[^\d]/g, ""), 10);
   if (isNaN(num) || num <= 0) return "Rp135.150";
-  return `Rp${num.toLocaleString("id-ID")}`;
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(num);
 }
 
 /** Fallback parser if custom CMS headline is provided */
@@ -62,29 +68,89 @@ function renderParsedHeadline(headlineText: string) {
 }
 
 export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) {
-  const headline = settings?.hero_headline || "Temukan Bacaan Bermakna untuk Jiwa";
-  const subheadline =
-    settings?.hero_subheadline ||
-    "Menghadirkan karya-karya pemikiran, spiritualitas, sejarah, dan literasi bermutu untuk mencerdaskan serta menutrisi kedalaman batin pembaca.";
+  const [mounted, setMounted] = useState(false);
+  const [currentSettings, setCurrentSettings] = useState<SiteSettings | null>(settings || null);
+  const [currentFeaturedBook, setCurrentFeaturedBook] = useState<any>(featuredBook || null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setCurrentSettings(settings || null);
+  }, [settings]);
+
+  useEffect(() => {
+    setCurrentFeaturedBook(featuredBook || null);
+  }, [featuredBook]);
+
+  // Client-side revalidation on mount
+  useEffect(() => {
+    async function loadLatestSettings() {
+      try {
+        const freshSettings = await getSiteSettings();
+        if (freshSettings) {
+          setCurrentSettings(freshSettings);
+          if (freshSettings.featured_book) {
+            setCurrentFeaturedBook(freshSettings.featured_book);
+          }
+        }
+      } catch (err) {
+        console.error("Error revalidating site settings on mount:", err);
+      } finally {
+        setIsLoaded(true);
+      }
+    }
+    loadLatestSettings();
+  }, []);
+
+  if (!mounted || !isLoaded) {
+    return (
+      <section className="relative overflow-hidden bg-white pt-8 pb-16 lg:pt-16 lg:pb-20 border-b border-gray-100 animate-pulse">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            {/* Left Column Skeleton */}
+            <div className="w-full lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left order-1 space-y-6 z-10">
+              <div className="h-7 w-36 bg-red-100 rounded-full" />
+              <div className="space-y-3 w-full">
+                <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-3/4 mx-auto lg:mx-0" />
+                <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-1/2 mx-auto lg:mx-0" />
+              </div>
+              <div className="space-y-2 w-full max-w-md">
+                <div className="h-4 bg-gray-200 rounded w-full" />
+                <div className="h-4 bg-gray-200 rounded w-5/6 mx-auto lg:mx-0" />
+              </div>
+              <div className="flex gap-4 pt-1">
+                <div className="h-12 w-44 bg-red-200 rounded-xl" />
+                <div className="h-12 w-36 bg-gray-200 rounded-xl" />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <div className="h-7 w-24 bg-gray-200 rounded-full" />
+                <div className="h-7 w-32 bg-gray-200 rounded-full" />
+                <div className="h-7 w-24 bg-gray-200 rounded-full" />
+              </div>
+            </div>
+            {/* Right Visual Column Skeleton */}
+            <div className="w-full lg:col-span-6 flex justify-center items-center relative order-2 mt-4 lg:mt-0">
+              <div className="w-full max-w-[400px] aspect-[4/3] bg-gray-100 rounded-3xl" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const headline = currentSettings?.hero_headline || "Temukan Bacaan Bermakna untuk Jiwa";
+  const subheadline = currentSettings?.hero_subheadline || null;
 
   // Book data for the Floating Card ('Pilihan Minggu Ini')
-  const cardBook =
-    featuredBook ||
-    settings?.featured_book || {
-      id: "c19f82ce-48ec-4b56-8af2-381c54134f61",
-      title: "Filsafat Literasi Islam",
-      author: "Prof. Dr. M. Quraish Shihab",
-      price: 135150,
-    };
-
-  const effectivePrice =
-    cardBook.is_promo && cardBook.promo_price
-      ? cardBook.promo_price
-      : cardBook.price || 135150;
-  const formattedPrice = formatDisplayPrice(effectivePrice);
+  const cardBook = currentFeaturedBook || currentSettings?.featured_book || null;
+  const priceInfo = getEffectiveBookPrice(cardBook);
+  const formattedPrice = priceInfo.displayPrice;
 
   const isDefaultHeadline =
-    headline.trim().toLowerCase() === "temukan bacaan bermakna untuk jiwa";
+    (headline || "").trim().toLowerCase() === "temukan bacaan bermakna untuk jiwa";
 
   return (
     <section className="relative overflow-hidden bg-white pt-8 pb-16 lg:pt-16 lg:pb-20 border-b border-gray-100">
@@ -115,14 +181,19 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
             </h1>
 
             {/* Subtext Paragraph */}
-            <p className="text-base md:text-lg text-[#76716A] leading-relaxed max-w-md lg:max-w-lg font-sans">
-              {subheadline}
-            </p>
+            {mounted && subheadline ? (
+              <p className="text-base md:text-lg text-[#76716A] leading-relaxed max-w-md lg:max-w-lg font-sans">
+                {subheadline}
+              </p>
+            ) : (
+              <div className="h-5 w-full max-w-lg bg-neutral-200/60 animate-pulse rounded mt-2" />
+            )}
 
             {/* Action Buttons (CTA) */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-4 pt-1 w-full sm:w-auto">
               <Link
-                href="/katalog"
+                href="/katalog/"
+                prefetch={false}
                 className="bg-[#E52E2D] hover:bg-[#c92423] text-white font-bold px-7 py-3.5 rounded-xl shadow-md uppercase text-sm tracking-wide inline-flex items-center justify-center gap-2 transition-all active:scale-98"
               >
                 <span>JELAJAHI KOLEKSI</span>
@@ -130,6 +201,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
               </Link>
               <Link
                 href="/katalog?filter=buku-baru"
+                prefetch={false}
                 className="bg-white border-2 border-[#E52E2D] text-[#E52E2D] hover:bg-red-50 font-bold px-7 py-3.5 rounded-xl uppercase text-sm tracking-wide inline-flex items-center justify-center transition-all active:scale-98"
               >
                 BUKU TERBARU
@@ -140,6 +212,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-2">
               <Link
                 href="/katalog?category=Fiksi+-+Romansa"
+                prefetch={false}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-rose-50 text-rose-800 border border-rose-100 hover:bg-rose-100 transition-colors shadow-2xs"
               >
                 <span>❤️</span>
@@ -147,6 +220,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
               </Link>
               <Link
                 href="/katalog?category=Agama+%26+Filsafat+-+Agama+Islam"
+                prefetch={false}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-100 hover:bg-amber-100 transition-colors shadow-2xs"
               >
                 <span>📖</span>
@@ -154,6 +228,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
               </Link>
               <Link
                 href="/katalog?category=Buku+Anak+-+Cerita+Anak"
+                prefetch={false}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-cyan-50 text-cyan-800 border border-cyan-100 hover:bg-cyan-100 transition-colors shadow-2xs"
               >
                 <span>🧒</span>
@@ -167,9 +242,9 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
             <div className="relative w-full max-w-[360px] sm:max-w-[480px] md:max-w-[560px] lg:max-w-[750px] mx-auto flex items-center justify-center">
               
               {/* Illustration / Image Visual */}
-              {settings?.hero_banner_url ? (
+              {currentSettings?.hero_banner_url ? (
                 <Image
-                  src={settings.hero_banner_url}
+                  src={currentSettings.hero_banner_url}
                   alt={headline}
                   width={750}
                   height={500}
@@ -181,7 +256,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                 />
               ) : (
                 <div className="relative flex items-center justify-center gap-3 sm:gap-6 w-full scale-100 lg:scale-105 xl:scale-110">
-                  {/* Fallback Arch 1 */}
+                  {/* Visual Art Arch 1 */}
                   <div className="w-1/3 rounded-t-full rounded-b-xl bg-gray-50 p-3 sm:p-4 border border-gray-100 transform -rotate-6 translate-y-6">
                     <div className="bg-white rounded-t-full rounded-b-lg p-2.5 sm:p-3 border border-gray-100 flex flex-col items-center text-center space-y-3">
                       <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#C12A26] to-[#E52E2D] flex items-center justify-center text-white font-serif font-bold text-xl">
@@ -189,16 +264,13 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase text-[#E52E2D] tracking-wider block">
-                          Tasawuf
+                          PUSTAKA IMAN
                         </span>
-                        <h4 className="font-serif text-xs font-bold text-[#272522] line-clamp-1">
-                          Lentera Hati
-                        </h4>
                       </div>
                     </div>
                   </div>
 
-                  {/* Fallback Arch 2 */}
+                  {/* Visual Art Arch 2 */}
                   <div className="w-1/3 rounded-t-full rounded-b-xl bg-gray-50 p-4 sm:p-5 border border-gray-100 z-10 transform -translate-y-2">
                     <div className="bg-white rounded-t-full rounded-b-lg p-3 sm:p-4 border border-gray-100 flex flex-col items-center text-center space-y-3">
                       <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#272522] to-[#E52E2D] flex flex-center items-center justify-center text-white font-serif font-bold text-2xl">
@@ -206,19 +278,13 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase text-[#E52E2D] tracking-widest block">
-                          Pilihan Editor
+                          KOLEKSI UTAMA
                         </span>
-                        <h4 className="font-serif text-sm font-bold text-[#272522] line-clamp-1">
-                          Kedalaman Hikmah
-                        </h4>
-                        <p className="text-[10px] text-[#76716A] line-clamp-1">
-                          M. Quraish Shihab
-                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Fallback Arch 3 */}
+                  {/* Visual Art Arch 3 */}
                   <div className="w-1/3 rounded-t-full rounded-b-xl bg-gray-50 p-3 sm:p-4 border border-gray-100 transform rotate-6 translate-y-6">
                     <div className="bg-white rounded-t-full rounded-b-lg p-2.5 sm:p-3 border border-gray-100 flex flex-col items-center text-center space-y-3">
                       <div className="w-full aspect-[2/3] rounded bg-gradient-to-br from-[#76716A] to-[#C12A26] flex items-center justify-center text-white font-serif font-bold text-xl">
@@ -226,11 +292,8 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase text-[#E52E2D] tracking-wider block">
-                          Filsafat
+                          LITERASI
                         </span>
-                        <h4 className="font-serif text-xs font-bold text-[#272522] line-clamp-1">
-                          Cinta & Akal
-                        </h4>
                       </div>
                     </div>
                   </div>
@@ -238,9 +301,17 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
               )}
 
               {/* Floating Price Badge ('Pilihan Minggu Ini') */}
-              {cardBook && (
+              {!isLoaded && !cardBook ? (
+                <div className="absolute -bottom-4 right-2 sm:right-6 md:right-10 lg:right-4 z-20 w-[180px] sm:w-[210px] p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xl bg-white/95 backdrop-blur-md border border-gray-100 animate-pulse space-y-2">
+                  <div className="h-2.5 bg-gray-200 rounded w-20" />
+                  <div className="h-4 bg-gray-200 rounded w-full" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mt-2" />
+                </div>
+              ) : cardBook ? (
                 <Link
-                  href={`/katalog/${cardBook.id}`}
+                  href={`/katalog/detail?id=${cardBook.id || cardBook.slug}`}
+                  prefetch={false}
                   className="absolute -bottom-4 right-2 sm:right-6 md:right-10 lg:right-4 z-20 max-w-[180px] sm:max-w-[210px] p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xl bg-white/95 backdrop-blur-md border border-gray-100 text-left hover:scale-105 transition-all duration-300 group block"
                 >
                   <span className="text-[9px] sm:text-[10px] font-bold uppercase text-[#E52E2D] tracking-wider block mb-1">
@@ -261,7 +332,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                     </span>
                   </div>
                 </Link>
-              )}
+              ) : null}
 
             </div>
           </div>

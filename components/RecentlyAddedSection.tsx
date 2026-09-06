@@ -1,12 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Sparkle, ChevronRight, ChevronLeft } from "lucide-react";
-import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
+import { Book, formatBookPrice, isActivePromo, getEffectiveBookPrice } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useScrollCarousel } from "./ScrollCarousel";
 import PromoStockBar from "./PromoStockBar";
+import { getNewBooks } from "@/lib/api";
 
 interface RecentlyAddedSectionProps {
   books?: Book[];
@@ -14,63 +16,100 @@ interface RecentlyAddedSectionProps {
 
 export default function RecentlyAddedSection({ books = [] }: RecentlyAddedSectionProps) {
   const { scrollRef, scroll } = useScrollCarousel();
+  const [mounted, setMounted] = useState(false);
+  const [newItems, setNewItems] = useState<Book[]>(books || []);
+  const [loading, setLoading] = useState(true);
 
-  if (!books || books.length === 0) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setNewItems(books);
+    if (books.length > 0) setLoading(false);
+  }, [books]);
+
+  // Client-side revalidation on mount
+  useEffect(() => {
+    async function loadLatestNewBooks() {
+      try {
+        const freshNew = await getNewBooks();
+        if (freshNew && freshNew.length > 0) {
+          setNewItems(freshNew);
+        }
+      } catch (err) {
+        console.error("Error revalidating new books on mount:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadLatestNewBooks();
+  }, []);
+
+  if (!mounted || loading) {
+    return (
+      <section className="w-full bg-white py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="h-8 bg-gray-200 rounded-full w-48 animate-pulse" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white border border-gray-100 rounded-2xl p-3 space-y-3 animate-pulse">
+                <div className="w-full aspect-[2/3] bg-gray-200 rounded-xl" />
+                <div className="h-3 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!newItems || newItems.length === 0) return null;
 
   return (
-    <section className="w-full bg-white py-12 md:py-16">
+    <section className="w-full bg-white py-12 md:py-16 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 border-b border-gray-100 pb-5 gap-4">
+        {/* Header */}
+        <div className="flex items-end justify-between mb-8 pb-4 border-b border-gray-100">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider font-bold text-[#E52E2D] mb-2 px-3 py-1 bg-red-50 rounded-full border border-red-200/80">
-              <Sparkle size={13} strokeWidth={2} />
-              Koleksi Rilisan Terbaru
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#E52E2D] uppercase tracking-wider bg-red-50 px-3 py-1 rounded-full border border-red-100 mb-2">
+              <Sparkle size={13} className="text-[#E52E2D]" />
+              <span>KOLEKSI TERBARU</span>
             </span>
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-black text-[#272522] tracking-tight">
-              ✨ Buku <span className="text-[#C12A26] italic font-serif">Terbaru</span>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#272522] tracking-tight">
+              ✨ Buku <span className="text-[#E52E2D] italic font-serif">Baru Terbit</span>
             </h2>
-            <p className="text-xs sm:text-sm text-[#76716A] mt-1 font-medium">
-              Temukan karya-karya pemikiran &amp; literasi bermutu paling hangat terbitan Pustaka Iman.
+            <p className="text-xs sm:text-sm text-[#76716A] mt-1 font-medium hidden sm:block">
+              Temukan karya terbitan terbaru dari penulis pilihan Pustaka Iman
             </p>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-3">
-            {/* Carousel Navigation Arrows */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => scroll("left")}
-                aria-label="Geser ke kiri"
-                className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-[#E52E2D] hover:border-red-200 flex items-center justify-center transition-colors shadow-2xs active:scale-95 cursor-pointer"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() => scroll("right")}
-                aria-label="Geser ke kanan"
-                className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-[#E52E2D] hover:border-red-200 flex items-center justify-center transition-colors shadow-2xs active:scale-95 cursor-pointer"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-
-            <Link
-              href="/katalog?sort=terbaru"
-              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-3.5 py-2 rounded-full border border-gray-200 shadow-2xs hover:shadow-xs shrink-0"
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => scroll('left')}
+              aria-label="Scroll Kiri"
+              className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-700 hover:border-[#E52E2D] hover:text-[#E52E2D] shadow-2xs transition-colors cursor-pointer active:scale-95"
             >
-              <span>Lihat Semua</span>
-              <ChevronRight size={14} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
-            </Link>
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              aria-label="Scroll Kanan"
+              className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-700 hover:border-[#E52E2D] hover:text-[#E52E2D] shadow-2xs transition-colors cursor-pointer active:scale-95"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
 
-        {/* Carousel Track */}
+        {/* Horizontal Carousel */}
         <div
           ref={scrollRef}
-          className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
+          className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 pt-2 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
         >
-          {books.map((book) => (
-            <RecentlyAddedCard key={book.id} book={book} />
+          {newItems.map((book) => (
+            <NewArrivalCard key={book.id} book={book} />
           ))}
         </div>
       </div>
@@ -78,36 +117,34 @@ export default function RecentlyAddedSection({ books = [] }: RecentlyAddedSectio
   );
 }
 
-function RecentlyAddedCard({ book }: { book: Book }) {
-  const isPromo = isActivePromo(book);
+function NewArrivalCard({ book }: { book: Book }) {
+  const priceInfo = getEffectiveBookPrice(book);
+  const isPromo = priceInfo.isPromo;
   const countdown = useCountdown(book.promo_end_date || undefined);
 
-  const numPrice = typeof book.price === "number" ? book.price : parseFloat(String(book.price || 0));
-  const numPromo = typeof book.promo_price === "number" ? book.promo_price : parseFloat(String(book.promo_price || 0));
-
-  const formattedOrig = formatBookPrice(book.price);
-  const formattedPromo = formatBookPrice(book.promo_price);
-
-  let discountPct = book.promo_percentage || 15;
-  if (!book.promo_percentage && isPromo && numPrice > 0 && numPromo > 0) {
-    discountPct = Math.round(((numPrice - numPromo) / numPrice) * 100);
-  }
+  const formattedOrig = priceInfo.originalPrice;
+  const formattedPromo = priceInfo.promoPrice;
+  const discountPct = priceInfo.discountPercentage || 0;
 
   const coverImage =
     (book.coverUrl && book.coverUrl.trim().length > 0 ? book.coverUrl : null) ||
     (book.cover_url && book.cover_url.trim().length > 0 ? book.cover_url : null) ||
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
+  const bookIdentifier = book.id || book.slug || "";
+  const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
+
   return (
     <div className="snap-start flex-shrink-0 w-44 sm:w-56 bg-white border border-gray-100 rounded-2xl overflow-hidden group flex flex-col justify-between hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all duration-300 h-full self-stretch">
       {/* Cover */}
       <Link
-        href={`/katalog/${book.id}`}
+        href={targetUrl}
+        prefetch={false}
         className="block relative overflow-hidden bg-gray-100 aspect-[2/3] rounded-t-2xl sm:rounded-2xl flex-shrink-0"
       >
         <Image
           src={coverImage}
-          alt={book.title || "Cover Buku"}
+          alt={book.title || ""}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           loading="lazy"
@@ -132,12 +169,12 @@ function RecentlyAddedCard({ book }: { book: Book }) {
         <div>
           <div className="h-7 sm:h-8 flex items-start">
             <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider line-clamp-2 leading-tight">
-              {book.category || "Literasi"}
+              {book.category || ""}
             </span>
           </div>
           <div className="h-9 sm:h-10 flex items-start mt-0.5">
             <h4 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors line-clamp-2 leading-tight">
-              <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+              <Link href={targetUrl} prefetch={false}>{book.title}</Link>
             </h4>
           </div>
           <div className="h-4 sm:h-5 mt-0.5">
@@ -173,7 +210,7 @@ function RecentlyAddedCard({ book }: { book: Book }) {
           <div className="min-h-[38px] sm:min-h-[42px] flex items-center my-1.5 w-full">
             {isPromo ? (
               <PromoStockBar
-                timeLeft={countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+                timeLeft={countdown.hasMounted ? (countdown.isForever ? "Promo Berkelanjutan" : countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
                 stockLabel="Stok Terbatas"
                 progressPercent={70}
                 theme="light"
@@ -185,7 +222,8 @@ function RecentlyAddedCard({ book }: { book: Book }) {
 
           {/* Action Button */}
           <Link
-            href={`/katalog/${book.id}`}
+            href={targetUrl}
+            prefetch={false}
             className="w-full bg-[#E53935] hover:bg-[#C12A26] text-white text-xs font-bold py-2 rounded-xl block text-center transition-all duration-200 active:scale-95 uppercase tracking-wider shadow-xs"
           >
             Lihat Detail

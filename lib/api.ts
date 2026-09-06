@@ -2,6 +2,66 @@ import { supabase } from "./supabase";
 
 const BOOK_LIST_FIELDS = "id, title, author, category, price, promo_price, is_promo, promo_end_date, promo_percentage, is_recommended, coverUrl, created_at";
 
+export interface DBCategory {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
+  created_at?: string;
+}
+
+export interface DynamicCategorySubItem {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string;
+}
+
+export interface DynamicCategoryGroup {
+  id: string;
+  name: string;
+  slug: string;
+  subcategories: DynamicCategorySubItem[];
+}
+
+export async function fetchDynamicCategories(): Promise<DynamicCategoryGroup[]> {
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, slug, parent_id, created_at")
+      .order("name", { ascending: true });
+
+    if (error || !data) {
+      console.error("Error fetching categories:", error);
+      return [];
+    }
+
+    const parents = data.filter((c: DBCategory) => c.parent_id === null);
+    const tree: DynamicCategoryGroup[] = parents.map((parent: DBCategory) => {
+      const subs = data
+        .filter((c: DBCategory) => c.parent_id === parent.id)
+        .map((c: DBCategory) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          parent_id: c.parent_id!,
+        }));
+
+      return {
+        id: parent.id,
+        name: parent.name,
+        slug: parent.slug,
+        subcategories: subs,
+      };
+    });
+
+    return tree;
+  } catch (err) {
+    console.error("Exception fetching categories:", err);
+    return [];
+  }
+}
+
 export async function getBooks(limit?: number) {
   let query = supabase
     .from("books")
@@ -30,7 +90,7 @@ export async function getPromoBooks() {
     .select(BOOK_LIST_FIELDS)
     .is("deleted_at", null)
     .eq("is_promo", true)
-    .gt("promo_end_date", now)
+    .or(`promo_end_date.gte.${now},promo_end_date.is.null`)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -57,20 +117,35 @@ export async function getRecommendedBooks() {
   return data || [];
 }
 
-export async function getNewBooks() {
-  const { data, error } = await supabase
-    .from("books")
-    .select(BOOK_LIST_FIELDS)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(12);
+export async function getNewBooks(limit = 12) {
+  try {
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-  if (error) {
-    console.error("Error fetching new books:", error);
+    if (error) {
+      console.warn("getNewBooks query warning, executing fallback query:", error.message);
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("books")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (fallbackError) {
+        console.error("Error fetching new books:", fallbackError);
+        return [];
+      }
+      return fallbackData || [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Exception in getNewBooks:", err);
     return [];
   }
-
-  return data || [];
 }
 
 export async function getBookById(id: string) {
@@ -92,14 +167,18 @@ export async function getBookById(id: string) {
     }
 
     // 2. Try matching by slug if column exists
-    const { data: slugData } = await supabase
-      .from("books")
-      .select("*")
-      .is("deleted_at", null)
-      .eq("slug", id)
-      .maybeSingle();
+    try {
+      const { data: slugData } = await supabase
+        .from("books")
+        .select("*")
+        .is("deleted_at", null)
+        .eq("slug", id)
+        .maybeSingle();
 
-    if (slugData) return slugData;
+      if (slugData) return slugData;
+    } catch (_) {
+      // column slug may not exist in database schema
+    }
 
     // 3. Fallback: search active books and match ID string or title
     const { data: allBooks } = await supabase
@@ -428,25 +507,6 @@ export async function submitPreorder(
       throw error;
     }
     return { success: true, data: fallbackData };
-  }
-
-  // 3. Dispatch background notification email to /api/preorder/notify
-  try {
-    fetch("/api/preorder/notify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customer_name: formData.customer_name,
-        customer_email: formData.customer_email,
-        customer_phone: formData.customer_phone,
-        book_title: formData.book_title,
-        quantity: formData.quantity,
-        transfer_receipt: receiptUrl,
-        receiptUrl,
-      }),
-    }).catch((err) => console.warn("Failed to dispatch preorder notification:", err));
-  } catch (err) {
-    // Ignore notification error gracefully
   }
 
   return { success: true, data };

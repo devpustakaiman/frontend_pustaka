@@ -30,6 +30,7 @@ export default function SectionHeader({
       {href && (
         <Link
           href={href}
+          prefetch={false}
           className="group inline-flex items-center gap-1 text-sm font-semibold text-[#272522] hover:text-[#E52E2D] border-b border-gray-300 hover:border-[#E52E2D] pb-0.5 transition-all mt-4 sm:mt-0"
         >
           <span>{linkLabel}</span>

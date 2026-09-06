@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Star, ChevronRight, ChevronLeft, Bookmark, Clock } from "lucide-react";
-import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
+import { Book, formatBookPrice, isActivePromo, getEffectiveBookPrice } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
 import PromoStockBar from "./PromoStockBar";
+import { getRecommendedBooks, getNewBooks } from "@/lib/api";
 
 interface RecommendedSectionProps {
   books?: Book[];
@@ -19,26 +20,22 @@ interface RecommendedSectionProps {
  */
 function FeaturedHeroCard({ book }: { book: Book }) {
   const countdown = useCountdown(book.promo_end_date || undefined);
-  const hasDiscount = isActivePromo(book);
-  const formattedOrig = formatBookPrice(book.price);
-  const formattedPromo = formatBookPrice(book.promo_price);
-  const currentPrice = hasDiscount ? formattedPromo : formattedOrig;
+  const priceInfo = getEffectiveBookPrice(book);
+  const hasDiscount = priceInfo.isPromo;
+  const formattedOrig = priceInfo.originalPrice;
+  const formattedPromo = priceInfo.promoPrice;
+  const currentPrice = priceInfo.displayPrice;
+  const discountPercent = priceInfo.discountPercentage || 0;
 
-  const numPrice = Number(book.price) || 0;
-  const numPromo = Number(book.promo_price) || 0;
-  const discountPercent = hasDiscount && numPrice > 0 && numPromo > 0
-    ? Math.round(((numPrice - numPromo) / numPrice) * 100)
-    : 0;
+  const coverImage = book.coverUrl || book.cover_url || "/logo500x200_1.png";
 
-  const coverImage =
-    book.coverUrl ||
-    book.cover_url ||
-    "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
+  const bookIdentifier = book.id || book.slug || "";
+  const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
 
   return (
     <div className="relative bg-white border border-amber-200/80 ring-1 ring-amber-400/20 rounded-3xl p-4 sm:p-8 shadow-[0_12px_32px_-12px_rgba(217,119,6,0.12)] flex flex-col justify-between h-full group">
       
-      {/* Header & Badge */}
+      {/* Top Header Badge & Curated Highlight */}
       <div className="flex items-center justify-between gap-3 mb-2">
         <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm inline-flex items-center gap-1.5">
           <Star size={12} fill="currentColor" className="text-white" />
@@ -52,7 +49,8 @@ function FeaturedHeroCard({ book }: { book: Book }) {
         {/* Book Cover (sm:col-span-5) */}
         <div className="w-24 sm:w-auto sm:col-span-5 flex-shrink-0 flex justify-center">
           <Link
-            href={`/katalog/${book.id}`}
+            href={targetUrl}
+            prefetch={false}
             className="w-full max-w-[220px] aspect-[2/3] rounded-xl sm:rounded-2xl drop-shadow-md sm:drop-shadow-xl hover:scale-105 transition-transform overflow-hidden shadow-md sm:shadow-lg block bg-gray-50 border border-gray-100 relative"
           >
             <Image
@@ -69,10 +67,10 @@ function FeaturedHeroCard({ book }: { book: Book }) {
         {/* Book Metadata (sm:col-span-7) */}
         <div className="sm:col-span-7 flex flex-col justify-center text-left min-w-0 flex-1">
           <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider">
-            {book.category || "PEMIKIRAN ISLAM"}
+            {book.category || ""}
           </span>
           <h3 className="text-base sm:text-2xl sm:text-3xl font-serif font-black text-gray-950 mt-0.5 leading-snug line-clamp-2 group-hover:text-[#E52E2D] transition-colors">
-            <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+            <Link href={targetUrl} prefetch={false}>{book.title}</Link>
           </h3>
           <p className="text-xs sm:text-sm text-gray-600 mt-0.5 font-medium truncate">{book.author}</p>
 
@@ -110,7 +108,7 @@ function FeaturedHeroCard({ book }: { book: Book }) {
         {hasDiscount && (
           <div className="flex-1 min-w-0">
             <PromoStockBar
-              timeLeft={`Sisa Waktu: ${countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}`}
+              timeLeft={countdown.hasMounted ? (countdown.isForever ? "Promo Berkelanjutan" : countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
               stockLabel="Promo Kurator"
               progressPercent={50}
               theme="light"
@@ -119,7 +117,8 @@ function FeaturedHeroCard({ book }: { book: Book }) {
         )}
 
         <Link
-          href={`/katalog/${book.id}`}
+          href={targetUrl}
+          prefetch={false}
           className="w-full sm:w-auto self-end px-6 py-2.5 text-sm font-semibold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm flex items-center justify-center gap-2 uppercase tracking-wider shrink-0 cursor-pointer group/btn"
         >
           <span>Lihat Detail Buku</span>
@@ -137,21 +136,17 @@ function FeaturedHeroCard({ book }: { book: Book }) {
  */
 function RightHorizontalCard({ book }: { book: Book }) {
   const countdown = useCountdown(book.promo_end_date || undefined);
-  const hasDiscount = isActivePromo(book);
-  const formattedOrig = formatBookPrice(book.price);
-  const formattedPromo = formatBookPrice(book.promo_price);
-  const currentPrice = hasDiscount ? formattedPromo : formattedOrig;
+  const priceInfo = getEffectiveBookPrice(book);
+  const hasDiscount = priceInfo.isPromo;
+  const formattedOrig = priceInfo.originalPrice;
+  const formattedPromo = priceInfo.promoPrice;
+  const currentPrice = priceInfo.displayPrice;
+  const discountPercent = priceInfo.discountPercentage || 0;
 
-  const numPrice = Number(book.price) || 0;
-  const numPromo = Number(book.promo_price) || 0;
-  const discountPercent = hasDiscount && numPrice > 0 && numPromo > 0
-    ? Math.round(((numPrice - numPromo) / numPrice) * 100)
-    : 0;
+  const coverImage = book.coverUrl || book.cover_url || "/logo500x200_1.png";
 
-  const coverImage =
-    book.coverUrl ||
-    book.cover_url ||
-    "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
+  const bookIdentifier = book.id || book.slug || "";
+  const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm transition-all group relative overflow-hidden h-full flex-1">
@@ -163,7 +158,7 @@ function RightHorizontalCard({ book }: { book: Book }) {
       )}
 
       {/* Top Content: Thumbnail & Details */}
-      <Link href={`/katalog/${book.id}`} className="flex items-center gap-4 group/item">
+      <Link href={targetUrl} prefetch={false} className="flex items-center gap-4 group/item">
         {/* Thumbnail */}
         <div className="w-20 aspect-[2/3] rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100 relative group-hover/item:scale-105 transition-transform block">
           <Image
@@ -216,7 +211,8 @@ function RightHorizontalCard({ book }: { book: Book }) {
 
         {/* Action Button: Red background with white font, shown on small screens / mobile */}
         <Link
-          href={`/katalog/${book.id}`}
+          href={targetUrl}
+          prefetch={false}
           className="mt-3 block lg:hidden w-full text-center py-2 px-3 bg-[#E53935] hover:bg-[#C12A26] text-white font-bold text-xs rounded-xl tracking-wider uppercase transition-colors shadow-xs shrink-0 cursor-pointer"
         >
           LIHAT DETAIL
@@ -231,6 +227,40 @@ export default function RecommendedSection({
   title = "Koleksi Pilihan Editor",
 }: RecommendedSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [recommendedItems, setRecommendedItems] = useState<Book[]>(books || []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setRecommendedItems(books);
+    if (books.length > 0) setLoading(false);
+  }, [books]);
+
+  // Client-side revalidation on mount
+  useEffect(() => {
+    async function loadLatestRecommended() {
+      try {
+        const freshRec = await getRecommendedBooks();
+        if (freshRec && freshRec.length > 0) {
+          setRecommendedItems(freshRec);
+        } else {
+          const freshNew = await getNewBooks();
+          if (freshNew && freshNew.length > 0) {
+            setRecommendedItems(freshNew.slice(0, 4));
+          }
+        }
+      } catch (err) {
+        console.error("Error revalidating recommended books on mount:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadLatestRecommended();
+  }, []);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -239,10 +269,28 @@ export default function RecommendedSection({
     }
   };
 
-  if (!books || books.length === 0) return null;
+  if (!mounted || loading) {
+    return (
+      <section className="w-full py-8 md:py-14 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="h-8 bg-gray-200 rounded-full w-48 animate-pulse" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7 aspect-[4/3] bg-gray-100 rounded-3xl animate-pulse" />
+            <div className="lg:col-span-5 flex flex-col gap-4">
+              <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
+              <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-  const featured = books[0];
-  const rightBooks = books.slice(1, 4);
+  const safeRecItems = Array.isArray(recommendedItems) ? recommendedItems : [];
+  if (safeRecItems.length === 0) return null;
+
+  const featured = safeRecItems[0];
+  const rightBooks = safeRecItems.slice(1, 4);
 
   return (
     <section className="w-full py-8 md:py-14 bg-white">

@@ -94,7 +94,8 @@ export default function CategorySection() {
             </div>
 
             <Link
-              href="/katalog"
+              href="/katalog/"
+              prefetch={false}
               className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-4 py-2.5 rounded-full border border-gray-200/80 shadow-2xs hover:shadow-xs shrink-0 self-stretch sm:self-auto justify-center"
             >
               <span>Lihat Semua Kategori</span>
@@ -109,6 +110,7 @@ export default function CategorySection() {
             {/* Top Featured Banner */}
             <Link
               href={mainCategory.href}
+              prefetch={false}
               className="w-full bg-[#E52E2D] rounded-2xl p-4 sm:p-5 flex flex-row items-center justify-between text-white overflow-hidden relative shadow-md group block"
             >
               <div className="flex-1 min-w-0 pr-3 z-10">
@@ -160,6 +162,7 @@ export default function CategorySection() {
                   <Link
                     key={cat.name}
                     href={cat.href}
+                    prefetch={false}
                     className="bg-white border border-gray-200/80 rounded-xl p-3 flex items-center gap-2.5 shadow-2xs active:scale-98 transition-transform group"
                   >
                     <div className={`w-8 h-8 rounded-lg ${cat.iconBg} flex items-center justify-center shrink-0`}>
@@ -183,6 +186,7 @@ export default function CategorySection() {
             <div className="col-span-5 h-full">
               <Link
                 href={mainCategory.href}
+                prefetch={false}
                 className="bg-gradient-to-br from-[#E52E2D] to-[#C12A26] rounded-3xl p-7 text-white relative flex flex-col justify-between overflow-hidden shadow-lg min-h-[420px] h-full group border border-red-500/30 block"
               >
                 {/* Decorative watermarked star/glow */}
@@ -262,6 +266,7 @@ export default function CategorySection() {
                   <Link
                     key={cat.name}
                     href={cat.href}
+                    prefetch={false}
                     className={`${cat.bg} border rounded-2xl flex flex-row items-center justify-between p-5 h-full overflow-hidden hover:shadow-md transition-all group relative min-h-[195px]`}
                   >
                     {/* Left: Category Icon, Title, and Link */}

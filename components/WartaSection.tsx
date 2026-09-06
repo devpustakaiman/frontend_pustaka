@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Play, ChevronRight, BookOpen, X, Clock } from "lucide-react";
 import { parseRichTextToPlainText, formatIndonesianDate } from "@/lib/utils";
-import { Article, MediaVideo } from "@/lib/api";
+import { Article, MediaVideo, getArticles, getMediaVideos } from "@/lib/api";
 
 interface WartaSectionProps {
   articles?: Article[];
@@ -26,7 +26,42 @@ export function getYouTubeEmbedUrl(url?: string): string {
 }
 
 export default function WartaSection({ articles = [], videos = [] }: WartaSectionProps) {
+  const [mounted, setMounted] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+  const [articleItems, setArticleItems] = useState<Article[]>(articles || []);
+  const [videoItems, setVideoItems] = useState<MediaVideo[]>(videos || []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setArticleItems(articles);
+    setVideoItems(videos);
+    if (articles.length > 0 || videos.length > 0) setLoading(false);
+  }, [articles, videos]);
+
+  // Client-side revalidation on mount
+  useEffect(() => {
+    async function loadLatestWartaData() {
+      try {
+        const freshArticles = await getArticles();
+        if (freshArticles && freshArticles.length > 0) {
+          setArticleItems(freshArticles);
+        }
+        const freshVideos = await getMediaVideos();
+        if (freshVideos && freshVideos.length > 0) {
+          setVideoItems(freshVideos);
+        }
+      } catch (err) {
+        console.error("Error revalidating warta data on mount:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadLatestWartaData();
+  }, []);
 
   // Close modal on Escape key press
   useEffect(() => {
@@ -43,39 +78,37 @@ export default function WartaSection({ articles = [], videos = [] }: WartaSectio
     };
   }, [selectedVideoUrl]);
 
-  // Video Datasets
-  const defaultVideo: MediaVideo = {
-    id: "vid-1",
-    title: "Mengenal Sosok Syekh Nawawi Al-Bantani: Mahaguru Ulama Nusantara",
-    category: "LIPUTAN UTAMA",
-    duration: "08:42",
-    youtube_url: "https://www.youtube.com/embed/t_cWQkwBDps?autoplay=1",
-    image_url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&q=80&w=800",
-  };
-
-  const featuredVideo = videos.find((v) => v.is_featured) || videos[0] || defaultVideo;
-
-  const displayArticles = articles.length >= 2 ? articles.slice(0, 2) : [
-    {
-      id: "art-1",
-      title: "Diapresiasi Tiga Media Raksasa Iran, Pustaka Iman Dorong Literasi Keislaman Global",
-      category: "MEDIA INTERNASIONAL",
-      date: "2026-08-14",
-      image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=600",
-    },
-    {
-      id: "art-2",
-      title: "Siswa Bukan Sekadar Cari Nilai: Pentingnya Literasi Kritis di Sekolah",
-      category: "WAWANCARA",
-      date: "2026-08-10",
-      image_url: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=600",
-    },
-  ];
-
   const handlePlayVideo = (video: MediaVideo) => {
     const rawUrl = video.youtube_url || video.video_url;
     setSelectedVideoUrl(getYouTubeEmbedUrl(rawUrl));
   };
+
+  if (!mounted || loading) {
+    return (
+      <section className="w-full bg-white py-10 md:py-16 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="h-8 bg-gray-200 rounded-full w-48 animate-pulse" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-6 aspect-video bg-gray-100 rounded-3xl animate-pulse" />
+            <div className="lg:col-span-6 space-y-4">
+              <div className="h-28 bg-gray-100 rounded-2xl animate-pulse" />
+              <div className="h-28 bg-gray-100 rounded-2xl animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const safeVideos = Array.isArray(videoItems) ? videoItems : [];
+  const safeArticles = Array.isArray(articleItems) ? articleItems : [];
+
+  const featuredVideo = safeVideos.find((v) => v.is_featured) || safeVideos[0] || null;
+  const displayArticles = safeArticles.slice(0, 2);
+
+  if (displayArticles.length === 0 && !featuredVideo) {
+    return null;
+  }
 
   return (
     <section className="w-full bg-white py-10 md:py-16 border-t border-gray-100">
@@ -196,6 +229,7 @@ export default function WartaSection({ articles = [], videos = [] }: WartaSectio
                   <Link
                     key={item.id}
                     href={`/warta/${item.id}`}
+                    prefetch={false}
                     className="bg-white border border-gray-200/80 rounded-3xl p-5 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-4 sm:gap-5 group block"
                   >
                     {/* Thumbnail Left */}

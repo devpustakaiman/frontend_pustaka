@@ -12,7 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 import { parseRichTextToPlainText, formatIndonesianDate } from "@/lib/utils";
-import { Article, MediaVideo } from "@/lib/api";
+import { Article, MediaVideo, getArticles, getMediaVideos } from "@/lib/api";
 import { getYouTubeEmbedUrl } from "@/components/WartaSection";
 
 interface WartaPageClientProps {
@@ -22,6 +22,35 @@ interface WartaPageClientProps {
 
 export default function WartaPageClient({ articles = [], videos = [] }: WartaPageClientProps) {
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+  const [articleItems, setArticleItems] = useState<Article[]>(articles);
+  const [videoItems, setVideoItems] = useState<MediaVideo[]>(videos);
+
+  useEffect(() => {
+    setArticleItems(articles);
+  }, [articles]);
+
+  useEffect(() => {
+    setVideoItems(videos);
+  }, [videos]);
+
+  // Client-side revalidation on mount
+  useEffect(() => {
+    async function loadLatestWartaData() {
+      try {
+        const freshArticles = await getArticles();
+        if (freshArticles && freshArticles.length > 0) {
+          setArticleItems(freshArticles);
+        }
+        const freshVideos = await getMediaVideos();
+        if (freshVideos && freshVideos.length > 0) {
+          setVideoItems(freshVideos);
+        }
+      } catch (err) {
+        console.error("Error revalidating warta data on mount:", err);
+      }
+    }
+    loadLatestWartaData();
+  }, []);
 
   // Close modal on Escape key press
   useEffect(() => {
@@ -38,87 +67,19 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
     };
   }, [selectedVideoUrl]);
 
-  // Video fallback dataset
-  const defaultVideo: MediaVideo = {
-    id: "vid-1",
-    title: "Mengenal Sosok Syekh Nawawi Al-Bantani: Mahaguru Ulama Nusantara",
-    category: "LIPUTAN UTAMA",
-    duration: "08:42",
-    youtube_url: "https://www.youtube.com/embed/t_cWQkwBDps?autoplay=1",
-    image_url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&q=80&w=1200",
-  };
-
-  const defaultNextVideos: MediaVideo[] = [
-    {
-      id: "vid-2",
-      title: "Bedah Buku: Filsafat Hidup & Spiritualitas Modern",
-      category: "BEDAH BUKU",
-      duration: "05:15",
-      youtube_url: "https://www.youtube.com/embed/t_cWQkwBDps?autoplay=1",
-      image_url: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400",
-    },
-    {
-      id: "vid-3",
-      title: "Jejak Literasi Islam Nusantara: Dari Pesantren untuk Dunia",
-      category: "DOKUMENTER",
-      duration: "12:30",
-      youtube_url: "https://www.youtube.com/embed/t_cWQkwBDps?autoplay=1",
-      image_url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=400",
-    },
-    {
-      id: "vid-4",
-      title: "Wawancara Eksklusif: Pentingnya Literasi Kritis & Karakter Pembaca",
-      category: "WAWANCARA",
-      duration: "09:45",
-      youtube_url: "https://www.youtube.com/embed/t_cWQkwBDps?autoplay=1",
-      image_url: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=400",
-    },
-    {
-      id: "vid-5",
-      title: "Kiprah Penerbitan Kitab Turats & Pengetahuan Klasik Nusantara",
-      category: "LIPUTAN",
-      duration: "15:20",
-      youtube_url: "https://www.youtube.com/embed/t_cWQkwBDps?autoplay=1",
-      image_url: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=400",
-    },
-  ];
-
   // Separate featured video and next videos slice(0, 4)
-  const featuredVideo = videos.find((v) => v.is_featured) || videos[0] || defaultVideo;
-  const nextVideos = videos.length > 1
-    ? videos.filter((v) => v.id !== featuredVideo.id).slice(0, 4)
-    : defaultNextVideos;
+  const featuredVideo = videoItems.find((v) => v.is_featured) || videoItems[0] || null;
+  const nextVideos = featuredVideo
+    ? videoItems.filter((v) => v.id !== featuredVideo.id).slice(0, 4)
+    : [];
 
   const openVideo = (video: MediaVideo) => {
     const rawUrl = video.youtube_url || video.video_url;
     setSelectedVideoUrl(getYouTubeEmbedUrl(rawUrl));
   };
 
-  const featuredArticle = articles[0] || {
-    id: "feat-1",
-    title: "Diapresiasi Tiga Media Raksasa Iran, Pustaka Iman Dorong Literasi Keislaman Global",
-    category: "MEDIA INTERNASIONAL",
-    date: "2026-08-14",
-    content: "Liputan khusus mengenai respon positif media luar negeri terhadap terbitan karya-karya pemikiran Islam klasik dan kontemporer dari Pustaka Iman.",
-    image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=800",
-  };
-
-  const sideArticles = articles.length >= 3 ? articles.slice(1, 3) : [
-    {
-      id: "side-1",
-      title: "Siswa Bukan Sekadar Cari Nilai: Pentingnya Literasi Kritis di Sekolah",
-      category: "WAWANCARA",
-      date: "2026-08-10",
-      image_url: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=400",
-    },
-    {
-      id: "side-2",
-      title: "Menagih Keberpihakan Kebijakan Perbukuan untuk Penulis & Penerbit Lokal",
-      category: "OPINI",
-      date: "2026-08-05",
-      image_url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&q=80&w=400",
-    },
-  ];
+  const featuredArticle = articleItems[0] || null;
+  const sideArticles = articleItems.length > 1 ? articleItems.slice(1, 3) : [];
 
   return (
     <div className="bg-white min-h-screen py-8 sm:py-12 text-[#272522]">
@@ -290,6 +251,7 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
             <div className="lg:col-span-7 flex flex-col h-full">
               <Link
                 href={`/warta/${featuredArticle.id}`}
+                prefetch={false}
                 className="h-full flex flex-col justify-between bg-white border border-gray-200/80 rounded-3xl p-6 sm:p-8 shadow-2xs hover:shadow-md hover:border-red-200 transition-all group block"
               >
                 <div>
@@ -359,6 +321,7 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
                   <Link
                     key={art.id}
                     href={`/warta/${art.id}`}
+                    prefetch={false}
                     className="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-4 sm:gap-5 group block"
                   >
                     {/* Left: Prominent Thumbnail */}

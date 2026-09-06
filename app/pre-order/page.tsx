@@ -19,6 +19,7 @@ import {
   Loader2,
   FileText,
   Building2,
+  MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { submitPreorder } from "@/lib/api";
@@ -79,26 +80,38 @@ export default function PreOrderPage() {
   // Copy Feedback State
   const [copiedBankIndex, setCopiedBankIndex] = useState<number | null>(null);
 
-  // Fetch dynamic bank accounts from Supabase site_settings
+  // Dynamic Preorder WA Settings State
+  const [preorderWaEnabled, setPreorderWaEnabled] = useState<boolean>(false);
+  const [preorderWaNumber, setPreorderWaNumber] = useState<string>("");
+
+  // Fetch dynamic bank accounts & WA settings from Supabase site_settings
   useEffect(() => {
-    async function fetchBankAccounts() {
+    async function fetchPreorderSettings() {
       try {
         const { data, error } = await supabase
           .from("site_settings")
-          .select("bank_accounts")
+          .select("bank_accounts, preorder_wa_enabled, preorder_wa_number")
           .eq("id", "default")
           .maybeSingle();
 
-        if (!error && data && Array.isArray(data.bank_accounts) && data.bank_accounts.length > 0) {
-          setBankAccounts(data.bank_accounts);
+        if (!error && data) {
+          if (typeof data.preorder_wa_enabled === "boolean") {
+            setPreorderWaEnabled(data.preorder_wa_enabled);
+          }
+          if (data.preorder_wa_number) {
+            setPreorderWaNumber(data.preorder_wa_number);
+          }
+          if (Array.isArray(data.bank_accounts) && data.bank_accounts.length > 0) {
+            setBankAccounts(data.bank_accounts);
+          }
         }
       } catch (err) {
-        console.error("Error fetching bank accounts from site_settings:", err);
+        console.error("Error fetching preorder settings from site_settings:", err);
       } finally {
         setIsLoadingBankAccounts(false);
       }
     }
-    fetchBankAccounts();
+    fetchPreorderSettings();
   }, []);
 
   // Fetch available books from Supabase for book selector dropdown
@@ -239,21 +252,10 @@ export default function PreOrderPage() {
       );
 
       if (result.success) {
-        // Trigger email notification dispatch to /api/preorder/notify (non-blocking)
-        fetch("/api/preorder/notify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            customer_name: customerName.trim(),
-            customer_email: customerEmail.trim(),
-            customer_phone: customerPhone.trim(),
-            book_title: bookTitle.trim(),
-            quantity,
-            transfer_receipt: (result.data as any)?.[0]?.transfer_receipt || null,
-          }),
-        }).catch((notifyErr) => {
-          console.warn("Background preorder notification dispatch warning:", notifyErr);
-        });
+        const rawId = (result.data as any)?.[0]?.id;
+        const formattedOrderId = rawId
+          ? `PO-${String(rawId).slice(0, 8).toUpperCase()}`
+          : `PO-${Date.now().toString().slice(-6)}`;
 
         setSubmittedOrder({
           customerName,
@@ -263,7 +265,7 @@ export default function PreOrderPage() {
           quantity,
           selectedBook,
           hasReceipt: !!receiptFile,
-          orderId: `PO-${Date.now().toString().slice(-6)}`,
+          orderId: formattedOrderId,
         });
         setShowSuccessModal(true);
       }
@@ -727,70 +729,111 @@ export default function PreOrderPage() {
       </div>
 
       {/* Confirmation / Success Dialog Modal */}
-      {showSuccessModal && submittedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-100 text-center space-y-5 animate-in zoom-in-95 duration-200">
-            
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-              <CheckCircle2 size={36} strokeWidth={2.5} />
-            </div>
+      {showSuccessModal && submittedOrder && (() => {
+        const rawWaNumber = (preorderWaNumber || "").trim();
+        const cleanWaNumber = rawWaNumber.replace(/[^0-9]/g, "").replace(/^0/, "62");
+        const isWaConfirmationEnabled = preorderWaEnabled && cleanWaNumber.length > 0;
 
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                Pemesanan Berhasil Dikirim
-              </span>
-              <h3 className="font-serif text-2xl font-bold text-gray-900 pt-2">
-                Terima Kasih, {submittedOrder.customerName}!
-              </h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Formulir Pre-Order Anda telah tersimpan dengan nomor referensi <strong className="text-gray-900 font-mono">{submittedOrder.orderId}</strong>.
-              </p>
-            </div>
+        const waMessageDraft = `Halo Pustaka Iman, saya telah melakukan pemesanan Pre-Order buku ${submittedOrder.bookTitle} atas nama ${submittedOrder.customerName} (ID Pesanan: ${submittedOrder.orderId}). Mohon konfirmasinya, terima kasih.`;
+        const waConfirmationLink = isWaConfirmationEnabled
+          ? `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(waMessageDraft)}`
+          : null;
 
-            {/* Submitted Order Details Table */}
-            <div className="bg-gray-50 border border-gray-200/80 rounded-2xl p-4 text-left text-xs space-y-2">
-              <div className="flex justify-between border-b border-gray-200 pb-1.5">
-                <span className="text-gray-500">Judul Buku:</span>
-                <strong className="text-gray-900 truncate max-w-[180px]">{submittedOrder.bookTitle}</strong>
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-100 text-center space-y-5 animate-in zoom-in-95 duration-200">
+              
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                <CheckCircle2 size={36} strokeWidth={2.5} />
               </div>
-              <div className="flex justify-between border-b border-gray-200 pb-1.5">
-                <span className="text-gray-500">Jumlah:</span>
-                <strong className="text-gray-900">{submittedOrder.quantity} Eksemplar</strong>
-              </div>
-              <div className="flex justify-between border-b border-gray-200 pb-1.5">
-                <span className="text-gray-500">No. WhatsApp:</span>
-                <strong className="text-gray-900">{submittedOrder.customerPhone}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Status Pembayaran:</span>
-                <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[10px]">
-                  {submittedOrder.hasReceipt ? "Bukti Terunggah (Verifikasi)" : "Menunggu Pembayaran"}
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  Pemesanan Berhasil Dikirim
                 </span>
+                <h3 className="font-serif text-2xl font-bold text-gray-900 pt-2">
+                  Terima Kasih, {submittedOrder.customerName}!
+                </h3>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Formulir Pre-Order Anda telah tersimpan dengan nomor referensi <strong className="text-gray-900 font-mono">{submittedOrder.orderId}</strong>.
+                </p>
               </div>
+
+              {/* Submitted Order Details Table */}
+              <div className="bg-gray-50 border border-gray-200/80 rounded-2xl p-4 text-left text-xs space-y-2">
+                <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                  <span className="text-gray-500">Judul Buku:</span>
+                  <strong className="text-gray-900 truncate max-w-[180px]">{submittedOrder.bookTitle}</strong>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                  <span className="text-gray-500">Jumlah:</span>
+                  <strong className="text-gray-900">{submittedOrder.quantity} Eksemplar</strong>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                  <span className="text-gray-500">No. WhatsApp:</span>
+                  <strong className="text-gray-900">{submittedOrder.customerPhone}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Status Pembayaran:</span>
+                  <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[10px]">
+                    {submittedOrder.hasReceipt ? "Bukti Terunggah (Verifikasi)" : "Menunggu Pembayaran"}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-gray-400 italic">
+                Tim Pustaka Iman akan segera memproses pesanan Anda.
+              </p>
+
+              {/* Action Buttons: Condition A (WA Active) vs Condition B (WA Disabled) */}
+              {waConfirmationLink ? (
+                <div className="space-y-2 pt-2">
+                  <a
+                    href={waConfirmationLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition-all duration-200 uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  >
+                    <MessageCircle size={18} className="fill-white text-[#25D366]" />
+                    <span>Konfirmasi via WhatsApp</span>
+                  </a>
+
+                  <div className="flex gap-2 pt-1">
+                    <Link
+                      href="/"
+                      className="flex-1 py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider text-center"
+                    >
+                      Beranda
+                    </Link>
+                    <Link
+                      href="/katalog"
+                      className="flex-1 py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider text-center"
+                    >
+                      Katalog
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                  <Link
+                    href="/"
+                    className="flex-1 py-2.5 px-4 bg-[#E52E2D] hover:bg-[#C12A26] text-white text-xs font-bold rounded-xl transition-colors uppercase tracking-wider shadow-sm text-center"
+                  >
+                    Kembali ke Beranda
+                  </Link>
+                  <Link
+                    href="/katalog"
+                    className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider text-center"
+                  >
+                    Lihat Katalog
+                  </Link>
+                </div>
+              )}
+
             </div>
-
-            <p className="text-[11px] text-gray-400 italic">
-              Tim Pustaka Iman akan segera menghubungi WhatsApp Anda untuk konfirmasi nomor resi dan pengiriman.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <Link
-                href="/"
-                className="flex-1 py-2.5 px-4 bg-[#E52E2D] hover:bg-[#C12A26] text-white text-xs font-bold rounded-xl transition-colors uppercase tracking-wider shadow-sm"
-              >
-                Kembali ke Beranda
-              </Link>
-              <Link
-                href="/katalog"
-                className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider"
-              >
-                Lihat Katalog
-              </Link>
-            </div>
-
           </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );

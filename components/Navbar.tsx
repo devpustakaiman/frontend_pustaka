@@ -14,13 +14,16 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fetchDynamicCategories, DynamicCategoryGroup } from "@/lib/api";
 
 export interface MizanCategorySubItem {
   name: string;
   full: string;
+  id?: string;
 }
 
 export interface MizanCategoryGroup {
+  id?: string;
   name: string;
   slug: string;
   subcategories: MizanCategorySubItem[];
@@ -126,15 +129,16 @@ export interface NavLinkItem {
 
 export const NAV_LINKS: NavLinkItem[] = [
   { name: "BERANDA", href: "/" },
-  { name: "KOLEKSI", href: "/shop", hasDropdown: true },
-  { name: "PRE-ORDER", href: "/pre-order" },
-  { name: "WARTA", href: "/warta" },
-  { name: "TENTANG", href: "/tentang" },
-  { name: "KONTAK", href: "/kontak" },
+  { name: "KOLEKSI", href: "/shop/", hasDropdown: true },
+  { name: "PRE-ORDER", href: "/pre-order/" },
+  { name: "WARTA", href: "/warta/" },
+  { name: "TENTANG", href: "/tentang/" },
+  { name: "KONTAK", href: "/kontak/" },
 ];
 
 interface SearchResultItem {
   id: string;
+  slug?: string;
   title: string;
   author?: string;
   cover_url?: string;
@@ -148,6 +152,23 @@ export default function Navbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [activeMobileSub, setActiveMobileSub] = useState<string | null>(null);
 
+  // Dynamic Categories State
+  const [categoryTree, setCategoryTree] = useState<DynamicCategoryGroup[]>(CATEGORY_TREE as unknown as DynamicCategoryGroup[]);
+
+  useEffect(() => {
+    async function loadDynamicCategories() {
+      try {
+        const dynamicTree = await fetchDynamicCategories();
+        if (dynamicTree && dynamicTree.length > 0) {
+          setCategoryTree(dynamicTree);
+        }
+      } catch (err) {
+        console.error("Error loading dynamic categories in Navbar:", err);
+      }
+    }
+    loadDynamicCategories();
+  }, []);
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
@@ -158,13 +179,38 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Determine active route state dynamically
+  // Determine active route state dynamically, handling trailing slashes & route aliases
   const isItemActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    if (href === "/shop") return pathname.startsWith("/shop") || pathname.startsWith("/katalog");
-    if (href === "/tentang") return pathname.startsWith("/tentang") || pathname.startsWith("/tentang-kami");
-    if (href === "/kontak") return pathname.startsWith("/kontak") || pathname.startsWith("/contact");
-    return pathname.startsWith(href);
+    if (!pathname) return false;
+    const cleanPath = pathname.split("?")[0].replace(/\/$/, "") || "/";
+    const cleanHref = href.split("?")[0].replace(/\/$/, "") || "/";
+
+    if (cleanHref === "/") return cleanPath === "/";
+    if (cleanHref === "/shop" || cleanHref === "/katalog") {
+      return (
+        cleanPath === "/shop" ||
+        cleanPath.startsWith("/shop/") ||
+        cleanPath === "/katalog" ||
+        cleanPath.startsWith("/katalog/")
+      );
+    }
+    if (cleanHref === "/tentang" || cleanHref === "/tentang-kami") {
+      return (
+        cleanPath === "/tentang" ||
+        cleanPath.startsWith("/tentang/") ||
+        cleanPath === "/tentang-kami" ||
+        cleanPath.startsWith("/tentang-kami/")
+      );
+    }
+    if (cleanHref === "/kontak" || cleanHref === "/contact") {
+      return (
+        cleanPath === "/kontak" ||
+        cleanPath.startsWith("/kontak/") ||
+        cleanPath === "/contact" ||
+        cleanPath.startsWith("/contact/")
+      );
+    }
+    return cleanPath === cleanHref || cleanPath.startsWith(`${cleanHref}/`);
   };
 
   // 1. Scroll State Listener (window.scrollY > 20)
@@ -262,6 +308,7 @@ export default function Navbar() {
         {/* Left: Brand Logo */}
         <Link
           href="/"
+          prefetch={false}
           className="flex items-center shrink-0 focus:outline-none rounded-md group py-1"
         >
           <Image
@@ -288,6 +335,7 @@ export default function Navbar() {
                 >
                   <Link
                     href={item.href}
+                    prefetch={false}
                     className={`relative self-stretch flex items-center gap-1 uppercase transition-colors ${
                       isActive
                         ? "text-[#E52E2D] font-bold"
@@ -312,7 +360,8 @@ export default function Navbar() {
                   <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
                     <div className="w-64 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 overflow-visible">
                       <Link
-                        href="/katalog"
+                        href="/katalog/"
+                        prefetch={false}
                         className="px-4 py-2 text-xs font-bold text-[#E52E2D] bg-red-50/50 hover:bg-red-50 border-b border-gray-100 transition-colors flex items-center justify-between"
                       >
                         <span>SEMUA PRODUK</span>
@@ -320,12 +369,13 @@ export default function Navbar() {
                       </Link>
 
                       <div className="py-1">
-                        {CATEGORY_TREE.map((cat) => {
+                        {categoryTree.map((cat) => {
                           const hasSub = cat.subcategories && cat.subcategories.length > 0;
                           return (
-                            <div key={cat.name} className="relative group/sub">
+                            <div key={cat.id || cat.name} className="relative group/sub">
                               <Link
                                 href={`/katalog?category=${encodeURIComponent(cat.name)}`}
+                                prefetch={false}
                                 className="px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-950 transition-colors flex items-center justify-between"
                               >
                                 <span className="truncate pr-2">{cat.name}</span>
@@ -351,8 +401,9 @@ export default function Navbar() {
                                     </div>
                                     {cat.subcategories.map((sub) => (
                                       <Link
-                                        key={sub.full}
+                                        key={sub.id || sub.name}
                                         href={`/katalog?category=${encodeURIComponent(sub.name)}`}
+                                        prefetch={false}
                                         className="block px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-950 transition-colors"
                                       >
                                         {sub.name}
@@ -375,6 +426,7 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={false}
                 className={`relative self-stretch flex items-center py-1 transition-colors uppercase ${
                   isActive
                     ? "text-[#E52E2D] font-bold"
@@ -435,7 +487,8 @@ export default function Navbar() {
                   {searchResults.map((book) => (
                     <Link
                       key={book.id}
-                      href={`/katalog/${book.id}`}
+                      href={`/katalog/detail?id=${book.id || book.slug}`}
+                      prefetch={false}
                       onClick={() => setShowDropdown(false)}
                       className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group"
                     >
@@ -472,6 +525,7 @@ export default function Navbar() {
 
                 <Link
                   href={`/katalog?search=${encodeURIComponent(searchQuery.trim())}`}
+                  prefetch={false}
                   onClick={() => setShowDropdown(false)}
                   className="mt-1 w-full py-2 px-3 text-xs font-bold text-center text-[#E52E2D] bg-red-50/60 hover:bg-red-50 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
                 >
@@ -484,7 +538,8 @@ export default function Navbar() {
 
           {/* CTA Button ('KIRIM NASKAH') */}
           <Link
-            href="/kirim-naskah"
+            href="/kirim-naskah/"
+            prefetch={false}
             className="hidden sm:inline-flex items-center justify-center border border-[#E52E2D] text-[#E52E2D] hover:bg-red-50 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-wide transition-colors whitespace-nowrap active:scale-95"
           >
             KIRIM NASKAH
@@ -600,20 +655,23 @@ export default function Navbar() {
                     {mobileShopOpen && (
                       <div className="pl-3 pr-1 py-1 space-y-1 text-xs">
                         <Link
-                          href="/katalog"
+                          href="/katalog/"
+                          prefetch={false}
                           className="block py-1.5 px-3 font-bold text-[#E52E2D] bg-red-50/50 rounded-lg"
                         >
                           Semua Produk &rarr;
                         </Link>
-                        {CATEGORY_TREE.map((cat) => {
+                        {categoryTree.map((cat) => {
                           const isSubOpen = activeMobileSub === cat.name;
                           const hasSub = cat.subcategories && cat.subcategories.length > 0;
                           return (
-                            <div key={cat.name} className="py-0.5">
+                            <div key={cat.id || cat.name} className="py-0.5">
                               <div className="flex items-center justify-between">
                                 <Link
                                   href={`/katalog?category=${encodeURIComponent(cat.name)}`}
+                                  prefetch={false}
                                   className="py-1 px-3 text-gray-700 hover:text-gray-950 truncate block"
+                                  onClick={() => setMobileMenuOpen(false)}
                                 >
                                   {cat.name}
                                 </Link>
@@ -638,9 +696,11 @@ export default function Navbar() {
                                 <div className="pl-4 py-1 space-y-1 border-l border-gray-100 ml-3">
                                   {cat.subcategories.map((sub) => (
                                     <Link
-                                      key={sub.full}
+                                      key={sub.id || sub.name}
                                       href={`/katalog?category=${encodeURIComponent(sub.name)}`}
+                                      prefetch={false}
                                       className="block py-1 text-[11px] text-gray-500 hover:text-gray-900"
+                                      onClick={() => setMobileMenuOpen(false)}
                                     >
                                       {sub.name}
                                     </Link>
@@ -660,6 +720,7 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch={false}
                   className={`block py-2 px-3 rounded-xl transition-colors ${
                     isActive
                       ? "bg-red-50 text-[#E52E2D] font-bold"
@@ -673,7 +734,8 @@ export default function Navbar() {
 
             <div className="pt-2">
               <Link
-                href="/kirim-naskah"
+                href="/kirim-naskah/"
+                prefetch={false}
                 className="w-full inline-flex items-center justify-center border border-[#E52E2D] text-[#E52E2D] hover:bg-red-50 text-xs font-bold py-2.5 rounded-full uppercase tracking-wide transition-colors"
               >
                 KIRIM NASKAH

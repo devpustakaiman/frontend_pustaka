@@ -8,23 +8,48 @@ import {
   ChevronRight,
   Clock,
   Timer,
-  ShoppingCart,
   ChevronLeft,
 } from "lucide-react";
-import { Book, formatBookPrice, isActivePromo } from "@/lib/utils";
+import { Book, isActivePromo, getEffectiveBookPrice } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
 import PromoStockBar from "@/components/PromoStockBar";
+import { getPromoBooks } from "@/lib/api";
 
 interface PromoSectionProps {
   books?: Book[];
 }
 
 export default function PromoSection({ books = [] }: PromoSectionProps) {
-  // Filter active promos strictly - unmount if empty
-  const activePromoBooks = (books || []).filter(isActivePromo);
-  if (activePromoBooks.length === 0) {
-    return null;
-  }
+  const [mounted, setMounted] = useState(false);
+  const [promoItems, setPromoItems] = useState<Book[]>(books || []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setPromoItems(books);
+    if (books && books.length > 0) setLoading(false);
+  }, [books]);
+
+  // Client-side revalidation on mount from Supabase
+  useEffect(() => {
+    async function loadFreshPromo() {
+      try {
+        const fresh = await getPromoBooks();
+        setPromoItems(fresh || []);
+      } catch (err) {
+        console.error("Error revalidating promo books on mount:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadFreshPromo();
+  }, []);
+
+  // Filter active promos strictly
+  const activePromoBooks = (promoItems || []).filter(isActivePromo);
 
   // Synchronize header countdown to the earliest active promo end date
   const earliestTargetDate = activePromoBooks[0]?.promo_end_date || undefined;
@@ -42,6 +67,23 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
       dealSliderRef.current.scrollBy({ left: offset, behavior: 'smooth' });
     }
   };
+
+  if (!mounted || loading) {
+    return (
+      <section className="w-full py-8 md:py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#FFF7F5] border border-red-200/90 rounded-3xl p-8 animate-pulse space-y-6">
+            <div className="h-10 bg-red-100 rounded-full w-64" />
+            <div className="h-64 bg-red-50 rounded-2xl w-full" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (activePromoBooks.length === 0) {
+    return null;
+  }
 
   return (
     <section className="w-full py-8 md:py-12 bg-white">
@@ -83,13 +125,17 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
                 </div>
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[9px] sm:text-[10px] uppercase font-bold text-gray-500 tracking-wider truncate">
-                    ⚡ BERAKHIR DALAM
+                    ⚡ {countdown.isForever ? "PENAWARAN SPESIAL" : "BERAKHIR DALAM"}
                   </span>
                   <span
                     className="text-xs sm:text-sm font-extrabold text-[#E52E2D] whitespace-nowrap truncate"
                     suppressHydrationWarning
                   >
-                    {countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+                    {countdown.hasMounted
+                      ? countdown.isForever
+                        ? "Promo Berkelanjutan"
+                        : countdown.formatted || "Promo Berakhir"
+                      : "Memuat promo..."}
                   </span>
                 </div>
               </div>
@@ -189,24 +235,13 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
  */
 function FeaturedRedDealTicket({ book }: { book: Book }) {
   const countdown = useCountdown(book.promo_end_date || undefined);
-  const hasPromo = isActivePromo(book);
-  const formattedOrig = formatBookPrice(book.price);
-  const formattedPromo = formatBookPrice(book.promo_price);
+  const priceInfo = getEffectiveBookPrice(book);
   const coverImage =
     book.coverUrl ||
     book.cover_url ||
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
-  let discountPct = book.promo_percentage || 15;
-  if (
-    !book.promo_percentage &&
-    hasPromo &&
-    typeof book.price === "number" &&
-    typeof book.promo_price === "number" &&
-    book.price > 0
-  ) {
-    discountPct = Math.round(((book.price - book.promo_price) / book.price) * 100);
-  }
+  const discountPct = priceInfo.discountPercentage || 15;
 
   return (
     <div className="bg-gradient-to-br from-[#c12a26] to-[#a01e1a] rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-7 text-white relative flex flex-col justify-between overflow-hidden shadow-xl h-full group border border-red-500/30">
@@ -237,7 +272,8 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
       <div className="my-auto py-2 flex flex-row items-center gap-3.5 sm:gap-5 flex-1 z-10 relative">
         {/* Left Sub-column: Book Cover Asset */}
         <Link
-          href={`/katalog/${book.id}`}
+          href={`/katalog/detail?id=${book.id || book.slug}`}
+          prefetch={false}
           className="w-24 sm:w-44 md:w-48 aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl flex-shrink-0 border border-white/20 block relative"
         >
           <Image
@@ -256,14 +292,14 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
             {book.category || "ROMANSA"}
           </span>
           <h3 className="text-base sm:text-2xl font-serif font-black leading-snug sm:leading-tight mt-0.5 text-white line-clamp-2 group-hover:text-amber-200 transition-colors">
-            <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+            <Link href={`/katalog/detail?id=${book.id || book.slug}`} prefetch={false}>{book.title}</Link>
           </h3>
           <p className="text-red-100/90 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">{book.author}</p>
           
           <div className="text-lg sm:text-3xl font-extrabold text-white mt-1.5 sm:mt-3 flex items-baseline justify-start gap-2 flex-wrap">
-            <span>{formattedPromo}</span>
+            <span>{priceInfo.promoPrice}</span>
             <span className="text-red-200/80 line-through text-xs sm:text-base font-normal">
-              {formattedOrig}
+              {priceInfo.originalPrice}
             </span>
           </div>
 
@@ -279,7 +315,7 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
         {/* Countdown + Progress Bar */}
         <div className="flex-1 min-w-0 w-full sm:w-auto">
           <PromoStockBar
-            timeLeft={`Sisa Waktu: ${countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}`}
+            timeLeft={countdown.hasMounted ? (countdown.isForever ? "Promo Berkelanjutan" : countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
             stockLabel="Bonus Stiker"
             progressPercent={50}
             theme="dark"
@@ -288,7 +324,8 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
 
         {/* CTA Button */}
         <Link
-          href={`/katalog/${book.id}`}
+          href={`/katalog/detail?id=${book.id || book.slug}`}
+          prefetch={false}
           className="bg-amber-400 hover:bg-amber-300 text-gray-950 font-bold px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl whitespace-nowrap text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-colors shrink-0 justify-center w-full sm:w-auto"
         >
           <span>Ambil Promo Sekarang</span>
@@ -305,24 +342,13 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
  */
 function SideCouponCard({ book, index }: { book: Book; index: number }) {
   const countdown = useCountdown(book.promo_end_date || undefined);
-  const hasPromo = isActivePromo(book);
-  const formattedOrig = formatBookPrice(book.price);
-  const formattedPromo = formatBookPrice(book.promo_price);
+  const priceInfo = getEffectiveBookPrice(book);
   const coverImage =
     book.coverUrl ||
     book.cover_url ||
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
-  let discountPct = book.promo_percentage || 15;
-  if (
-    !book.promo_percentage &&
-    hasPromo &&
-    typeof book.price === "number" &&
-    typeof book.promo_price === "number" &&
-    book.price > 0
-  ) {
-    discountPct = Math.round(((book.price - book.promo_price) / book.price) * 100);
-  }
+  const discountPct = priceInfo.discountPercentage || 15;
 
   return (
     <div className="flex-1 bg-white rounded-3xl p-3.5 sm:p-4 border border-gray-100 shadow-sm flex flex-row items-center gap-3 sm:gap-3.5 hover:shadow-md transition-shadow relative overflow-hidden group">
@@ -338,7 +364,8 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
 
       {/* Cover Thumbnail */}
       <Link
-        href={`/katalog/${book.id}`}
+        href={`/katalog/detail?id=${book.id || book.slug}`}
+        prefetch={false}
         className="w-20 aspect-[2/3] flex-shrink-0 rounded-xl bg-gray-50 p-1 border border-gray-100 overflow-hidden block group-hover:scale-105 transition-transform relative"
       >
         <Image
@@ -358,20 +385,20 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
             {book.category || "LITERASI"}
           </span>
           <h4 className="font-bold text-gray-900 line-clamp-2 text-sm sm:text-base group-hover:text-red-600 transition-colors mt-0.5">
-            <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+            <Link href={`/katalog/detail?id=${book.id || book.slug}`} prefetch={false}>{book.title}</Link>
           </h4>
           <p className="text-xs text-[#76716A] truncate mt-0.5">{book.author}</p>
 
           <div className="flex items-baseline gap-2 mt-1.5 flex-wrap">
-            <span className="font-extrabold text-[#E53935] text-sm sm:text-base">{formattedPromo}</span>
-            <span className="line-through text-gray-400 text-xs font-normal">{formattedOrig}</span>
+            <span className="font-extrabold text-[#E53935] text-sm sm:text-base">{priceInfo.promoPrice}</span>
+            <span className="line-through text-gray-400 text-xs font-normal">{priceInfo.originalPrice}</span>
           </div>
         </div>
 
         {/* Dynamic Countdown & Stock Progress */}
         <div className="mt-2.5 pt-2 border-t border-gray-100/80">
           <PromoStockBar
-            timeLeft={countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+            timeLeft={countdown.hasMounted ? (countdown.isForever ? "Promo Berkelanjutan" : countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
             stockLabel="Stok Terbatas"
             progressPercent={50}
             theme="light"
@@ -388,24 +415,13 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
  */
 function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
   const countdown = useCountdown(book.promo_end_date || undefined);
-  const hasPromo = isActivePromo(book);
-  const formattedOrig = formatBookPrice(book.price);
-  const formattedPromo = formatBookPrice(book.promo_price);
+  const priceInfo = getEffectiveBookPrice(book);
   const coverImage =
     book.coverUrl ||
     book.cover_url ||
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
-  let discountPct = book.promo_percentage || 15;
-  if (
-    !book.promo_percentage &&
-    hasPromo &&
-    typeof book.price === "number" &&
-    typeof book.promo_price === "number" &&
-    book.price > 0
-  ) {
-    discountPct = Math.round(((book.price - book.promo_price) / book.price) * 100);
-  }
+  const discountPct = priceInfo.discountPercentage || 15;
 
   return (
     <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-red-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between h-full group relative overflow-hidden">
@@ -417,7 +433,8 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
 
       {/* Cover Image */}
       <Link
-        href={`/katalog/${book.id}`}
+        href={`/katalog/detail?id=${book.id || book.slug}`}
+        prefetch={false}
         className="w-full aspect-[2/3] max-h-36 sm:max-h-40 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden mb-2.5 border border-gray-100 group-hover:scale-102 transition-transform block relative"
       >
         <Image
@@ -437,7 +454,7 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
             {book.category || "FLASH SALE"}
           </span>
           <h4 className="font-bold text-gray-900 line-clamp-1 text-xs sm:text-sm group-hover:text-red-600 transition-colors">
-            <Link href={`/katalog/${book.id}`}>{book.title}</Link>
+            <Link href={`/katalog/detail?id=${book.id || book.slug}`} prefetch={false}>{book.title}</Link>
           </h4>
           <p className="text-[11px] text-[#76716A] truncate mt-0.5">{book.author}</p>
         </div>
@@ -445,14 +462,14 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
         {/* Price & Stock */}
         <div className="mt-2 pt-2 border-t border-gray-100">
           <div className="flex items-baseline justify-between gap-1 flex-wrap mb-1.5">
-            <span className="font-black text-[#E53935] text-sm">{formattedPromo}</span>
-            <span className="line-through text-gray-400 text-[10px] font-normal">{formattedOrig}</span>
+            <span className="font-black text-[#E53935] text-sm">{priceInfo.promoPrice}</span>
+            <span className="line-through text-gray-400 text-[10px] font-normal">{priceInfo.originalPrice}</span>
           </div>
 
           {/* Standardized Stock / Time Progress Bar */}
           <div className="mb-3">
             <PromoStockBar
-              timeLeft={countdown.hasMounted ? (countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+              timeLeft={countdown.hasMounted ? (countdown.isForever ? "Promo Berkelanjutan" : countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
               stockLabel="Stok Terbatas"
               progressPercent={65}
               theme="light"
@@ -463,7 +480,8 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
 
       {/* Action Button */}
       <Link
-        href={`/katalog/${book.id}`}
+        href={`/katalog/detail?id=${book.id || book.slug}`}
+        prefetch={false}
         className="w-full bg-[#E53935] hover:bg-[#C12A26] text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer uppercase tracking-wider"
       >
         <span>Lihat Detail</span>

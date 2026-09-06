@@ -54,7 +54,7 @@ export default function NewsGrid({ articles = [] }: NewsGridProps) {
                   className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all overflow-hidden flex flex-col"
                 >
                   {/* Thumbnail */}
-                  <Link href={`/warta/${item.id}`} className="block overflow-hidden bg-gray-50 aspect-video relative">
+                  <Link href={`/warta/${item.id}`} prefetch={false} className="block overflow-hidden bg-gray-50 aspect-video relative">
                     {imgUrl ? (
                       <Image
                         src={imgUrl}
@@ -80,7 +80,7 @@ export default function NewsGrid({ articles = [] }: NewsGridProps) {
                         {item.category || displayDate}
                       </span>
                       <h3 className="text-base font-serif font-bold text-[#272522] line-clamp-2 mb-2 group-hover:text-[#E52E2D] transition-colors leading-snug">
-                        <Link href={`/warta/${item.id}`}>
+                        <Link href={`/warta/${item.id}`} prefetch={false}>
                           {item.title}
                         </Link>
                       </h3>
@@ -93,6 +93,7 @@ export default function NewsGrid({ articles = [] }: NewsGridProps) {
                       <span className="text-[11px] text-[#76716A] font-medium">{displayDate}</span>
                       <Link
                         href={`/warta/${item.id}`}
+                        prefetch={false}
                         className="text-xs font-bold text-[#E52E2D] hover:text-[#C12A26] flex items-center gap-1 group-hover:underline"
                       >
                         <span>Baca Selengkapnya</span>

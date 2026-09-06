@@ -16,9 +16,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import BookGrid, { Book } from "@/components/BookGrid";
-import { CATEGORY_TREE, MizanCategoryGroup } from "@/components/Navbar";
+import { CATEGORY_TREE } from "@/components/Navbar";
 import { isActivePromo } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { getBooks, fetchDynamicCategories, DynamicCategoryGroup } from "@/lib/api";
 
 interface CatalogClientProps {
   books: Book[];
@@ -61,6 +62,50 @@ function parseCategories(input: any): string[] {
 export default function CatalogClient({ books }: CatalogClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  const [allBooks, setAllBooks] = useState<Book[]>(books);
+
+  useEffect(() => {
+    setAllBooks(books);
+  }, [books]);
+
+  // Dynamic Categories State fetched directly from Supabase public.categories
+  const [categoryTree, setCategoryTree] = useState<DynamicCategoryGroup[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadDynamicCategories() {
+      try {
+        const dynamicTree = await fetchDynamicCategories();
+        if (dynamicTree && dynamicTree.length > 0) {
+          setCategoryTree(dynamicTree);
+        } else {
+          setCategoryTree(CATEGORY_TREE as unknown as DynamicCategoryGroup[]);
+        }
+      } catch (err) {
+        console.error("Error fetching dynamic categories for catalog:", err);
+        setCategoryTree(CATEGORY_TREE as unknown as DynamicCategoryGroup[]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    }
+    loadDynamicCategories();
+  }, []);
+
+  // Client-side revalidation on mount to reflect runtime DB changes immediately
+  useEffect(() => {
+    async function loadLatestBooks() {
+      try {
+        const freshBooks = await getBooks();
+        if (freshBooks && freshBooks.length > 0) {
+          setAllBooks(freshBooks);
+        }
+      } catch (err) {
+        console.error("Error revalidating catalog books on mount:", err);
+      }
+    }
+    loadLatestBooks();
+  }, []);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua Kategori");
   const [sort, setSort] = useState<SortOption>("all");
@@ -200,7 +245,8 @@ export default function CatalogClient({ books }: CatalogClientProps) {
 
   // Sort Categories by catalog_featured_categories
   const featured = parseCategories(catalogSettings?.catalog_featured_categories);
-  const allCategories = CATEGORY_TREE.map((c) => c.name);
+  const currentCategoryTree = categoryTree.length > 0 ? categoryTree : (CATEGORY_TREE as unknown as DynamicCategoryGroup[]);
+  const allCategories = currentCategoryTree.map((c) => c.name);
 
   const isMatched = (cat: string, featuredList: string[]) => {
     return featuredList.some((f) => 
@@ -217,18 +263,20 @@ export default function CatalogClient({ books }: CatalogClientProps) {
   const orderedCategoryNames = [...priorityCategories, ...remainingCategories];
 
   const orderedCategories = orderedCategoryNames
-    .map((name) => CATEGORY_TREE.find((c) => c.name === name))
-    .filter((c): c is MizanCategoryGroup => c !== undefined);
+    .map((name) => currentCategoryTree.find((c) => c.name === name))
+    .filter((c): c is DynamicCategoryGroup => c !== undefined);
 
   // Find active parent category group if selectedCategory is a parent OR a subcategory
-  const activeParentGroup: MizanCategoryGroup | undefined = CATEGORY_TREE.find((parent) => {
+  const activeParentGroup: DynamicCategoryGroup | undefined = currentCategoryTree.find((parent) => {
     if (parent.name.toLowerCase() === selectedCategory.toLowerCase()) return true;
+    if (parent.slug && parent.slug.toLowerCase() === selectedCategory.toLowerCase()) return true;
     if (
       parent.subcategories &&
       parent.subcategories.some(
         (sub) =>
           sub.name.toLowerCase() === selectedCategory.toLowerCase() ||
-          sub.full.toLowerCase() === selectedCategory.toLowerCase()
+          (sub as any).full?.toLowerCase() === selectedCategory.toLowerCase() ||
+          sub.slug?.toLowerCase() === selectedCategory.toLowerCase()
       )
     ) {
       return true;
@@ -236,27 +284,112 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     return false;
   });
 
+  // Determine active category mode
+  const isAllCategories = selectedCategory === "Semua Kategori";
+  const isMainCategorySelected =
+    !isAllCategories &&
+    activeParentGroup !== undefined &&
+    (activeParentGroup.name.toLowerCase() === selectedCategory.toLowerCase() ||
+      (activeParentGroup.slug && activeParentGroup.slug.toLowerCase() === selectedCategory.toLowerCase()));
+  const isSubCategorySelected =
+    !isAllCategories &&
+    !isMainCategorySelected &&
+    activeParentGroup !== undefined;
+
   // Combine Category, Smart Search, & Tri-State Toggle Filters
-  const filteredBooks = books.filter((book) => {
+  const filteredBooks = allBooks.filter((book) => {
     // A. Filter by Category
-    if (selectedCategory !== "Semua Kategori") {
+    if (!isAllCategories) {
       const bookCat = (book.category || "").toLowerCase();
-      const selectedNorm = selectedCategory.toLowerCase();
+      const bookSubCat = ((book as any).sub_category || "").toLowerCase();
+      const bookCatId = String((book as any).category_id || "").toLowerCase();
+      const bookSubCatId = String((book as any).sub_category_id || "").toLowerCase();
+      const bookTags = Array.isArray(book.tags)
+        ? book.tags.map((t: string) => String(t).toLowerCase())
+        : [];
 
-      let catMatch =
-        bookCat.includes(selectedNorm) ||
-        (book.tags && book.tags.some((t: string) => t.toLowerCase().includes(selectedNorm)));
+      if (isMainCategorySelected && activeParentGroup) {
+        // User selected a Main/Parent Category (e.g. "tes123")
+        // Match if book belongs to this main category OR any of its subcategories
+        const parentName = activeParentGroup.name.toLowerCase();
+        const parentSlug = (activeParentGroup.slug || "").toLowerCase();
+        const parentId = String(activeParentGroup.id || "").toLowerCase();
 
-      if (!catMatch && activeParentGroup) {
-        if (activeParentGroup.subcategories) {
-          catMatch = activeParentGroup.subcategories.some((sub) =>
-            bookCat.includes(sub.name.toLowerCase()) ||
-            bookCat.includes(sub.full.toLowerCase())
-          );
+        const directParentMatch =
+          bookCat.includes(parentName) ||
+          (parentSlug && bookCat.includes(parentSlug)) ||
+          (parentId && (bookCatId === parentId || bookCat === parentId)) ||
+          bookTags.some((t) => t.includes(parentName) || (parentSlug && t.includes(parentSlug)));
+
+        let subMatch = false;
+        if (!directParentMatch && activeParentGroup.subcategories && activeParentGroup.subcategories.length > 0) {
+          subMatch = activeParentGroup.subcategories.some((sub) => {
+            const sName = sub.name.toLowerCase();
+            const sSlug = (sub.slug || "").toLowerCase();
+            const sId = String(sub.id || "").toLowerCase();
+            const sFull = ((sub as any).full || "").toLowerCase();
+
+            return (
+              (sName && (bookCat.includes(sName) || bookSubCat.includes(sName))) ||
+              (sSlug && (bookCat.includes(sSlug) || bookSubCat.includes(sSlug))) ||
+              (sFull && (bookCat.includes(sFull) || bookSubCat.includes(sFull))) ||
+              (sId && (bookSubCatId === sId || bookSubCat === sId || bookCat === sId)) ||
+              bookTags.some((t) => (sName && t.includes(sName)) || (sSlug && t.includes(sSlug)))
+            );
+          });
         }
-      }
 
-      if (!catMatch) return false;
+        if (!directParentMatch && !subMatch) return false;
+
+      } else if (isSubCategorySelected && activeParentGroup) {
+        // User selected a SPECIFIC SUB-CATEGORY (e.g. "tes3")
+        // Must match ONLY this specific subcategory!
+        const selectedNorm = selectedCategory.toLowerCase();
+
+        // Find the specific subcategory item in activeParentGroup
+        const targetSub = activeParentGroup.subcategories?.find(
+          (sub) =>
+            sub.name.toLowerCase() === selectedNorm ||
+            (sub.slug && sub.slug.toLowerCase() === selectedNorm) ||
+            ((sub as any).full && (sub as any).full.toLowerCase() === selectedNorm) ||
+            String(sub.id || "").toLowerCase() === selectedNorm
+        );
+
+        const subName = targetSub ? targetSub.name.toLowerCase() : selectedNorm;
+        const subSlug = targetSub?.slug ? targetSub.slug.toLowerCase() : selectedNorm;
+        const subId = targetSub?.id ? String(targetSub.id).toLowerCase() : "";
+        const subFull = (targetSub as any)?.full ? (targetSub as any).full.toLowerCase() : "";
+
+        const parentName = activeParentGroup.name.toLowerCase();
+        const parentSubCombo = `${parentName} - ${subName}`;
+
+        const matchesSub =
+          // Match on sub_category column
+          (bookSubCat && (bookSubCat.includes(subName) || (subSlug && bookSubCat.includes(subSlug)))) ||
+          // Match on sub_category_id column
+          (subId && (bookSubCatId === subId || bookSubCat === subId)) ||
+          // Match on book.category column if it matches subName, subSlug, subFull, or parentSubCombo
+          (bookCat && (
+            bookCat.includes(subName) ||
+            (subSlug && bookCat.includes(subSlug)) ||
+            (subFull && bookCat.includes(subFull)) ||
+            bookCat.includes(parentSubCombo)
+          )) ||
+          // Match on tags
+          bookTags.some((t) => t.includes(subName) || (subSlug && t.includes(subSlug)));
+
+        if (!matchesSub) return false;
+
+      } else {
+        // Direct string match fallback
+        const selectedNorm = selectedCategory.toLowerCase();
+        const directMatch =
+          bookCat.includes(selectedNorm) ||
+          bookSubCat.includes(selectedNorm) ||
+          bookTags.some((t) => t.includes(selectedNorm));
+
+        if (!directMatch) return false;
+      }
     }
 
     // B. Smart Search Filter (Title, Author, Category)
@@ -536,12 +669,14 @@ export default function CatalogClient({ books }: CatalogClientProps) {
               </button>
 
               {activeParentGroup.subcategories.map((sub) => {
+                const subFull = (sub as any).full || sub.name;
                 const isSubActive =
                   selectedCategory.toLowerCase() === sub.name.toLowerCase() ||
-                  selectedCategory.toLowerCase() === sub.full.toLowerCase();
+                  selectedCategory.toLowerCase() === subFull.toLowerCase() ||
+                  (sub.slug && selectedCategory.toLowerCase() === sub.slug.toLowerCase());
                 return (
                   <button
-                    key={sub.full}
+                    key={sub.id || sub.name}
                     onClick={() => handleCategorySelect(sub.name)}
                     type="button"
                     className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer ${

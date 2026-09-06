@@ -7,6 +7,7 @@ export interface CountdownState {
   seconds: number;
   formatted: string;
   isExpired: boolean;
+  isForever: boolean;
   progressPercent: number;
   hasMounted: boolean;
   isMounted: boolean;
@@ -14,28 +15,50 @@ export interface CountdownState {
 
 export function useCountdown(targetDate?: string | Date | null): CountdownState {
   const [hasMounted, setHasMounted] = useState(false);
+  const isForever = !targetDate || String(targetDate).trim() === "" || targetDate === "forever";
+
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
-    formatted: '',
+    formatted: isForever ? 'Promo Berkelanjutan' : '',
     isExpired: false,
-    progressPercent: 0,
+    isForever,
+    progressPercent: 100,
   });
 
   useEffect(() => {
     setHasMounted(true);
 
+    if (isForever) {
+      setTimeLeft({
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        formatted: 'Promo Berkelanjutan',
+        isExpired: false,
+        isForever: true,
+        progressPercent: 100,
+      });
+      return;
+    }
+
     const calculate = () => {
-      let target: Date;
-      if (!targetDate) {
-        target = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-      } else {
-        target = new Date(targetDate);
-        if (isNaN(target.getTime())) {
-          target = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-        }
+      const target = new Date(targetDate!);
+      if (isNaN(target.getTime())) {
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          formatted: 'Promo Berkelanjutan',
+          isExpired: false,
+          isForever: true,
+          progressPercent: 100,
+        });
+        return;
       }
       const now = new Date();
       const diff = target.getTime() - now.getTime();
@@ -48,6 +71,7 @@ export function useCountdown(targetDate?: string | Date | null): CountdownState 
           seconds: 0,
           formatted: 'Promo Berakhir',
           isExpired: true,
+          isForever: false,
           progressPercent: 0,
         });
         return;
@@ -70,6 +94,7 @@ export function useCountdown(targetDate?: string | Date | null): CountdownState 
         seconds,
         formatted: `${days > 0 ? `${days} hari ` : ''}${hours} jam ${minutes} menit`,
         isExpired: false,
+        isForever: false,
         progressPercent,
       });
     };
@@ -77,7 +102,7 @@ export function useCountdown(targetDate?: string | Date | null): CountdownState 
     calculate();
     const timer = setInterval(calculate, 1000);
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [targetDate, isForever]);
 
   return {
     ...timeLeft,
