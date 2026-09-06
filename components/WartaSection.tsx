@@ -122,14 +122,25 @@ export default function WartaSection({ articles = [], videos = [] }: WartaSectio
           {/* ═══════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-6 space-y-4">
             {/* Header */}
-            <div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#E52E2D] mb-1">
-                <Play size={12} fill="currentColor" className="text-[#E52E2D]" />
-                MEDIA &amp; CERITA
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#272522] tracking-tight">
-                Cerita <span className="text-[#C12A26] italic font-serif">dalam Sorotan</span>
-              </h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#E52E2D] mb-1">
+                  <Play size={12} fill="currentColor" className="text-[#E52E2D]" />
+                  MEDIA &amp; CERITA
+                </span>
+                <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#272522] tracking-tight">
+                  Cerita <span className="text-[#C12A26] italic font-serif">dalam Sorotan</span>
+                </h2>
+              </div>
+
+              <Link
+                href="/warta/video"
+                prefetch={false}
+                className="group inline-flex items-center gap-1 text-xs font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-3.5 py-2 rounded-full border border-gray-200/80 shadow-2xs hover:shadow-xs shrink-0"
+              >
+                <span>Lihat Semua Video</span>
+                <ChevronRight size={14} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
+              </Link>
             </div>
 
             {/* Single Cinematic Standalone Video Card */}
@@ -201,10 +212,11 @@ export default function WartaSection({ articles = [], videos = [] }: WartaSectio
               </div>
 
               <Link
-                href="/warta"
+                href="/warta/berita"
+                prefetch={false}
                 className="group inline-flex items-center gap-1 text-xs font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-3.5 py-2 rounded-full border border-gray-200/80 shadow-2xs hover:shadow-xs shrink-0"
               >
-                <span>Lihat Semua Warta</span>
+                <span>Lihat Semua Artikel</span>
                 <ChevronRight size={14} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
               </Link>
             </div>

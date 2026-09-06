@@ -72,6 +72,7 @@ export default function KirimNaskah() {
   const [whatsapp, setWhatsapp] = useState("");
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("Agama & Filsafat");
+  const [customGenre, setCustomGenre] = useState("");
   const [synopsis, setSynopsis] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
@@ -245,6 +246,11 @@ export default function KirimNaskah() {
       return;
     }
 
+    if (genre === "Lain-lain" && !customGenre.trim()) {
+      setErrorMsg("Sebutkan genre / kategori naskah Anda.");
+      return;
+    }
+
     if (!synopsis.trim()) {
       setErrorMsg("Silakan isi Sinopsis / Ringkasan Naskah.");
       return;
@@ -254,6 +260,8 @@ export default function KirimNaskah() {
       setErrorMsg("Silakan unggah file naskah Anda (PDF / DOCX).");
       return;
     }
+
+    const effectiveGenre = genre === "Lain-lain" ? customGenre.trim() : genre;
 
     setIsSubmitting(true);
     setSuccessMsg("");
@@ -266,7 +274,7 @@ export default function KirimNaskah() {
           email: email.trim(),
           whatsapp: whatsapp.trim(),
           title: title.trim(),
-          genre,
+          genre: effectiveGenre,
           synopsis: synopsis.trim(),
         },
         file
@@ -290,6 +298,7 @@ export default function KirimNaskah() {
     setWhatsapp("");
     setTitle("");
     setGenre("Agama & Filsafat");
+    setCustomGenre("");
     setSynopsis("");
     setFile(null);
     setShowSuccessModal(false);
@@ -439,7 +448,13 @@ export default function KirimNaskah() {
                       id="genre"
                       name="genre"
                       value={genre}
-                      onChange={(e) => setGenre(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setGenre(val);
+                        if (val !== "Lain-lain") {
+                          setCustomGenre("");
+                        }
+                      }}
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#dc2626] focus:bg-white rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#dc2626]/20 transition-all cursor-pointer"
                     >
                       {GENRE_OPTIONS.map((g) => (
@@ -448,6 +463,24 @@ export default function KirimNaskah() {
                         </option>
                       ))}
                     </select>
+
+                    {genre === "Lain-lain" && (
+                      <div className="mt-3 animate-in fade-in">
+                        <label htmlFor="customGenre" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                          Sebutkan Genre / Kategori Naskah <span className="text-[#dc2626]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="customGenre"
+                          name="customGenre"
+                          required
+                          value={customGenre}
+                          onChange={(e) => setCustomGenre(e.target.value)}
+                          placeholder="Contoh: Biografi, Sejarah, Sains Populer..."
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 focus:border-[#dc2626] focus:bg-white rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#dc2626]/20 transition-all"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 

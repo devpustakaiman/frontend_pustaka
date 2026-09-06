@@ -79,7 +79,7 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
   };
 
   const featuredArticle = articleItems[0] || null;
-  const sideArticles = articleItems.length > 1 ? articleItems.slice(1, 3) : [];
+  const sideArticles = articleItems.length > 1 ? articleItems.slice(1, 4) : [];
 
   return (
     <div className="bg-white min-h-screen py-8 sm:py-12 text-[#272522]">
@@ -115,13 +115,14 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
               </p>
             </div>
 
-            <button
-              onClick={() => openVideo(featuredVideo)}
-              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-4 py-2.5 rounded-full border border-gray-200/80 shadow-2xs hover:shadow-xs shrink-0 cursor-pointer"
+            <Link
+              href="/warta/video"
+              prefetch={false}
+              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-4 py-2.5 rounded-full border border-gray-200/80 shadow-2xs hover:shadow-xs shrink-0"
             >
               <span>Lihat Semua Video</span>
               <ChevronRight size={15} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
-            </button>
+            </Link>
           </div>
 
           {/* Balanced Max 4XL Cinematic Video Player Showcase */}
@@ -243,6 +244,15 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
                 Artikel opini, warta pers, dan kabar publikasi dari Pustaka Iman.
               </p>
             </div>
+
+            <Link
+              href="/warta/berita"
+              prefetch={false}
+              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#272522] hover:text-[#E52E2D] transition-colors bg-white px-4 py-2.5 rounded-full border border-gray-200/80 shadow-2xs hover:shadow-xs shrink-0"
+            >
+              <span>Lihat Semua Artikel</span>
+              <ChevronRight size={15} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
+            </Link>
           </div>
 
           {/* Editorial Grid: Left Major Card (7 cols) + Right Stacked Cards (5 cols) */}
@@ -301,8 +311,8 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
               </Link>
             </div>
 
-            {/* Right Stacked Side Cards (5 cols) — Compact Natural Height Cards without hollow vertical gaps */}
-            <div className="lg:col-span-5 flex flex-col gap-4">
+            {/* Right Stacked Side Cards (5 cols) — 3 Cards neatly balanced with Left Featured Card */}
+            <div className="lg:col-span-5 flex flex-col justify-between gap-3 sm:gap-3.5 h-full">
               {sideArticles.map((art) => {
                 const rawDate = art.created_at || art.date;
                 const displayDate = formatIndonesianDate(rawDate);
@@ -322,36 +332,36 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
                     key={art.id}
                     href={`/warta/${art.id}`}
                     prefetch={false}
-                    className="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-4 sm:gap-5 group block"
+                    className="bg-white border border-gray-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-3.5 sm:gap-4 group block flex-1"
                   >
                     {/* Left: Prominent Thumbnail */}
-                    <div className="w-full sm:w-36 md:w-40 aspect-[4/3] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 shadow-2xs relative">
+                    <div className="w-full sm:w-28 md:w-32 aspect-[4/3] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 shadow-2xs relative">
                       <Image
                         src={imgUrl}
                         alt={art.title}
                         fill
-                        sizes="160px"
+                        sizes="130px"
                         loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
 
                     {/* Right: Content Column */}
-                    <div className="flex flex-col justify-between flex-1 min-w-0 space-y-2">
+                    <div className="flex flex-col justify-between flex-1 min-w-0 space-y-1.5 w-full">
                       <div>
-                        <span className="text-[11px] font-bold text-[#E52E2D] uppercase tracking-wider block mb-0.5">
+                        <span className="text-[10px] sm:text-[11px] font-bold text-[#E52E2D] uppercase tracking-wider block mb-0.5">
                           {art.category || "OPINI & GAGASAN"}
                         </span>
-                        <h3 className="text-sm sm:text-base font-serif font-black text-gray-900 line-clamp-2 leading-snug group-hover:text-[#E52E2D] transition-colors">
+                        <h3 className="text-xs sm:text-sm font-serif font-black text-gray-900 line-clamp-2 leading-snug group-hover:text-[#E52E2D] transition-colors">
                           {art.title}
                         </h3>
-                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1">
+                        <p className="text-[11px] sm:text-xs text-gray-500 line-clamp-1 leading-relaxed mt-0.5">
                           {excerptText}
                         </p>
                       </div>
 
                       {/* Bottom Meta Row */}
-                      <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-gray-100 text-xs">
+                      <div className="flex items-center justify-between pt-2 mt-1 border-t border-gray-100 text-[11px] sm:text-xs">
                         <span className="text-gray-400 font-medium">{displayDate}</span>
                         <span className="font-bold text-[#E52E2D] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                           <span>Baca</span>
