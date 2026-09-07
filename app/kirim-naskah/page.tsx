@@ -89,6 +89,9 @@ export default function KirimNaskah() {
   const [manuscriptCriteria, setManuscriptCriteria] = useState<string[]>(DEFAULT_MANUSCRIPT_CRITERIA);
   const [manuscriptContactDesc, setManuscriptContactDesc] = useState<string>(DEFAULT_MANUSCRIPT_CONTACT_DESC);
   const [manuscriptWhatsapp, setManuscriptWhatsapp] = useState<string>(DEFAULT_CONTACT_WHATSAPP);
+  const [manuscriptWaEnabled, setManuscriptWaEnabled] = useState<boolean>(true);
+  const [manuscriptConfirmationWa, setManuscriptConfirmationWa] = useState<string>("");
+  const [manuscriptRedaksiWa, setManuscriptRedaksiWa] = useState<string>("");
 
   // Fetch dynamic manuscript settings from Supabase site_settings (id = 'default')
   useEffect(() => {
@@ -97,7 +100,7 @@ export default function KirimNaskah() {
         const { data, error } = await supabase
           .from("site_settings")
           .select(
-            "manuscript_steps, manuscript_criteria, manuscript_contact_desc, manuscript_whatsapp, contact_whatsapp, contact_phone"
+            "manuscript_steps, manuscript_criteria, manuscript_contact_desc, manuscript_whatsapp, manuscript_whatsapp_enabled, manuscript_whatsapp_number, manuscript_confirmation_wa, manuscript_redaksi_wa"
           )
           .eq("id", "default")
           .maybeSingle();
@@ -156,8 +159,23 @@ export default function KirimNaskah() {
             setManuscriptContactDesc(data.manuscript_contact_desc.trim());
           }
 
-          // 4. manuscript_whatsapp
-          const rawWa = data.manuscript_whatsapp || data.contact_whatsapp || data.contact_phone;
+          // 4. manuscript_whatsapp_enabled
+          if (data.manuscript_whatsapp_enabled !== undefined && data.manuscript_whatsapp_enabled !== null) {
+            setManuscriptWaEnabled(Boolean(data.manuscript_whatsapp_enabled));
+          }
+
+          // 5. manuscript_confirmation_wa
+          if (data.manuscript_confirmation_wa && typeof data.manuscript_confirmation_wa === "string") {
+            setManuscriptConfirmationWa(data.manuscript_confirmation_wa.trim());
+          }
+
+          // 6. manuscript_redaksi_wa
+          if (data.manuscript_redaksi_wa && typeof data.manuscript_redaksi_wa === "string") {
+            setManuscriptRedaksiWa(data.manuscript_redaksi_wa.trim());
+          }
+
+          // 7. Fallback manuscript_whatsapp_number
+          const rawWa = data.manuscript_whatsapp_number || data.manuscript_whatsapp;
           if (rawWa && typeof rawWa === "string" && rawWa.trim()) {
             setManuscriptWhatsapp(rawWa.trim());
           }
@@ -169,15 +187,13 @@ export default function KirimNaskah() {
     fetchManuscriptSettings();
   }, []);
 
-  // Clean WhatsApp phone number (strip symbols, format international number)
-  const rawWaNumber = manuscriptWhatsapp || DEFAULT_CONTACT_WHATSAPP;
-  let cleanWaNumber = rawWaNumber.replace(/\D/g, "");
-  if (cleanWaNumber.startsWith("0")) {
-    cleanWaNumber = "62" + cleanWaNumber.slice(1);
-  }
-  if (!cleanWaNumber) {
-    cleanWaNumber = DEFAULT_CONTACT_WHATSAPP;
-  }
+  // Clean WhatsApp phone number helper (strip non-digits, format international 62)
+  const formatWaNumber = (num?: string | null): string => {
+    return (num || "").replace(/\D/g, "").replace(/^0/, "62");
+  };
+
+  const cleanRedaksiNumber = formatWaNumber(manuscriptRedaksiWa || manuscriptWhatsapp);
+  const cleanConfirmationNumber = formatWaNumber(manuscriptConfirmationWa || manuscriptWhatsapp);
 
   const handleFileValidation = (selectedFile: File | null) => {
     if (!selectedFile) {
@@ -663,7 +679,7 @@ export default function KirimNaskah() {
               </p>
               <div className="pt-1">
                 <a
-                  href={`https://wa.me/${cleanWaNumber}?text=Halo%20Redaksi%20Pustaka%20Iman,%20saya%20ingin%20bertanya%20mengenai%20pengiriman%20naskah...`}
+                  href={`https://wa.me/${cleanRedaksiNumber}?text=${encodeURIComponent("Halo Redaksi Pustaka Iman, saya ingin bertanya seputar penerbitan naskah...")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
@@ -720,20 +736,36 @@ export default function KirimNaskah() {
               Hasil evaluasi akan kami infokan secara berkala melalui Email ({email}) dan WhatsApp ({whatsapp}).
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
-                type="button"
-                onClick={handleResetForm}
-                className="flex-1 py-2.5 px-4 bg-[#dc2626] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-xl transition-colors uppercase tracking-wider shadow-sm cursor-pointer"
-              >
-                Kirim Naskah Lain
-              </button>
-              <Link
-                href="/"
-                className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider text-center"
-              >
-                Kembali Beranda
-              </Link>
+            <div className="space-y-2.5 pt-2">
+              {manuscriptWaEnabled && cleanConfirmationNumber && (
+                <a
+                  href={`https://wa.me/${cleanConfirmationNumber}?text=${encodeURIComponent(
+                    `Halo Redaksi Pustaka Iman, saya telah mengirimkan naskah berjudul "${title}" atas nama ${senderName}. Mohon konfirmasinya, terima kasih.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer active:scale-95"
+                >
+                  <MessageCircle size={18} fill="currentColor" />
+                  <span>Konfirmasi via WhatsApp</span>
+                </a>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="flex-1 py-2.5 px-4 bg-[#dc2626] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-xl transition-colors uppercase tracking-wider shadow-sm cursor-pointer"
+                >
+                  Kirim Naskah Lain
+                </button>
+                <Link
+                  href="/"
+                  className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider text-center"
+                >
+                  Kembali Beranda
+                </Link>
+              </div>
             </div>
 
           </div>

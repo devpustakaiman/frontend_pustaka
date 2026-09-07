@@ -8,8 +8,8 @@ export async function generateStaticParams() {
     return [{ slug: "1" }, { slug: "default" }];
   }
 
-  return articles.map((article) => ({
-    slug: String(article.id),
+  return articles.map((article: any) => ({
+    slug: article.slug || String(article.id),
   }));
 }
 

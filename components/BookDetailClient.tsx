@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, BookOpen, Clock, Tag } from "lucide-react";
+import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, BookOpen, Clock, Tag, Copy, Check, MessageCircle } from "lucide-react";
 import BookGrid from "./BookGrid";
+import RenderTextWithLinks from "@/components/RenderTextWithLinks";
+import ShareSection from "./ShareSection";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining } from "@/lib/utils";
 
 interface BookDetailClientProps {
@@ -148,7 +150,13 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                 </h1>
 
                 <p className="text-sm text-[#76716A]">
-                  Penulis: <span className="text-[#272522] font-semibold text-base">{book.author}</span>
+                  Penulis:{" "}
+                  <Link
+                    href={`/koleksi?author=${encodeURIComponent(book.author || "")}`}
+                    className="font-medium text-slate-800 hover:text-red-600 hover:underline transition-colors"
+                  >
+                    {book.author}
+                  </Link>
                 </p>
               </div>
 
@@ -233,13 +241,13 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                 <div className="border-t border-gray-200 pt-5 space-y-3">
                   <h2 className="font-serif text-xl font-bold text-[#272522]">Deskripsi Buku</h2>
                   <div className="relative">
-                    <p
-                      className={`text-[#272522]/90 text-sm leading-relaxed whitespace-pre-line transition-all ${
+                    <div
+                      className={`text-[#272522]/90 text-sm leading-relaxed transition-all ${
                         isSynopsisExpanded ? "" : "line-clamp-4"
                       }`}
                     >
-                      {book.synopsis}
-                    </p>
+                      <RenderTextWithLinks text={book.synopsis} />
+                    </div>
                   </div>
                   <button
                     onClick={() => setIsSynopsisExpanded(!isSynopsisExpanded)}
@@ -255,6 +263,9 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                   </button>
                 </div>
               )}
+
+              {/* Reusable Share Section */}
+              <ShareSection title={book.title} className="border-t border-gray-200 pt-5" />
             </div>
           </div>
         </div>

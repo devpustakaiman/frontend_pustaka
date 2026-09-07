@@ -111,6 +111,9 @@ export default function CatalogClient({ books }: CatalogClientProps) {
   const [sort, setSort] = useState<SortOption>("all");
   const [isOpen, setIsOpen] = useState(false);
 
+  // Author filter state
+  const [authorFilter, setAuthorFilter] = useState<string>("");
+
   // Smart Search State with Debounce
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -171,12 +174,19 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Sync state with URL search parameters (?category=, ?sort=, ?filter=, ?search=)
+  // Sync state with URL search parameters (?category=, ?sort=, ?filter=, ?search=, ?author=)
   useEffect(() => {
     const categoryParam = searchParams.get("category");
     const sortParam = searchParams.get("sort");
     const filterParam = searchParams.get("filter");
     const searchParam = searchParams.get("search") || searchParams.get("q");
+    const authorParam = searchParams.get("author");
+
+    if (authorParam) {
+      setAuthorFilter(decodeURIComponent(authorParam));
+    } else {
+      setAuthorFilter("");
+    }
 
     if (searchParam) {
       const decoded = decodeURIComponent(searchParam);
@@ -237,6 +247,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     setSelectedCategory("Semua Kategori");
     setSearchQuery("");
     setDebouncedQuery("");
+    setAuthorFilter("");
     setPromoFilter(0);
     setRecommendedFilter(0);
     setSort("all");
@@ -401,6 +412,13 @@ export default function CatalogClient({ books }: CatalogClientProps) {
       if (!titleMatch && !authorMatch && !catMatch) return false;
     }
 
+    // B2. Dedicated Author Filter
+    if (authorFilter.trim().length > 0) {
+      const authorNorm = authorFilter.toLowerCase().trim();
+      const bookAuthor = (book.author || "").toLowerCase();
+      if (!bookAuthor.includes(authorNorm)) return false;
+    }
+
     // C. Promo Tri-State Filter
     if (promoFilter === 1 && !isActivePromo(book)) return false;
     if (promoFilter === 2 && isActivePromo(book)) return false;
@@ -438,6 +456,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
   const hasActiveFilters =
     selectedCategory !== "Semua Kategori" ||
     searchQuery.trim().length > 0 ||
+    authorFilter.trim().length > 0 ||
     promoFilter !== 0 ||
     recommendedFilter !== 0 ||
     sort !== "all";
@@ -591,11 +610,32 @@ export default function CatalogClient({ books }: CatalogClientProps) {
 
         {/* Category Pills Header & Reset All Button */}
         <div className="pt-2 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-bold text-[#76716A] uppercase tracking-wider flex items-center gap-1.5">
-              <Filter size={13} className="text-[#E52E2D]" />
-              <span>Kategori Utama</span>
-            </span>
+          <div className="flex items-center justify-between mb-2.5 flex-wrap gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs font-bold text-[#76716A] uppercase tracking-wider flex items-center gap-1.5">
+                <Filter size={13} className="text-[#E52E2D]" />
+                <span>Kategori Utama</span>
+              </span>
+
+              {authorFilter && (
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-red-50 text-[#E52E2D] border border-red-200/80 rounded-full text-xs font-bold shadow-2xs">
+                  <span>Menampilkan buku karya: <strong>{authorFilter}</strong></span>
+                  <button
+                    onClick={() => {
+                      setAuthorFilter("");
+                      const newParams = new URLSearchParams(searchParams.toString());
+                      newParams.delete("author");
+                      const query = newParams.toString();
+                      router.push(query ? `/katalog?${query}` : "/katalog", { scroll: false });
+                    }}
+                    className="p-0.5 hover:bg-red-200 rounded-full transition-colors cursor-pointer"
+                    title="Hapus filter penulis"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              )}
+            </div>
 
             {hasActiveFilters && (
               <button

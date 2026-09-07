@@ -7,6 +7,8 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Clock, Tag } from "lucide-react";
 import BookCard from "@/components/BookCard";
 import PromoStockBar from "@/components/PromoStockBar";
+import RenderTextWithLinks from "@/components/RenderTextWithLinks";
+import ShareSection from "@/components/ShareSection";
 import { getBookById, getBooks } from "@/lib/api";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining, getEffectiveBookPrice } from "@/lib/utils";
 
@@ -266,7 +268,13 @@ function BookDetailContent({ slug }: BookDetailClientProps) {
                 </h1>
 
                 <p className="text-sm text-[#76716A]">
-                  Penulis: <span className="text-[#272522] font-semibold text-base">{book?.author || "Pustaka Iman"}</span>
+                  Penulis:{" "}
+                  <Link
+                    href={`/koleksi?author=${encodeURIComponent(book?.author || "")}`}
+                    className="font-semibold text-slate-900 hover:text-red-600 hover:underline cursor-pointer transition-colors"
+                  >
+                    {book?.author || "Pustaka Iman"}
+                  </Link>
                 </p>
               </div>
 
@@ -360,14 +368,18 @@ function BookDetailContent({ slug }: BookDetailClientProps) {
             <div className="lg:col-span-8 space-y-4">
               <h2 className="font-serif text-xl font-bold text-[#272522]">Deskripsi Buku</h2>
               <div className="relative">
-                <p
-                  className={`text-[#272522] opacity-90 text-sm leading-relaxed whitespace-pre-line transition-all ${
+                <div
+                  className={`text-[#272522] opacity-90 text-sm leading-relaxed transition-all ${
                     isSynopsisExpanded ? "" : "line-clamp-4"
                   }`}
                 >
-                  {book?.synopsis ||
-                    "Informasi dan sinopsis lengkap mengenai buku karya terbitan Pustaka Iman."}
-                </p>
+                  <RenderTextWithLinks
+                    text={
+                      book?.synopsis ||
+                      "Informasi dan sinopsis lengkap mengenai buku karya terbitan Pustaka Iman."
+                    }
+                  />
+                </div>
               </div>
               <button
                 onClick={() => setIsSynopsisExpanded(!isSynopsisExpanded)}
@@ -381,6 +393,12 @@ function BookDetailContent({ slug }: BookDetailClientProps) {
                   <ChevronDown size={14} strokeWidth={2} />
                 )}
               </button>
+
+              {/* Reusable Share Section */}
+              <ShareSection
+                title={book?.title || "Detail Buku Pustaka Iman"}
+                className="pt-6 border-t border-gray-100"
+              />
             </div>
           </div>
         </div>

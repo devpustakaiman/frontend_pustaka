@@ -234,7 +234,7 @@ export default function ArticleArchiveClient({ initialArticles = [] }: ArticleAr
                 return (
                   <Link
                     key={art.id}
-                    href={`/warta/${art.id}`}
+                    href={`/warta/${art.slug || art.id}`}
                     prefetch={false}
                     className="bg-white border border-gray-200/80 rounded-2xl overflow-hidden shadow-2xs hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col justify-between group block"
                   >

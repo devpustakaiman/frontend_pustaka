@@ -205,6 +205,7 @@ export async function getBookById(id: string) {
 
 export interface Article {
   id: string | number;
+  slug?: string;
   title: string;
   date?: string;
   created_at?: string;
@@ -213,6 +214,7 @@ export interface Article {
   imageUrl?: string;
   image_url?: string;
   category?: string;
+  author?: string;
 }
 
 export async function getArticles() {
@@ -229,24 +231,38 @@ export async function getArticles() {
   return (data as Article[]) || [];
 }
 
-export async function getArticleById(id: string) {
-  if (!id) return null;
+export async function getArticleById(slugOrId: string) {
+  if (!slugOrId) return null;
 
   try {
     const { data, error } = await supabase
       .from("articles")
       .select("*")
-      .eq("id", id)
+      .or(`slug.eq.${slugOrId},id.eq.${slugOrId}`)
       .maybeSingle();
 
     if (error) {
-      console.warn(`Gracefully handling getArticleById error for id "${id}":`, error.message);
-      return null;
+      // Fallback if .or fails (e.g. Postgres type mismatch when comparing text slug with UUID id)
+      const { data: slugData } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("slug", slugOrId)
+        .maybeSingle();
+
+      if (slugData) return slugData;
+
+      const { data: idData } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("id", slugOrId)
+        .maybeSingle();
+
+      return idData || null;
     }
 
     return data;
   } catch (err) {
-    console.warn(`Exception caught in getArticleById for id "${id}":`, err);
+    console.warn(`Exception caught in getArticleById for "${slugOrId}":`, err);
     return null;
   }
 }

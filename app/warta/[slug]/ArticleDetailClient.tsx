@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { getArticleById } from "@/lib/api";
+import RenderTextWithLinks from "@/components/RenderTextWithLinks";
+import ShareSection from "@/components/ShareSection";
 import { formatIndonesianDate, parseQuillJsonToParagraphs } from "@/lib/utils";
 
 const DEFAULT_HERO_IMAGE = "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&q=80&w=1200";
@@ -35,6 +37,23 @@ interface ArticleDetailClientProps {
 export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) {
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const [currentUrl, setCurrentUrl] = useState<string>("");
+  const [copied, setCopied] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     async function loadArticle() {
@@ -112,7 +131,15 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
             <div className="flex items-center gap-6 text-xs md:text-sm text-[#76716A] pt-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <User size={16} className="text-[#E52E2D]" />
-                <span>Penulis: <strong className="text-[#272522] font-semibold">{authorName}</strong></span>
+                <span>
+                  Penulis:{" "}
+                  <Link
+                    href={`/koleksi?author=${encodeURIComponent(authorName)}`}
+                    className="text-[#272522] font-semibold hover:text-[#E52E2D] hover:underline transition-colors"
+                  >
+                    {authorName}
+                  </Link>
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar size={16} className="text-[#E52E2D]" />
@@ -126,7 +153,7 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
             {paragraphs && paragraphs.length > 0 ? (
               paragraphs.map((para, index) => (
                 <p key={index} className="text-base sm:text-lg leading-relaxed text-[#272522]/90">
-                  {para}
+                  <RenderTextWithLinks text={para} />
                 </p>
               ))
             ) : (
@@ -135,6 +162,9 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
               </p>
             )}
           </div>
+
+          {/* Share Section */}
+          <ShareSection title={article?.title || "Warta Pustaka Iman"} className="border-t border-gray-100 pt-6" />
 
           {/* Article Footer & Back Button */}
           <div className="border-t border-gray-100 pt-8 flex items-center justify-between flex-wrap gap-4">

@@ -260,7 +260,7 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
             {/* Left Major Card (Featured Article) */}
             <div className="lg:col-span-7 flex flex-col h-full">
               <Link
-                href={`/warta/${featuredArticle.id}`}
+                href={`/warta/${featuredArticle.slug || featuredArticle.id}`}
                 prefetch={false}
                 className="h-full flex flex-col justify-between bg-white border border-gray-200/80 rounded-3xl p-6 sm:p-8 shadow-2xs hover:shadow-md hover:border-red-200 transition-all group block"
               >
@@ -330,7 +330,7 @@ export default function WartaPageClient({ articles = [], videos = [] }: WartaPag
                 return (
                   <Link
                     key={art.id}
-                    href={`/warta/${art.id}`}
+                    href={`/warta/${art.slug || art.id}`}
                     prefetch={false}
                     className="bg-white border border-gray-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-3.5 sm:gap-4 group block flex-1"
                   >

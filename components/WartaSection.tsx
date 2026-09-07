@@ -240,7 +240,7 @@ export default function WartaSection({ articles = [], videos = [] }: WartaSectio
                 return (
                   <Link
                     key={item.id}
-                    href={`/warta/${item.id}`}
+                    href={`/warta/${item.slug || item.id}`}
                     prefetch={false}
                     className="bg-white border border-gray-200/80 rounded-3xl p-5 shadow-2xs hover:shadow-md hover:border-red-200 transition-all flex flex-col sm:flex-row items-center gap-4 sm:gap-5 group block"
                   >
