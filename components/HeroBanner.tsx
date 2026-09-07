@@ -13,6 +13,7 @@ import {
 
 import { getEffectiveBookPrice } from "@/lib/utils";
 import { SiteSettings, getSiteSettings } from "@/lib/api";
+import { generateSlug } from "@/lib/slugify";
 
 interface HeroBannerProps {
   settings?: SiteSettings | null;
@@ -211,7 +212,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
             {/* Quick Category Pills */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-2">
               <Link
-                href="/katalog?category=Fiksi+-+Romansa"
+                href="/katalog?category=fiksi-romansa"
                 prefetch={false}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-rose-50 text-rose-800 border border-rose-100 hover:bg-rose-100 transition-colors shadow-2xs"
               >
@@ -219,7 +220,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                 <span>Romansa</span>
               </Link>
               <Link
-                href="/katalog?category=Agama+%26+Filsafat+-+Agama+Islam"
+                href="/katalog?category=agama-filsafat"
                 prefetch={false}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-100 hover:bg-amber-100 transition-colors shadow-2xs"
               >
@@ -227,7 +228,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                 <span>Agama & Filsafat</span>
               </Link>
               <Link
-                href="/katalog?category=Buku+Anak+-+Cerita+Anak"
+                href="/katalog?category=buku-anak"
                 prefetch={false}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-cyan-50 text-cyan-800 border border-cyan-100 hover:bg-cyan-100 transition-colors shadow-2xs"
               >
@@ -310,7 +311,7 @@ export default function HeroBanner({ settings, featuredBook }: HeroBannerProps) 
                 </div>
               ) : cardBook ? (
                 <Link
-                  href={`/katalog/detail?id=${cardBook.id || cardBook.slug}`}
+                  href={`/katalog/${cardBook.slug || generateSlug(cardBook.title) || cardBook.id}`}
                   prefetch={false}
                   className="absolute -bottom-4 right-2 sm:right-6 md:right-10 lg:right-4 z-20 max-w-[180px] sm:max-w-[210px] p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xl bg-white/95 backdrop-blur-md border border-gray-100 text-left hover:scale-105 transition-all duration-300 group block"
                 >

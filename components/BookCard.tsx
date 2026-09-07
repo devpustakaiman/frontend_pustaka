@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining, getEffectiveBookPrice } from "@/lib/utils";
 import PromoStockBar from "@/components/PromoStockBar";
+import { generateSlug } from "@/lib/slugify";
 
 export type { Book };
 
@@ -23,8 +24,8 @@ const BookCard = memo(function BookCard({ book, priority = false }: BookCardProp
   const daysRemaining = getPromoDaysRemaining(currentBook.promo_end_date);
   const discountPct = priceInfo.discountPercentage;
 
-  const bookIdentifier = currentBook.id || currentBook.slug || "";
-  const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
+  const target = currentBook.slug || generateSlug(currentBook.title) || currentBook.id;
+  const targetUrl = target ? `/katalog/${target}` : "/katalog";
 
   const timeLeftText = !currentBook.promo_end_date || daysRemaining >= 900
     ? "Promo Berkelanjutan"

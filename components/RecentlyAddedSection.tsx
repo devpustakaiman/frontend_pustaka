@@ -9,6 +9,7 @@ import { useCountdown } from "@/hooks/useCountdown";
 import { useScrollCarousel } from "./ScrollCarousel";
 import PromoStockBar from "./PromoStockBar";
 import { getNewBooks } from "@/lib/api";
+import { generateSlug } from "@/lib/slugify";
 
 interface RecentlyAddedSectionProps {
   books?: Book[];
@@ -131,8 +132,8 @@ function NewArrivalCard({ book }: { book: Book }) {
     (book.cover_url && book.cover_url.trim().length > 0 ? book.cover_url : null) ||
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
-  const bookIdentifier = book.id || book.slug || "";
-  const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
+  const target = book.slug || generateSlug(book.title) || book.id;
+  const targetUrl = target ? `/katalog/${target}` : "/katalog";
 
   return (
     <div className="snap-start flex-shrink-0 w-44 sm:w-56 bg-white border border-gray-100 rounded-2xl overflow-hidden group flex flex-col justify-between hover:border-[#FCA5A5] hover:ring-2 hover:ring-red-100 hover:shadow-xl transition-all duration-300 h-full self-stretch">

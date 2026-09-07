@@ -12,11 +12,13 @@ import {
   Star,
 } from "lucide-react";
 
+import { generateSlug } from "@/lib/slugify";
+
 export default function CategorySection() {
   const mainCategory = {
     name: "Agama & Filsafat",
     desc: "Memahami iman, pemikiran, dan kehidupan.",
-    href: `/katalog?category=${encodeURIComponent("Agama & Filsafat")}`,
+    href: `/katalog?category=${generateSlug("Agama & Filsafat")}`,
     covers: [
       "/assets/categories/agama/BA-066-cov1.jpg",
       "/assets/categories/agama/NA-271-cov1.jpg",
@@ -28,7 +30,7 @@ export default function CategorySection() {
     {
       name: "Fiksi & Novel",
       icon: Feather,
-      href: `/katalog?category=${encodeURIComponent("Fiksi & Novel")}`,
+      href: `/katalog?category=${generateSlug("Fiksi & Novel")}`,
       bg: "bg-red-50/70 border-red-100/90",
       iconBg: "bg-red-100 text-[#E52E2D]",
       covers: [
@@ -39,7 +41,7 @@ export default function CategorySection() {
     {
       name: "Buku Anak & Komik",
       icon: Sparkles,
-      href: `/katalog?category=${encodeURIComponent("Buku Anak & Komik")}`,
+      href: `/katalog?category=${generateSlug("Buku Anak & Komik")}`,
       bg: "bg-blue-50/70 border-blue-100/90",
       iconBg: "bg-blue-100 text-blue-700",
       covers: [
@@ -50,7 +52,7 @@ export default function CategorySection() {
     {
       name: "Non Fiksi & Biografi",
       icon: Scroll,
-      href: `/katalog?category=${encodeURIComponent("Non Fiksi & Biografi")}`,
+      href: `/katalog?category=${generateSlug("Non Fiksi & Biografi")}`,
       bg: "bg-amber-50/70 border-amber-100/90",
       iconBg: "bg-amber-100 text-amber-800",
       covers: [
@@ -61,7 +63,7 @@ export default function CategorySection() {
     {
       name: "Pengembangan Diri",
       icon: Compass,
-      href: `/katalog?category=${encodeURIComponent("Pengembangan Diri")}`,
+      href: `/katalog?category=${generateSlug("Pengembangan Diri")}`,
       bg: "bg-emerald-50/70 border-emerald-100/90",
       iconBg: "bg-emerald-100 text-emerald-800",
       covers: [

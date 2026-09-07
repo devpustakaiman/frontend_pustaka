@@ -11,11 +11,13 @@ import RenderTextWithLinks from "@/components/RenderTextWithLinks";
 import ShareSection from "@/components/ShareSection";
 import { getBookById, getBooks } from "@/lib/api";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining, getEffectiveBookPrice } from "@/lib/utils";
+import { generateSlug } from "@/lib/slugify";
 
 const PLACEHOLDER_COVER = "/logo500x200_1.png";
 
 interface BookDetailClientProps {
   slug?: string;
+  initialBook?: Book | null;
 }
 
 export default function BookDetailClient(props: BookDetailClientProps) {
@@ -46,14 +48,16 @@ export default function BookDetailClient(props: BookDetailClientProps) {
   );
 }
 
-function BookDetailContent({ slug }: BookDetailClientProps) {
+function BookDetailContent({ slug, initialBook }: BookDetailClientProps) {
   const searchParams = useSearchParams();
   const activeIdOrSlug = searchParams?.get("id") || searchParams?.get("slug") || slug;
 
-  const [book, setBook] = useState<Book | null>(null);
+  const [book, setBook] = useState<Book | null>(initialBook || null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeImage, setActiveImage] = useState<string>("");
+  const [loading, setLoading] = useState(!initialBook);
+  const [activeImage, setActiveImage] = useState<string>(
+    initialBook?.coverUrl || initialBook?.cover_url || ""
+  );
   const [isSynopsisExpanded, setIsSynopsisExpanded] = useState<boolean>(false);
 
   useEffect(() => {
@@ -61,6 +65,28 @@ function BookDetailContent({ slug }: BookDetailClientProps) {
       if (!activeIdOrSlug) {
         setLoading(false);
         setBook(null);
+        return;
+      }
+
+      if (initialBook && (
+        String(initialBook.id) === String(activeIdOrSlug) ||
+        initialBook.slug === activeIdOrSlug ||
+        generateSlug(initialBook.title) === activeIdOrSlug
+      )) {
+        setBook(initialBook);
+        const cover = initialBook.coverUrl || initialBook.cover_url || PLACEHOLDER_COVER;
+        setActiveImage(cover);
+        setLoading(false);
+
+        try {
+          const allBooks = await getBooks();
+          if (allBooks && allBooks.length > 0) {
+            const related = allBooks
+              .filter((b: any) => String(b.id) !== String(initialBook.id) && String(b.slug) !== String(activeIdOrSlug))
+              .slice(0, 4);
+            setRelatedBooks(related);
+          }
+        } catch (e) {}
         return;
       }
 
@@ -89,7 +115,7 @@ function BookDetailContent({ slug }: BookDetailClientProps) {
     }
 
     loadBookData();
-  }, [activeIdOrSlug]);
+  }, [activeIdOrSlug, initialBook]);
 
   if (loading) {
     return (
@@ -270,7 +296,7 @@ function BookDetailContent({ slug }: BookDetailClientProps) {
                 <p className="text-sm text-[#76716A]">
                   Penulis:{" "}
                   <Link
-                    href={`/koleksi?author=${encodeURIComponent(book?.author || "")}`}
+                    href={`/katalog?author=${generateSlug(book?.author || "")}`}
                     className="font-semibold text-slate-900 hover:text-red-600 hover:underline cursor-pointer transition-colors"
                   >
                     {book?.author || "Pustaka Iman"}

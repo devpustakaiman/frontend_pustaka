@@ -15,11 +15,13 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchDynamicCategories, DynamicCategoryGroup } from "@/lib/api";
+import { generateSlug } from "@/lib/slugify";
 
 export interface MizanCategorySubItem {
   name: string;
   full: string;
   id?: string;
+  slug?: string;
 }
 
 export interface MizanCategoryGroup {
@@ -110,8 +112,11 @@ export function buildMizanCategoryTree(): MizanCategoryGroup[] {
   map.forEach((subcategories, name) => {
     tree.push({
       name,
-      slug: name,
-      subcategories,
+      slug: generateSlug(name),
+      subcategories: subcategories.map((sub) => ({
+        ...sub,
+        slug: generateSlug(sub.name),
+      })),
     });
   });
 
@@ -374,7 +379,7 @@ export default function Navbar() {
                           return (
                             <div key={cat.id || cat.name} className="relative group/sub">
                               <Link
-                                href={`/katalog?category=${encodeURIComponent(cat.name)}`}
+                                href={`/katalog?category=${cat.slug || generateSlug(cat.name)}`}
                                 prefetch={false}
                                 className="px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-950 transition-colors flex items-center justify-between"
                               >
@@ -402,7 +407,7 @@ export default function Navbar() {
                                     {cat.subcategories.map((sub) => (
                                       <Link
                                         key={sub.id || sub.name}
-                                        href={`/katalog?category=${encodeURIComponent(sub.name)}`}
+                                        href={`/katalog?category=${sub.slug || generateSlug(sub.name)}`}
                                         prefetch={false}
                                         className="block px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-950 transition-colors"
                                       >
@@ -487,7 +492,7 @@ export default function Navbar() {
                   {searchResults.map((book) => (
                     <Link
                       key={book.id}
-                      href={`/katalog/detail?id=${book.id || book.slug}`}
+                      href={`/katalog/${book.slug || generateSlug(book.title) || book.id}`}
                       prefetch={false}
                       onClick={() => setShowDropdown(false)}
                       className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group"
@@ -668,7 +673,7 @@ export default function Navbar() {
                             <div key={cat.id || cat.name} className="py-0.5">
                               <div className="flex items-center justify-between">
                                 <Link
-                                  href={`/katalog?category=${encodeURIComponent(cat.name)}`}
+                                  href={`/katalog?category=${cat.slug || generateSlug(cat.name)}`}
                                   prefetch={false}
                                   className="py-1 px-3 text-gray-700 hover:text-gray-950 truncate block"
                                   onClick={() => setMobileMenuOpen(false)}
@@ -697,7 +702,7 @@ export default function Navbar() {
                                   {cat.subcategories.map((sub) => (
                                     <Link
                                       key={sub.id || sub.name}
-                                      href={`/katalog?category=${encodeURIComponent(sub.name)}`}
+                                      href={`/katalog?category=${sub.slug || generateSlug(sub.name)}`}
                                       prefetch={false}
                                       className="block py-1 text-[11px] text-gray-500 hover:text-gray-900"
                                       onClick={() => setMobileMenuOpen(false)}

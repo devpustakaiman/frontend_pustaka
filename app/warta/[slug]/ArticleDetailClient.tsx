@@ -8,6 +8,7 @@ import { getArticleById } from "@/lib/api";
 import RenderTextWithLinks from "@/components/RenderTextWithLinks";
 import ShareSection from "@/components/ShareSection";
 import { formatIndonesianDate, parseQuillJsonToParagraphs } from "@/lib/utils";
+import { generateSlug } from "@/lib/slugify";
 
 const DEFAULT_HERO_IMAGE = "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&q=80&w=1200";
 
@@ -177,7 +178,7 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
                 <span>
                   Penulis:{" "}
                   <Link
-                    href={`/koleksi?author=${encodeURIComponent(authorName)}`}
+                    href={`/katalog?author=${generateSlug(authorName)}`}
                     className="text-[#272522] font-semibold hover:text-[#E52E2D] hover:underline transition-colors"
                   >
                     {authorName}

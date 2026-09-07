@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { generateSlug } from "./slugify";
 
 const BOOK_LIST_FIELDS = "id, title, author, category, price, promo_price, is_promo, promo_end_date, promo_percentage, is_recommended, coverUrl, created_at";
 
@@ -149,57 +150,67 @@ export async function getNewBooks(limit = 12) {
   }
 }
 
-export async function getBookById(id: string) {
-  if (!id) return null;
+export async function getBookById(idOrSlug: string) {
+  if (!idOrSlug) return null;
 
   try {
-    // 1. Try matching by exact ID (exclude soft-deleted)
+    // 1. Try matching by slug or exact ID (exclude soft-deleted)
     const { data, error } = await supabase
       .from("books")
       .select("*")
       .is("deleted_at", null)
-      .eq("id", id)
+      .or(`slug.eq.${idOrSlug},id.eq.${idOrSlug}`)
       .maybeSingle();
 
     if (data) return data;
 
     if (error) {
-      console.warn(`Gracefully handling getBookById error for id "${id}":`, error.message);
-    }
-
-    // 2. Try matching by slug if column exists
-    try {
+      // Fallback if Postgres throws type mismatch (e.g. string compared to UUID)
       const { data: slugData } = await supabase
         .from("books")
         .select("*")
         .is("deleted_at", null)
-        .eq("slug", id)
+        .eq("slug", idOrSlug)
         .maybeSingle();
 
       if (slugData) return slugData;
-    } catch (_) {
-      // column slug may not exist in database schema
+
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+      if (isUUID) {
+        const { data: idData } = await supabase
+          .from("books")
+          .select("*")
+          .is("deleted_at", null)
+          .eq("id", idOrSlug)
+          .maybeSingle();
+
+        if (idData) return idData;
+      }
     }
 
-    // 3. Fallback: search active books and match ID string or title
+    // 2. Fallback: match by title slug or decoded title
     const { data: allBooks } = await supabase
       .from("books")
       .select("*")
       .is("deleted_at", null);
-      
+
     if (allBooks && allBooks.length > 0) {
-      const match = allBooks.find(
-        (b: any) =>
-          String(b.id) === String(id) ||
-          b.slug === id ||
-          b.title?.toLowerCase() === decodeURIComponent(id).toLowerCase()
-      );
+      const match = allBooks.find((b: any) => {
+        if (b.deleted_at || b.is_deleted === true) return false;
+        const titleSlug = generateSlug(b.title || "");
+        return (
+          String(b.id) === String(idOrSlug) ||
+          b.slug === idOrSlug ||
+          (titleSlug && titleSlug === idOrSlug) ||
+          b.title?.toLowerCase() === decodeURIComponent(idOrSlug).toLowerCase()
+        );
+      });
       if (match) return match;
     }
 
     return null;
   } catch (err) {
-    console.warn(`Exception caught in getBookById for id "${id}":`, err);
+    console.warn(`Exception caught in getBookById for "${idOrSlug}":`, err);
     return null;
   }
 }

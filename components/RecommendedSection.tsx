@@ -8,6 +8,7 @@ import { Book, formatBookPrice, isActivePromo, getEffectiveBookPrice } from "@/l
 import { useCountdown } from "@/hooks/useCountdown";
 import PromoStockBar from "./PromoStockBar";
 import { getRecommendedBooks, getNewBooks } from "@/lib/api";
+import { generateSlug } from "@/lib/slugify";
 
 interface RecommendedSectionProps {
   books?: Book[];
@@ -29,8 +30,8 @@ function FeaturedHeroCard({ book }: { book: Book }) {
 
   const coverImage = book.coverUrl || book.cover_url || "/logo500x200_1.png";
 
-  const bookIdentifier = book.id || book.slug || "";
-  const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
+  const target = book.slug || generateSlug(book.title) || book.id;
+  const targetUrl = target ? `/katalog/${target}` : "/katalog";
 
   return (
     <div className="relative bg-white border border-amber-200/80 ring-1 ring-amber-400/20 rounded-3xl p-4 sm:p-8 shadow-[0_12px_32px_-12px_rgba(217,119,6,0.12)] flex flex-col justify-between h-full group">
@@ -145,8 +146,8 @@ function RightHorizontalCard({ book }: { book: Book }) {
 
   const coverImage = book.coverUrl || book.cover_url || "/logo500x200_1.png";
 
-  const bookIdentifier = book.id || book.slug || "";
-  const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
+  const target = book.slug || generateSlug(book.title) || book.id;
+  const targetUrl = target ? `/katalog/${target}` : "/katalog";
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm transition-all group relative overflow-hidden h-full flex-1">

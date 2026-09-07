@@ -5,6 +5,7 @@ import Image from "next/image";
 import { TrendingUp, ChevronRight, ChevronLeft } from "lucide-react";
 import { Book, formatBookPrice, isActivePromo, getEffectiveBookPrice } from "@/lib/utils";
 import { useScrollCarousel } from "./ScrollCarousel";
+import { generateSlug } from "@/lib/slugify";
 
 interface BestSellerSectionProps {
   books?: Book[];
@@ -72,8 +73,8 @@ export default function BestSellerSection({ books = [] }: BestSellerSectionProps
               {books.map((book, idx) => {
                 const priceInfo = getEffectiveBookPrice(book);
                 const hasPromo = priceInfo.isPromo;
-                const bookIdentifier = book.id || book.slug || "";
-                const targetUrl = bookIdentifier ? `/katalog/detail?id=${bookIdentifier}` : "/katalog";
+                const target = book.slug || generateSlug(book.title) || book.id;
+                const targetUrl = target ? `/katalog/${target}` : "/katalog";
 
                 return (
                   <div

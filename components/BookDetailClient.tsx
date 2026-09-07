@@ -8,6 +8,7 @@ import BookGrid from "./BookGrid";
 import RenderTextWithLinks from "@/components/RenderTextWithLinks";
 import ShareSection from "./ShareSection";
 import { Book, formatBookPrice, isActivePromo, getPromoDaysRemaining } from "@/lib/utils";
+import { generateSlug } from "@/lib/slugify";
 
 interface BookDetailClientProps {
   book: Book;
@@ -152,7 +153,7 @@ export default function BookDetailClient({ book, relatedBooks = [] }: BookDetail
                 <p className="text-sm text-[#76716A]">
                   Penulis:{" "}
                   <Link
-                    href={`/koleksi?author=${encodeURIComponent(book.author || "")}`}
+                    href={`/katalog?author=${generateSlug(book.author || "")}`}
                     className="font-medium text-slate-800 hover:text-red-600 hover:underline transition-colors"
                   >
                     {book.author}

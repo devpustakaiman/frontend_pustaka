@@ -14,6 +14,7 @@ import { Book, isActivePromo, getEffectiveBookPrice } from "@/lib/utils";
 import { useCountdown } from "@/hooks/useCountdown";
 import PromoStockBar from "@/components/PromoStockBar";
 import { getPromoBooks } from "@/lib/api";
+import { generateSlug } from "@/lib/slugify";
 
 interface PromoSectionProps {
   books?: Book[];
@@ -245,6 +246,7 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
   const discountPct = priceInfo.discountPercentage || 15;
+  const target = book.slug || generateSlug(book.title) || book.id;
 
   return (
     <div className="bg-gradient-to-br from-[#c12a26] to-[#a01e1a] rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-7 text-white relative flex flex-col justify-between overflow-hidden shadow-xl h-full group border border-red-500/30">
@@ -275,7 +277,7 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
       <div className="my-auto py-2 flex flex-row items-center gap-3.5 sm:gap-5 flex-1 z-10 relative">
         {/* Left Sub-column: Book Cover Asset */}
         <Link
-          href={`/katalog/detail?id=${book.id || book.slug}`}
+          href={`/katalog/${target}`}
           prefetch={false}
           className="w-24 sm:w-44 md:w-48 aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl flex-shrink-0 border border-white/20 block relative"
         >
@@ -295,7 +297,7 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
             {book.category || "ROMANSA"}
           </span>
           <h3 className="text-base sm:text-2xl font-serif font-black leading-snug sm:leading-tight mt-0.5 text-white line-clamp-2 group-hover:text-amber-200 transition-colors">
-            <Link href={`/katalog/detail?id=${book.id || book.slug}`} prefetch={false}>{book.title}</Link>
+            <Link href={`/katalog/${target}`} prefetch={false}>{book.title}</Link>
           </h3>
           <p className="text-red-100/90 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">{book.author}</p>
           
@@ -327,7 +329,7 @@ function FeaturedRedDealTicket({ book }: { book: Book }) {
 
         {/* CTA Button */}
         <Link
-          href={`/katalog/detail?id=${book.id || book.slug}`}
+          href={`/katalog/${target}`}
           prefetch={false}
           className="bg-amber-400 hover:bg-amber-300 text-gray-950 font-bold px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl whitespace-nowrap text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-colors shrink-0 justify-center w-full sm:w-auto"
         >
@@ -352,6 +354,7 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
   const discountPct = priceInfo.discountPercentage || 15;
+  const target = book.slug || generateSlug(book.title) || book.id;
 
   return (
     <div className="flex-1 bg-white rounded-3xl p-3.5 sm:p-4 border border-gray-100 shadow-sm flex flex-row items-center gap-3 sm:gap-3.5 hover:shadow-md transition-shadow relative overflow-hidden group">
@@ -367,7 +370,7 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
 
       {/* Cover Thumbnail */}
       <Link
-        href={`/katalog/detail?id=${book.id || book.slug}`}
+        href={`/katalog/${target}`}
         prefetch={false}
         className="w-20 aspect-[2/3] flex-shrink-0 rounded-xl bg-gray-50 p-1 border border-gray-100 overflow-hidden block group-hover:scale-105 transition-transform relative"
       >
@@ -388,7 +391,7 @@ function SideCouponCard({ book, index }: { book: Book; index: number }) {
             {book.category || "LITERASI"}
           </span>
           <h4 className="font-bold text-gray-900 line-clamp-2 text-sm sm:text-base group-hover:text-red-600 transition-colors mt-0.5">
-            <Link href={`/katalog/detail?id=${book.id || book.slug}`} prefetch={false}>{book.title}</Link>
+            <Link href={`/katalog/${target}`} prefetch={false}>{book.title}</Link>
           </h4>
           <p className="text-xs text-[#76716A] truncate mt-0.5">{book.author}</p>
 
@@ -425,6 +428,7 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
     "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600";
 
   const discountPct = priceInfo.discountPercentage || 15;
+  const target = book.slug || generateSlug(book.title) || book.id;
 
   return (
     <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-red-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between h-full group relative overflow-hidden">
@@ -436,7 +440,7 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
 
       {/* Cover Image */}
       <Link
-        href={`/katalog/detail?id=${book.id || book.slug}`}
+        href={`/katalog/${target}`}
         prefetch={false}
         className="w-full aspect-[2/3] max-h-36 sm:max-h-40 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden mb-2.5 border border-gray-100 group-hover:scale-102 transition-transform block relative"
       >
@@ -457,7 +461,7 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
             {book.category || "FLASH SALE"}
           </span>
           <h4 className="font-bold text-gray-900 line-clamp-1 text-xs sm:text-sm group-hover:text-red-600 transition-colors">
-            <Link href={`/katalog/detail?id=${book.id || book.slug}`} prefetch={false}>{book.title}</Link>
+            <Link href={`/katalog/${target}`} prefetch={false}>{book.title}</Link>
           </h4>
           <p className="text-[11px] text-[#76716A] truncate mt-0.5">{book.author}</p>
         </div>
@@ -483,7 +487,7 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
 
       {/* Action Button */}
       <Link
-        href={`/katalog/detail?id=${book.id || book.slug}`}
+        href={`/katalog/${target}`}
         prefetch={false}
         className="w-full bg-[#E53935] hover:bg-[#C12A26] text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer uppercase tracking-wider"
       >

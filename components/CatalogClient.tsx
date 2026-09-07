@@ -20,6 +20,7 @@ import { CATEGORY_TREE } from "@/components/Navbar";
 import { isActivePromo } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { getBooks, fetchDynamicCategories, DynamicCategoryGroup } from "@/lib/api";
+import { generateSlug } from "@/lib/slugify";
 
 interface CatalogClientProps {
   books: Book[];
@@ -174,6 +175,8 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
+  const currentCategoryTree = categoryTree.length > 0 ? categoryTree : (CATEGORY_TREE as unknown as DynamicCategoryGroup[]);
+
   // Sync state with URL search parameters (?category=, ?sort=, ?filter=, ?search=, ?author=)
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -183,7 +186,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     const authorParam = searchParams.get("author");
 
     if (authorParam) {
-      setAuthorFilter(decodeURIComponent(authorParam));
+      setAuthorFilter(decodeURIComponent(authorParam).trim());
     } else {
       setAuthorFilter("");
     }
@@ -210,28 +213,96 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     }
 
     if (categoryParam) {
-      const decoded = decodeURIComponent(categoryParam);
-      if (decoded === "rekomendasi") {
+      const cleanParam = decodeURIComponent(categoryParam).trim();
+      const paramSlug = generateSlug(cleanParam);
+
+      if (cleanParam === "rekomendasi" || paramSlug === "rekomendasi") {
         setRecommendedFilter(1);
-      } else if (decoded === "promo") {
+      } else if (cleanParam === "promo" || paramSlug === "promo") {
         setPromoFilter(1);
-      } else if (decoded === "terbaru" || decoded === "buku-baru") {
+      } else if (
+        cleanParam === "terbaru" ||
+        cleanParam === "buku-baru" ||
+        paramSlug === "terbaru" ||
+        paramSlug === "buku-baru"
+      ) {
         setSort("terbaru");
       } else {
-        setSelectedCategory(decoded);
+        // Bidirectional mapping: resolve slug or raw name to canonical category name in tree
+        let resolvedCategoryName: string | null = null;
+
+        for (const parent of currentCategoryTree) {
+          const pSlug = parent.slug ? parent.slug.toLowerCase() : "";
+          const genPSlug = generateSlug(parent.name);
+          if (
+            parent.name.toLowerCase() === cleanParam.toLowerCase() ||
+            (pSlug && pSlug === cleanParam.toLowerCase()) ||
+            (pSlug && pSlug === paramSlug) ||
+            genPSlug === cleanParam.toLowerCase() ||
+            genPSlug === paramSlug
+          ) {
+            resolvedCategoryName = parent.name;
+            break;
+          }
+
+          if (parent.subcategories && parent.subcategories.length > 0) {
+            for (const sub of parent.subcategories) {
+              const sSlug = sub.slug ? sub.slug.toLowerCase() : "";
+              const genSSlug = generateSlug(sub.name);
+              const genFull = generateSlug((sub as any).full || "");
+              if (
+                sub.name.toLowerCase() === cleanParam.toLowerCase() ||
+                (sSlug && sSlug === cleanParam.toLowerCase()) ||
+                (sSlug && sSlug === paramSlug) ||
+                genSSlug === cleanParam.toLowerCase() ||
+                genSSlug === paramSlug ||
+                ((sub as any).full && (sub as any).full.toLowerCase() === cleanParam.toLowerCase()) ||
+                (genFull && genFull === paramSlug)
+              ) {
+                resolvedCategoryName = sub.name;
+                break;
+              }
+            }
+            if (resolvedCategoryName) break;
+          }
+        }
+
+        setSelectedCategory(resolvedCategoryName || cleanParam);
       }
     } else {
       setSelectedCategory("Semua Kategori");
     }
-  }, [searchParams]);
+  }, [searchParams, currentCategoryTree]);
 
   const handleCategorySelect = (categoryName: string) => {
     setSelectedCategory(categoryName);
+    const newParams = new URLSearchParams(searchParams.toString());
+
     if (categoryName === "Semua Kategori") {
-      router.push("/katalog", { scroll: false });
+      newParams.delete("category");
     } else {
-      router.push(`/katalog?category=${encodeURIComponent(categoryName)}`, { scroll: false });
+      let targetSlug = generateSlug(categoryName);
+      for (const parent of currentCategoryTree) {
+        if (parent.name.toLowerCase() === categoryName.toLowerCase()) {
+          targetSlug = parent.slug || generateSlug(parent.name);
+          break;
+        }
+        if (parent.subcategories) {
+          const sub = parent.subcategories.find(
+            (s) =>
+              s.name.toLowerCase() === categoryName.toLowerCase() ||
+              (s as any).full?.toLowerCase() === categoryName.toLowerCase()
+          );
+          if (sub) {
+            targetSlug = sub.slug || generateSlug(sub.name);
+            break;
+          }
+        }
+      }
+      newParams.set("category", targetSlug);
     }
+    const q = newParams.toString();
+    router.push(q ? `/katalog?${q}` : "/katalog", { scroll: false });
   };
 
   // Cycle Tri-State: 0 (Default/All) -> 1 (Active) -> 2 (Inactive) -> 0
@@ -256,7 +327,6 @@ export default function CatalogClient({ books }: CatalogClientProps) {
 
   // Sort Categories by catalog_featured_categories
   const featured = parseCategories(catalogSettings?.catalog_featured_categories);
-  const currentCategoryTree = categoryTree.length > 0 ? categoryTree : (CATEGORY_TREE as unknown as DynamicCategoryGroup[]);
   const allCategories = currentCategoryTree.map((c) => c.name);
 
   const isMatched = (cat: string, featuredList: string[]) => {
@@ -415,8 +485,13 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     // B2. Dedicated Author Filter
     if (authorFilter.trim().length > 0) {
       const authorNorm = authorFilter.toLowerCase().trim();
+      const authorSlug = generateSlug(authorFilter);
       const bookAuthor = (book.author || "").toLowerCase();
-      if (!bookAuthor.includes(authorNorm)) return false;
+      const bookAuthorSlug = generateSlug(book.author || "");
+      const matchesAuthor =
+        bookAuthor.includes(authorNorm) ||
+        (authorSlug && (bookAuthorSlug.includes(authorSlug) || authorSlug.includes(bookAuthorSlug)));
+      if (!matchesAuthor) return false;
     }
 
     // C. Promo Tri-State Filter
@@ -619,7 +694,15 @@ export default function CatalogClient({ books }: CatalogClientProps) {
 
               {authorFilter && (
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-red-50 text-[#E52E2D] border border-red-200/80 rounded-full text-xs font-bold shadow-2xs">
-                  <span>Menampilkan buku karya: <strong>{authorFilter}</strong></span>
+                  <span>Menampilkan buku karya: <strong>{
+                    allBooks.find((b) => {
+                      const bA = b.author || "";
+                      return (
+                        bA.toLowerCase().includes(authorFilter.toLowerCase()) ||
+                        (generateSlug(authorFilter) && generateSlug(bA) === generateSlug(authorFilter))
+                      );
+                    })?.author || authorFilter
+                  }</strong></span>
                   <button
                     onClick={() => {
                       setAuthorFilter("");
