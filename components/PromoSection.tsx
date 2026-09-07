@@ -57,13 +57,14 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
 
   const featuredBook = activePromoBooks[0];
   const sideBooks = activePromoBooks.slice(1, 4);
-  const dealStripBooks = activePromoBooks.slice(0, 4);
+  const dealStripBooks = activePromoBooks;
 
   // Ref & Scroll Handler for DEAL HARI INI slider
   const dealSliderRef = useRef<HTMLDivElement>(null);
   const scrollDeal = (direction: 'left' | 'right') => {
     if (dealSliderRef.current) {
-      const offset = direction === 'left' ? -320 : 320;
+      const scrollAmount = dealSliderRef.current.clientWidth * 0.75 || 320;
+      const offset = direction === 'left' ? -scrollAmount : scrollAmount;
       dealSliderRef.current.scrollBy({ left: offset, behavior: 'smooth' });
     }
   };
@@ -191,31 +192,33 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => scrollDeal('left')}
                   aria-label="Sebelumnya"
-                  className="w-7 h-7 rounded-full bg-white border border-red-200 flex items-center justify-center text-gray-600 hover:text-red-600 transition-colors shadow-2xs active:scale-95 cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-white border border-red-200 flex items-center justify-center text-gray-700 hover:text-[#E53935] hover:border-[#E53935] hover:bg-red-50 transition-all shadow-2xs active:scale-95 cursor-pointer"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={18} />
                 </button>
                 <button
+                  type="button"
                   onClick={() => scrollDeal('right')}
                   aria-label="Berikutnya"
-                  className="w-7 h-7 rounded-full bg-white border border-red-200 flex items-center justify-center text-gray-600 hover:text-red-600 transition-colors shadow-2xs active:scale-95 cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-white border border-red-200 flex items-center justify-center text-gray-700 hover:text-[#E53935] hover:border-[#E53935] hover:bg-red-50 transition-all shadow-2xs active:scale-95 cursor-pointer"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={18} />
                 </button>
               </div>
             </div>
             <div
               ref={dealSliderRef}
-              className="flex overflow-x-auto lg:grid lg:grid-cols-4 gap-4 pb-4 pt-2 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
+              className="flex overflow-x-auto gap-4 pb-4 pt-2 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
             >
               {dealStripBooks.map((book, idx) => (
                 <div
-                  key={book.id}
-                  className="w-[82vw] max-w-[310px] flex-shrink-0 snap-center lg:w-auto"
+                  key={book.id || idx}
+                  className="w-[80vw] max-w-[280px] sm:w-[270px] lg:w-[285px] flex-shrink-0 snap-start"
                 >
                   <TearOffTicketCard book={book} index={idx} />
                 </div>
