@@ -534,10 +534,10 @@ export default function CatalogClient({ books }: CatalogClientProps) {
                   : "bg-gray-50 text-[#272522] border-gray-200 hover:bg-white hover:border-[#E52E2D]/60"
               }`}
             >
-              <Flame size={14} className={promoFilter === 1 ? "fill-amber-300 text-amber-300" : "text-[#E52E2D]"} />
+              <Flame size={14} className={promoFilter === 1 ? "fill-amber-300 text-amber-300 drop-shadow-xs" : "text-[#E52E2D]"} />
               <span>
                 {promoFilter === 0 && "Promo: Semua"}
-                {promoFilter === 1 && "🔥 Promo: Aktif ✓"}
+                {promoFilter === 1 && "Promo: Aktif ✓"}
                 {promoFilter === 2 && "Promo: Non-Promo ✗"}
               </span>
             </button>
@@ -554,10 +554,10 @@ export default function CatalogClient({ books }: CatalogClientProps) {
                   : "bg-gray-50 text-[#272522] border-gray-200 hover:bg-white hover:border-[#E52E2D]/60"
               }`}
             >
-              <Star size={14} className={recommendedFilter === 1 ? "fill-white text-white" : "text-[#E52E2D]"} />
+              <Star size={14} className={recommendedFilter === 1 ? "fill-amber-300 text-amber-300 drop-shadow-xs" : "text-[#E52E2D]"} />
               <span>
                 {recommendedFilter === 0 && "Rekomendasi: Semua"}
-                {recommendedFilter === 1 && "⭐ Rekomendasi: Aktif ✓"}
+                {recommendedFilter === 1 && "Rekomendasi: Aktif ✓"}
                 {recommendedFilter === 2 && "Rekomendasi: Standar ✗"}
               </span>
             </button>
@@ -580,9 +580,9 @@ export default function CatalogClient({ books }: CatalogClientProps) {
                   : "bg-gray-50 text-[#272522] border-gray-200 hover:bg-white hover:border-[#E52E2D]/60"
               }`}
             >
-              <Sparkles size={14} className={sort === "terbaru" ? "fill-white text-white" : "text-[#E52E2D]"} />
+              <Sparkles size={14} className={sort === "terbaru" ? "fill-amber-300 text-amber-300 drop-shadow-xs" : "text-[#E52E2D]"} />
               <span>
-                {sort === "terbaru" ? "✨ Buku Baru ✓" : "Buku Baru"}
+                {sort === "terbaru" ? "Buku Baru ✓" : "Buku Baru"}
               </span>
             </button>
 
