@@ -75,6 +75,49 @@ export default function ArticleDetailClient({ slug }: ArticleDetailClientProps) 
     loadArticle();
   }, [slug]);
 
+  if (loading) {
+    return (
+      <div className="bg-white min-h-screen py-16 text-[#272522]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 animate-pulse">
+          <div className="h-8 bg-gray-200 rounded-full w-44" />
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 space-y-6">
+            <div className="w-full aspect-[16/9] max-h-[480px] bg-gray-200 rounded-2xl" />
+            <div className="h-10 bg-gray-200 rounded w-3/4" />
+            <div className="h-4 bg-gray-200 rounded w-1/3" />
+            <div className="h-32 bg-gray-100 rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loading && !article) {
+    return (
+      <div className="bg-white min-h-screen py-20 text-[#272522] flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 text-center space-y-6">
+          <div className="w-20 h-20 bg-red-50 text-[#E52E2D] rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
+            404
+          </div>
+          <h1 className="font-serif text-2xl font-bold text-[#272522]">
+            Warta Tidak Ditemukan
+          </h1>
+          <p className="text-sm text-[#76716A]">
+            Maaf, warta atau artikel yang Anda cari tidak ditemukan atau telah dihapus.
+          </p>
+          <div>
+            <Link
+              href="/warta"
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-[#E52E2D] hover:bg-[#C12A26] rounded-full shadow-md transition-all"
+            >
+              <ArrowLeft size={16} strokeWidth={2} />
+              <span>Kembali ke Warta</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const heroImage = article?.image_url || article?.imageUrl || DEFAULT_HERO_IMAGE;
   const rawDate = article?.created_at || article?.date || "2026-08-13";
   const formattedDate = formatIndonesianDate(rawDate);

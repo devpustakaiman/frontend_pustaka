@@ -131,6 +131,7 @@ export async function getNewBooks(limit = 12) {
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("books")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(limit);
 
@@ -215,12 +216,14 @@ export interface Article {
   image_url?: string;
   category?: string;
   author?: string;
+  deleted_at?: string | null;
 }
 
 export async function getArticles() {
   const { data, error } = await supabase
     .from("articles")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -238,14 +241,18 @@ export async function getArticleById(slugOrId: string) {
     const { data, error } = await supabase
       .from("articles")
       .select("*")
+      .is("deleted_at", null)
       .or(`slug.eq.${slugOrId},id.eq.${slugOrId}`)
       .maybeSingle();
+
+    if (data) return data;
 
     if (error) {
       // Fallback if .or fails (e.g. Postgres type mismatch when comparing text slug with UUID id)
       const { data: slugData } = await supabase
         .from("articles")
         .select("*")
+        .is("deleted_at", null)
         .eq("slug", slugOrId)
         .maybeSingle();
 
@@ -254,13 +261,14 @@ export async function getArticleById(slugOrId: string) {
       const { data: idData } = await supabase
         .from("articles")
         .select("*")
+        .is("deleted_at", null)
         .eq("id", slugOrId)
         .maybeSingle();
 
       return idData || null;
     }
 
-    return data;
+    return null;
   } catch (err) {
     console.warn(`Exception caught in getArticleById for "${slugOrId}":`, err);
     return null;
