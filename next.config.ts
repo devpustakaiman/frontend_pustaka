@@ -76,6 +76,54 @@ const nextConfig: NextConfig = {
         destination: "/tentang-kami/",
         permanent: true,
       },
+
+      // ── WooCommerce /product-category/* taxonomy routes ───────────────────
+      // Legacy WordPress/WooCommerce category URLs indexed in Google SERP.
+      // ORDERING RULE: specific slugs MUST precede the wildcard catch-all
+      // (:slug*) — Next.js evaluates top-to-bottom and stops at first match.
+
+      // /product-category/buku-baru/ → /katalog/?filter=buku-baru
+      // Preserves the filter-activated catalog landing for fresh-release traffic.
+      {
+        source: "/product-category/buku-baru/",
+        destination: "/katalog/?filter=buku-baru",
+        permanent: true,
+      },
+
+      // /product-category/best-seller/ → /katalog/
+      // Unbuilt feature; graceful fallback prevents 404.
+      {
+        source: "/product-category/best-seller/",
+        destination: "/katalog/",
+        permanent: true,
+      },
+
+      // /product-category/:slug*/ → /katalog/
+      // Generic catch-all for any other legacy WooCommerce category slug.
+      // Placed AFTER the specific rules above so they are never shadowed.
+      {
+        source: "/product-category/:slug*/",
+        destination: "/katalog/",
+        permanent: true,
+      },
+
+      // ── WooCommerce /product-tag/* taxonomy routes ────────────────────────
+
+      // /product-tag/buku-pustaka-iiman/ → /katalog/
+      // Named explicitly for clarity, though the wildcard below also covers it.
+      {
+        source: "/product-tag/buku-pustaka-iiman/",
+        destination: "/katalog/",
+        permanent: true,
+      },
+
+      // /product-tag/:slug*/ → /katalog/
+      // Generic catch-all for any other legacy WooCommerce product-tag slug.
+      {
+        source: "/product-tag/:slug*/",
+        destination: "/katalog/",
+        permanent: true,
+      },
     ];
   },
 };
