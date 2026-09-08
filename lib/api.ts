@@ -428,6 +428,11 @@ export interface SiteSettings {
     account_holder?: string;
     accountHolder?: string;
   }>;
+  facebook_url?: string;
+  x_url?: string;
+  instagram_url?: string;
+  tiktok_url?: string;
+  mizanstore_url?: string;
   featured_book?: {
     id: string;
     title: string;
