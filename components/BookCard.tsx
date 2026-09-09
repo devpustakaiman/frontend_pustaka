@@ -39,7 +39,7 @@ const BookCard = memo(function BookCard({ book, priority = false }: BookCardProp
       <Link
         href={targetUrl}
         prefetch={false}
-        className="block overflow-hidden bg-gray-100 aspect-[2/3] rounded-t-2xl sm:rounded-2xl relative flex-shrink-0"
+        className="relative w-full aspect-[3/4] rounded-t-xl sm:rounded-t-2xl bg-gray-50/70 p-2 flex items-center justify-center overflow-hidden flex-shrink-0 block"
       >
         <Image
           src={coverImage}
@@ -48,7 +48,7 @@ const BookCard = memo(function BookCard({ book, priority = false }: BookCardProp
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           loading={priority ? "eager" : "lazy"}
           priority={priority}
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-contain p-1 drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
         />
 
         {/* Cover Image Overlay Badge (-X%) */}

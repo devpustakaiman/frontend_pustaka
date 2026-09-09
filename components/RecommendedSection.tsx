@@ -52,7 +52,7 @@ function FeaturedHeroCard({ book }: { book: Book }) {
           <Link
             href={targetUrl}
             prefetch={false}
-            className="w-full max-w-[220px] aspect-[2/3] rounded-xl sm:rounded-2xl drop-shadow-md sm:drop-shadow-xl hover:scale-105 transition-transform overflow-hidden shadow-md sm:shadow-lg block bg-gray-50 border border-gray-100 relative"
+            className="w-full max-w-[220px] aspect-[3/4] rounded-xl sm:rounded-2xl bg-gray-50/70 p-2 flex items-center justify-center hover:scale-105 transition-transform overflow-hidden shadow-md sm:shadow-lg block border border-gray-100 relative"
           >
             <Image
               src={coverImage}
@@ -60,7 +60,7 @@ function FeaturedHeroCard({ book }: { book: Book }) {
               fill
               priority
               sizes="(max-width: 768px) 100vw, 400px"
-              className="object-cover"
+              className="object-contain p-1 drop-shadow-sm"
             />
           </Link>
         </div>
