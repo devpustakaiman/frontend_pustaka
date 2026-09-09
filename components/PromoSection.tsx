@@ -219,7 +219,7 @@ export default function PromoSection({ books = [] }: PromoSectionProps) {
               {dealStripBooks.map((book, idx) => (
                 <div
                   key={book.id || idx}
-                  className="w-[80vw] max-w-[280px] sm:w-[270px] lg:w-[285px] flex-shrink-0 snap-start"
+                  className="w-[85vw] max-w-[320px] sm:w-[300px] lg:w-[315px] flex-shrink-0 snap-start"
                 >
                   <TearOffTicketCard book={book} index={idx} />
                 </div>
@@ -433,66 +433,77 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
   return (
     <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-red-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between h-full group relative overflow-hidden">
       
-      {/* Discount Tag */}
-      <span className="absolute top-2.5 right-2.5 z-10 bg-[#E53935] text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-0.5 rounded-md shadow-xs uppercase tracking-wider">
-        -{discountPct}%
-      </span>
+      {/* ── Top Section: Side-by-Side Flex Layout ── */}
+      <div className="flex flex-row items-stretch gap-3">
+        {/* Left Column: Cover Container */}
+        <Link
+          href={`/katalog/${target}`}
+          prefetch={false}
+          className="rounded-xl border border-gray-100 bg-gray-50/50 p-2 flex items-center justify-center w-28 sm:w-32 flex-shrink-0 aspect-[3/4] relative overflow-hidden group-hover:scale-102 transition-transform block"
+        >
+          <Image
+            src={coverImage}
+            alt={book.title}
+            fill
+            sizes="(max-width: 640px) 130px, 160px"
+            loading="lazy"
+            className="object-contain p-0.5 drop-shadow-sm rounded-lg"
+          />
+        </Link>
 
-      {/* Cover Image */}
-      <Link
-        href={`/katalog/${target}`}
-        prefetch={false}
-        className="w-full aspect-[2/3] max-h-36 sm:max-h-40 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden mb-2.5 border border-gray-100 group-hover:scale-102 transition-transform block relative"
-      >
-        <Image
-          src={coverImage}
-          alt={book.title}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          loading="lazy"
-          className="object-cover rounded-lg"
-        />
-      </Link>
+        {/* Right Column: Product Details */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+          <div>
+            {/* Header: Category & Discount Badge */}
+            <div className="flex items-start justify-between gap-1.5 mb-1">
+              <span className="text-[10px] font-bold text-[#E53935] uppercase tracking-wider truncate flex-1">
+                {book.category || "DEAL HARI INI"}
+              </span>
+              <span className="bg-[#E53935] text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md shadow-2xs uppercase tracking-wider shrink-0">
+                -{discountPct}%
+              </span>
+            </div>
 
-      {/* Title & Author */}
-      <div className="flex-1 flex flex-col justify-between">
-        <div>
-          <span className="text-[9px] font-bold text-[#E53935] uppercase tracking-wider block mb-0.5">
-            {book.category || "FLASH SALE"}
-          </span>
-          <h4 className="font-bold text-gray-900 line-clamp-1 text-xs sm:text-sm group-hover:text-red-600 transition-colors">
-            <Link href={`/katalog/${target}`} prefetch={false}>{book.title}</Link>
-          </h4>
-          <p className="text-[11px] text-[#76716A] truncate mt-0.5">{book.author}</p>
-        </div>
+            {/* Book Title */}
+            <h4 className="font-bold text-gray-900 line-clamp-2 text-xs sm:text-sm group-hover:text-red-600 transition-colors leading-snug">
+              <Link href={`/katalog/${target}`} prefetch={false}>{book.title}</Link>
+            </h4>
 
-        {/* Price & Stock */}
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <div className="flex items-baseline justify-between gap-1 flex-wrap mb-1.5">
-            <span className="font-black text-[#E53935] text-sm">{priceInfo.promoPrice}</span>
-            <span className="line-through text-gray-400 text-[10px] font-normal">{priceInfo.originalPrice}</span>
+            {/* Author Name */}
+            <p className="text-xs text-gray-500 truncate mt-0.5">{book.author}</p>
           </div>
 
-          {/* Standardized Stock / Time Progress Bar */}
-          <div className="mb-3">
-            <PromoStockBar
-              timeLeft={countdown.hasMounted ? (countdown.isForever ? "Promo Berkelanjutan" : countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
-              stockLabel="Stok Terbatas"
-              progressPercent={65}
-              theme="light"
-            />
+          {/* Price Row */}
+          <div className="flex items-baseline gap-1.5 flex-wrap mt-2">
+            <span className="font-bold text-red-600 text-sm sm:text-base">{priceInfo.promoPrice}</span>
+            {priceInfo.originalPrice && (
+              <span className="text-gray-400 line-through text-xs font-normal">{priceInfo.originalPrice}</span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Action Button */}
-      <Link
-        href={`/katalog/${target}`}
-        prefetch={false}
-        className="w-full bg-[#E53935] hover:bg-[#C12A26] text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer uppercase tracking-wider"
-      >
-        <span>Lihat Detail</span>
-      </Link>
+      {/* ── Bottom Section: Full-Width Stack ── */}
+      <div className="mt-3 pt-2.5 border-t border-gray-100">
+        {/* Progress / Stock Indicator Bar */}
+        <div className="mb-3">
+          <PromoStockBar
+            timeLeft={countdown.hasMounted ? (countdown.isForever ? "Promo Berkelanjutan" : countdown.formatted || "Promo Berakhir") : "Memuat promo..."}
+            stockLabel="STOK TERBATAS"
+            progressPercent={65}
+            theme="light"
+          />
+        </div>
+
+        {/* Action Button */}
+        <Link
+          href={`/katalog/${target}`}
+          prefetch={false}
+          className="w-full bg-[#E53935] hover:bg-[#C12A26] text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-95 cursor-pointer uppercase tracking-wider text-center block"
+        >
+          <span>LIHAT DETAIL</span>
+        </Link>
+      </div>
 
     </div>
   );
