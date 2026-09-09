@@ -60,45 +60,42 @@ const BookCard = memo(function BookCard({ book, priority = false }: BookCardProp
       </Link>
 
       <div className="flex flex-col flex-1 p-2.5 sm:p-4 justify-between">
-        <div>
-          <div className="h-7 sm:h-8 flex items-start">
-            <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider line-clamp-2 leading-tight">
-              {currentBook.category || "Literasi"}
-            </span>
-          </div>
-          <div className="h-9 sm:h-10 flex items-start mt-0.5">
-            <h4 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors line-clamp-2 leading-tight">
-              <Link href={targetUrl} prefetch={false}>{currentBook.title}</Link>
-            </h4>
-          </div>
-          <div className="h-4 sm:h-5 mt-0.5">
-            <p className="text-[11px] text-[#76716A] truncate">
-              {currentBook.author}
-            </p>
-          </div>
+        <div className="flex flex-col gap-1">
+          {/* Category: Strict 1-line truncation */}
+          <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider truncate block">
+            {currentBook.category || "Literasi"}
+          </span>
+
+          {/* Book Title: Locked 2-line height reservation */}
+          <h4
+            className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors leading-snug line-clamp-2 h-9 sm:h-10 overflow-hidden"
+            title={currentBook.title}
+          >
+            <Link href={targetUrl} prefetch={false}>{currentBook.title}</Link>
+          </h4>
+
+          {/* Author Name: Strict 1-line truncation */}
+          <p className="text-xs text-gray-500 truncate block mt-1">
+            {currentBook.author}
+          </p>
         </div>
 
         <div className="mt-auto pt-2 border-t border-gray-100 flex flex-col justify-between">
-          <div className="min-h-[44px] flex flex-col justify-center">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className={`text-sm sm:text-base font-black ${hasActivePromo ? 'text-[#E52E2D]' : 'text-gray-900'}`}>
-                {hasActivePromo ? formattedPromoPrice : formattedOriginalPrice}
+          {/* Standardized Price Area: Fixed 2-row vertical stack */}
+          <div className="flex flex-col min-h-[44px] justify-center mt-1.5">
+            {/* Main Active / Discounted Price */}
+            <span className={`text-base font-bold tracking-tight ${hasActivePromo ? 'text-red-600' : 'text-gray-900'}`}>
+              {hasActivePromo ? formattedPromoPrice : (currentBook.price ? formatBookPrice(currentBook.price) : formattedOriginalPrice)}
+            </span>
+
+            {/* Original Strikethrough Price */}
+            {hasActivePromo ? (
+              <span className="text-xs text-gray-400 line-through">
+                {formattedOriginalPrice}
               </span>
-              {hasActivePromo && discountPct ? (
-                <span className="bg-red-50 text-[#E53935] border border-red-200 font-extrabold text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                  HEMAT {discountPct}%
-                </span>
-              ) : null}
-            </div>
-            <div className="h-4 flex items-center">
-              {hasActivePromo ? (
-                <span className="line-through text-gray-400 text-[10px] sm:text-[11px]">
-                  {formattedOriginalPrice}
-                </span>
-              ) : (
-                <span className="invisible text-[11px] select-none">-</span>
-              )}
-            </div>
+            ) : (
+              <span className="text-xs text-transparent select-none">&#160;</span>
+            )}
           </div>
 
           <div className="min-h-[38px] sm:min-h-[42px] flex items-center my-1.5 w-full">
@@ -119,7 +116,7 @@ const BookCard = memo(function BookCard({ book, priority = false }: BookCardProp
             prefetch={false}
             className="w-full block text-center px-2.5 py-2 text-xs font-bold bg-[#E53935] hover:bg-[#C12A26] rounded-xl text-white transition-all duration-200 active:scale-95 uppercase tracking-wider shadow-xs"
           >
-            Lihat Detail
+            LIHAT DETAIL
           </Link>
         </div>
       </div>

@@ -107,7 +107,7 @@ export default function RecentlyAddedSection({ books = [] }: RecentlyAddedSectio
         {/* Horizontal Carousel */}
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 pt-2 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
+          className="flex overflow-x-auto gap-4 sm:gap-6 pt-3 pb-5 snap-x snap-mandatory scroll-px-4 sm:scroll-px-6 lg:scroll-px-0 scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
         >
           {newItems.map((book) => (
             <NewArrivalCard key={book.id} book={book} />
@@ -167,44 +167,42 @@ function NewArrivalCard({ book }: { book: Book }) {
 
       {/* Card body */}
       <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between">
-        <div>
-          <div className="h-7 sm:h-8 flex items-start">
-            <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider line-clamp-2 leading-tight">
-              {book.category || ""}
-            </span>
-          </div>
-          <div className="h-9 sm:h-10 flex items-start mt-0.5">
-            <h4 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors line-clamp-2 leading-tight">
-              <Link href={targetUrl} prefetch={false}>{book.title}</Link>
-            </h4>
-          </div>
-          <div className="h-4 sm:h-5 mt-0.5">
-            <p className="text-[11px] text-[#76716A] truncate">{book.author}</p>
-          </div>
+        <div className="flex flex-col gap-1">
+          {/* Category: Strict 1-line truncation */}
+          <span className="text-[10px] sm:text-xs font-bold text-[#E52E2D] uppercase tracking-wider truncate block">
+            {book.category || ""}
+          </span>
+
+          {/* Book Title: Locked 2-line height reservation */}
+          <h4
+            className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-[#E52E2D] transition-colors leading-snug line-clamp-2 h-9 sm:h-10 overflow-hidden"
+            title={book.title}
+          >
+            <Link href={targetUrl} prefetch={false}>{book.title}</Link>
+          </h4>
+
+          {/* Author Name: Strict 1-line truncation */}
+          <p className="text-xs text-gray-500 truncate block mt-1">
+            {book.author}
+          </p>
         </div>
 
         <div className="mt-auto pt-2 border-t border-gray-100 flex flex-col justify-between">
-          {/* Price & Strikethrough */}
-          <div className="min-h-[44px] flex flex-col justify-center">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className={`text-sm sm:text-base font-black ${isPromo ? 'text-[#E52E2D]' : 'text-gray-900'}`}>
-                {isPromo ? formattedPromo : (book.price ? formatBookPrice(book.price) : "Hubungi Kami")}
+          {/* Standardized Price Area: Fixed 2-row vertical stack */}
+          <div className="flex flex-col min-h-[44px] justify-center mt-1.5">
+            {/* Main Active / Discounted Price */}
+            <span className={`text-base font-bold tracking-tight ${isPromo ? 'text-red-600' : 'text-gray-900'}`}>
+              {isPromo ? formattedPromo : (book.price ? formatBookPrice(book.price) : formattedOrig)}
+            </span>
+
+            {/* Original Strikethrough Price */}
+            {isPromo ? (
+              <span className="text-xs text-gray-400 line-through">
+                {formattedOrig}
               </span>
-              {isPromo && discountPct ? (
-                <span className="bg-red-50 text-[#E53935] border border-red-200 font-extrabold text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                  HEMAT {discountPct}%
-                </span>
-              ) : null}
-            </div>
-            <div className="h-4 flex items-center">
-              {isPromo ? (
-                <span className="line-through text-gray-400 text-[10px] sm:text-[11px]">
-                  {formattedOrig}
-                </span>
-              ) : (
-                <span className="invisible text-[11px] select-none">-</span>
-              )}
-            </div>
+            ) : (
+              <span className="text-xs text-transparent select-none">&#160;</span>
+            )}
           </div>
 
           {/* Reusable Stock / Timer Progress Bar */}
@@ -227,7 +225,7 @@ function NewArrivalCard({ book }: { book: Book }) {
             prefetch={false}
             className="w-full bg-[#E53935] hover:bg-[#C12A26] text-white text-xs font-bold py-2 rounded-xl block text-center transition-all duration-200 active:scale-95 uppercase tracking-wider shadow-xs"
           >
-            Lihat Detail
+            LIHAT DETAIL
           </Link>
         </div>
       </div>

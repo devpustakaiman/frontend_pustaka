@@ -452,32 +452,41 @@ function TearOffTicketCard({ book, index }: { book: Book; index: number }) {
         </Link>
 
         {/* Right Column: Product Details */}
-        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-          <div>
-            {/* Header: Category & Discount Badge */}
-            <div className="flex items-start justify-between gap-1.5 mb-1">
-              <span className="text-[10px] font-bold text-[#E53935] uppercase tracking-wider truncate flex-1">
-                {book.category || "DEAL HARI INI"}
-              </span>
-              <span className="bg-[#E53935] text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md shadow-2xs uppercase tracking-wider shrink-0">
-                -{discountPct}%
-              </span>
-            </div>
+        <div className="flex flex-col justify-center flex-1 min-w-0 py-1">
+          {/* Top Row: Category + Discount Badge */}
+          <div className="flex items-center justify-between gap-1.5 mb-1">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase text-red-600 tracking-wide truncate flex-1">
+              {book.category || "DEAL HARI INI"}
+            </span>
+            <span className="bg-[#E53935] text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md shadow-2xs uppercase tracking-wider shrink-0">
+              -{discountPct}%
+            </span>
+          </div>
 
-            {/* Book Title */}
-            <h4 className="font-bold text-gray-900 line-clamp-2 text-xs sm:text-sm group-hover:text-red-600 transition-colors leading-snug">
+          {/* Middle: Title + Author */}
+          <div className="flex flex-col gap-0.5">
+            <h4
+              className="text-sm sm:text-base font-bold text-gray-900 leading-snug group-hover:text-red-600 transition-colors line-clamp-2 overflow-hidden"
+              style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                maxHeight: "2.5rem",
+                wordBreak: "break-word",
+              }}
+              title={book.title}
+            >
               <Link href={`/katalog/${target}`} prefetch={false}>{book.title}</Link>
             </h4>
-
-            {/* Author Name */}
-            <p className="text-xs text-gray-500 truncate mt-0.5">{book.author}</p>
+            <p className="text-xs text-gray-500 font-medium truncate block mt-1">{book.author}</p>
           </div>
 
           {/* Price Row */}
-          <div className="flex items-baseline gap-1.5 flex-wrap mt-2">
-            <span className="font-bold text-red-600 text-sm sm:text-base">{priceInfo.promoPrice}</span>
+          <div className="flex items-baseline gap-1.5 flex-wrap mt-2 sm:mt-3">
+            <span className="text-lg sm:text-xl font-black text-red-600 tracking-tight">{priceInfo.promoPrice}</span>
             {priceInfo.originalPrice && (
-              <span className="text-gray-400 line-through text-xs font-normal">{priceInfo.originalPrice}</span>
+              <span className="text-xs text-gray-400 line-through self-center">{priceInfo.originalPrice}</span>
             )}
           </div>
         </div>
