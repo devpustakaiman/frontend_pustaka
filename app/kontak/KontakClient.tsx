@@ -423,18 +423,6 @@ export default function KontakClient({ articles = [] }: KontakClientProps) {
                       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.32 0 .63.05.92.14V8.9a6.38 6.38 0 0 0-.92-.07A6.34 6.34 0 0 0 3 15.17a6.34 6.34 0 0 0 6.34 6.33 6.34 6.34 0 0 0 6.33-6.33V9.05a8.27 8.27 0 0 0 4.92 1.6V7.2a4.85 4.85 0 0 1-1-.51z" />
                     </svg>
                   </a>
-
-                  {/* WhatsApp */}
-                  <a
-                    href={`https://wa.me/${cleanWhatsappPhone}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-9 h-9 sm:w-10 sm:h-10 bg-[#25D366] text-white rounded-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 shadow-2xs hover:shadow-md"
-                    aria-label="WhatsApp Resmi Pustaka IIMaN"
-                    title="WhatsApp Resmi"
-                  >
-                    <MessageCircle size={18} fill="currentColor" />
-                  </a>
                 </div>
               </div>
 
