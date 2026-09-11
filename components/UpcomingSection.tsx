@@ -404,7 +404,7 @@ export default function UpcomingSection({ books = [], whatsappPhone }: UpcomingS
                 className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2.5 bg-white border border-gray-200 hover:border-[#E52E2D] text-[#272522] hover:text-[#E52E2D] rounded-full font-bold text-xs sm:text-sm transition-all duration-200 shadow-2xs hover:shadow-md shrink-0 group cursor-pointer"
               >
                 <span>Lihat Semua Buku</span>
-                <ArrowRight size={15} className="text-[#E52E2D] transition-transform group-hover:translate-x-1" />
+                <ChevronRight size={15} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform text-[#E52E2D]" />
               </Link>
             </div>
           </div>
