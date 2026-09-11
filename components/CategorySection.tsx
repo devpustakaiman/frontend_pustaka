@@ -19,12 +19,10 @@ interface CategorySectionProps {
   initialFeaturedData?: FeaturedCategoriesConfig | null;
 }
 
-// Helper untuk membuat link katalog persis sesuai listener filter katalog
+// Helper link katalog terintegrasi ganda (query kategori & category)
 const buildKatalogUrl = (categoryName: string, customSlug?: string) => {
   if (!categoryName) return "/katalog";
   const slug = customSlug || generateSlug(categoryName);
-  
-  // Kirim kedua parameter: kategori dan category dengan nilai slug
   return `/katalog?kategori=${slug}&category=${slug}`;
 };
 
@@ -96,12 +94,10 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
     initialFeaturedData || null
   );
 
-  // Client-side revalidation on mount to fetch dynamic featured categories from site_settings
   useEffect(() => {
     async function loadFreshSettings() {
       try {
         const fresh = await getFeaturedCategories();
-        console.log("[CategorySection] Client-side fresh data:", fresh);
         if (fresh) {
           setFeaturedData(fresh);
         }
@@ -112,12 +108,10 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
     loadFreshSettings();
   }, []);
 
-  // Compute active Main Category with fallback
   const rawMain = featuredData?.main;
   const mainName = rawMain?.name || DEFAULT_MAIN_CATEGORY.name;
   const mainSlug = rawMain?.slug || generateSlug(mainName);
 
-  // Use DB covers if they exist and are non-empty; otherwise fall back to defaults
   const dbMainCovers = rawMain?.covers?.filter(Boolean) || [];
   const mainCovers =
     dbMainCovers.length > 0
@@ -131,22 +125,17 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
   const mainCategory = {
     name: mainName,
     desc: rawMain?.desc || (rawMain as any)?.description || DEFAULT_MAIN_CATEGORY.desc,
-    // Selalu paksa generate format URL lengkap dengan parameter ?kategori=...&category=...
     href: buildKatalogUrl(mainName, mainSlug),
     covers: mainCovers,
   };
 
-  // Compute active 4 Supporting Categories with static icons & color themes
   const rawCats = featuredData?.categories || [];
   const categories = DEFAULT_CATEGORIES.map((defaultCat, idx) => {
     const rawCat = rawCats[idx];
     const name = rawCat?.name || defaultCat.name;
     const slug = rawCat?.slug || generateSlug(name);
-    
-    // Selalu paksa generate format URL lengkap dengan parameter ?kategori=...&category=...
     const href = buildKatalogUrl(name, slug);
 
-    // Use DB covers if non-empty, else default
     const dbCovers = rawCat?.covers?.filter(Boolean) || [];
     const covers =
       dbCovers.length > 0
@@ -194,11 +183,8 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
             </Link>
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════ */}
-          {/* MOBILE & SMALL SCREENS LAYOUT (< lg)                       */}
-          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* MOBILE & SMALL SCREENS (< lg) */}
           <div className="block lg:hidden">
-            {/* Top Featured Banner */}
             <Link
               href={mainCategory.href}
               prefetch={false}
@@ -222,24 +208,24 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
 
               {/* Peeking 2 Book Covers */}
               <div className="flex items-center -space-x-4 shrink-0 z-10">
-                <div className="relative w-14 sm:w-18 aspect-[3/4] transform -rotate-6 rounded-md drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] overflow-hidden bg-neutral-900/40 p-0.5 flex items-center justify-center">
+                <div className="relative w-14 sm:w-18 aspect-[3/4] transform -rotate-6 filter drop-shadow-[-8px_12px_14px_rgba(0,0,0,0.35)]">
                   <Image
                     src={mainCategory.covers[0]}
                     alt={`${mainCategory.name} Cover 1`}
                     fill
                     sizes="72px"
                     loading="lazy"
-                    className="object-contain rounded-sm"
+                    className="object-contain"
                   />
                 </div>
-                <div className="relative w-14 sm:w-18 aspect-[3/4] transform rotate-3 rounded-md drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] overflow-hidden bg-neutral-900/40 p-0.5 flex items-center justify-center">
+                <div className="relative w-14 sm:w-18 aspect-[3/4] transform rotate-3 filter drop-shadow-[-8px_12px_14px_rgba(0,0,0,0.35)]">
                   <Image
                     src={mainCategory.covers[1]}
                     alt={`${mainCategory.name} Cover 2`}
                     fill
                     sizes="72px"
                     loading="lazy"
-                    className="object-contain rounded-sm"
+                    className="object-contain"
                   />
                 </div>
               </div>
@@ -268,9 +254,7 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
             </div>
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════ */}
-          {/* DESKTOP ASYMMETRICAL BENTO GRID (lg: Breakpoint)           */}
-          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* DESKTOP ASYMMETRICAL BENTO GRID (lg: Breakpoint) */}
           <div className="hidden lg:grid grid-cols-12 gap-5 items-stretch mt-2">
             
             {/* A. Left Main Featured Card (lg:col-span-5) */}
@@ -308,38 +292,38 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
                   {/* Dedicated Fanned 3-Book Deck Container */}
                   <div className="relative h-56 sm:h-64 w-44 sm:w-52 ml-auto mt-auto flex items-end justify-end pointer-events-auto z-10">
                     {/* Book 1 (Back / Leftmost) */}
-                    <div className="absolute bottom-2 right-16 sm:right-20 w-28 sm:w-32 aspect-[3/4] -rotate-12 z-10 transition-transform duration-300 origin-bottom-left hover:-translate-y-2 hover:-rotate-16 rounded-md drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] overflow-hidden bg-neutral-900/40 p-1 flex items-center justify-center">
+                    <div className="absolute bottom-2 right-16 sm:right-20 w-28 sm:w-32 aspect-[3/4] -rotate-12 z-10 transition-transform duration-300 origin-bottom-left hover:-translate-y-2 hover:-rotate-16 filter drop-shadow-[-8px_12px_14px_rgba(0,0,0,0.35)]">
                       <Image
                         src={mainCategory.covers[0]}
                         alt={`${mainCategory.name} Cover 1`}
                         fill
                         sizes="128px"
                         loading="lazy"
-                        className="object-contain rounded-sm"
+                        className="object-contain"
                       />
                     </div>
 
                     {/* Book 2 (Middle) */}
-                    <div className="absolute bottom-1 right-8 sm:right-10 w-28 sm:w-32 aspect-[3/4] -rotate-2 z-20 transition-transform duration-300 origin-bottom hover:-translate-y-3 rounded-md drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] overflow-hidden bg-neutral-900/40 p-1 flex items-center justify-center">
+                    <div className="absolute bottom-1 right-8 sm:right-10 w-28 sm:w-32 aspect-[3/4] -rotate-2 z-20 transition-transform duration-300 origin-bottom hover:-translate-y-3 filter drop-shadow-[-8px_12px_14px_rgba(0,0,0,0.35)]">
                       <Image
                         src={mainCategory.covers[1]}
                         alt={`${mainCategory.name} Cover 2`}
                         fill
                         sizes="128px"
                         loading="lazy"
-                        className="object-contain rounded-sm"
+                        className="object-contain"
                       />
                     </div>
 
                     {/* Book 3 (Front / Rightmost) */}
-                    <div className="absolute bottom-0 right-0 w-28 sm:w-32 aspect-[3/4] rotate-8 z-30 transition-transform duration-300 origin-bottom-right hover:-translate-y-2 hover:rotate-12 rounded-md drop-shadow-[-8px_12px_16px_rgba(0,0,0,0.35)] overflow-hidden bg-neutral-900/40 p-1 flex items-center justify-center">
+                    <div className="absolute bottom-0 right-0 w-28 sm:w-32 aspect-[3/4] rotate-8 z-30 transition-transform duration-300 origin-bottom-right hover:-translate-y-2 hover:rotate-12 filter drop-shadow-[-8px_12px_14px_rgba(0,0,0,0.35)]">
                       <Image
                         src={mainCategory.covers[2]}
                         alt={`${mainCategory.name} Cover 3`}
                         fill
                         sizes="128px"
                         loading="lazy"
-                        className="object-contain rounded-sm"
+                        className="object-contain"
                       />
                     </div>
                   </div>
@@ -377,27 +361,29 @@ export default function CategorySection({ initialFeaturedData }: CategorySection
 
                     {/* Right: Display 2 Overlapping Mini Book Covers */}
                     <div className="relative w-28 h-24 flex items-center justify-end flex-shrink-0 z-10">
+                      {/* Book 1 (back) */}
                       {cat.covers[0] && (
-                        <div className="absolute right-6 w-14 aspect-[3/4] rotate-[-6deg] rounded-sm drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)] overflow-hidden bg-gray-100/80 p-0.5 flex items-center justify-center">
+                        <div className="absolute right-6 w-14 aspect-[3/4] rotate-[-6deg] filter drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)]">
                           <Image
                             src={cat.covers[0]}
                             alt={`${cat.name} Cover 1`}
                             fill
                             sizes="60px"
                             loading="lazy"
-                            className="object-contain rounded-xs"
+                            className="object-contain"
                           />
                         </div>
                       )}
+                      {/* Book 2 (front) */}
                       {cat.covers[1] && (
-                        <div className="absolute right-0 w-15 aspect-[3/4] rotate-[4deg] hover:rotate-0 transition-transform rounded-sm drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)] overflow-hidden bg-gray-100/80 p-0.5 flex items-center justify-center">
+                        <div className="absolute right-0 w-15 aspect-[3/4] rotate-[4deg] hover:rotate-0 transition-transform filter drop-shadow-[-4px_6px_8px_rgba(0,0,0,0.18)]">
                           <Image
                             src={cat.covers[1]}
                             alt={`${cat.name} Cover 2`}
                             fill
                             sizes="60px"
                             loading="lazy"
-                            className="object-contain rounded-xs"
+                            className="object-contain"
                           />
                         </div>
                       )}
