@@ -13,6 +13,7 @@ import {
   getArticles,
   getMediaVideos,
   getSiteSettings,
+  getFeaturedCategories,
 } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export const revalidate = 0;
 
 export default async function Home() {
   // Fetch real backend data from Supabase with safe catch fallbacks
-  const [promoBooks, recommendedBooks, newBooks, upcomingBooks, articles, videos, settings] = await Promise.all([
+  const [promoBooks, recommendedBooks, newBooks, upcomingBooks, articles, videos, settings, featuredCategories] = await Promise.all([
     getPromoBooks().catch(() => []),
     getRecommendedBooks().catch(() => []),
     getNewBooks().catch(() => []),
@@ -28,6 +29,7 @@ export default async function Home() {
     getArticles().catch(() => []),
     getMediaVideos().catch(() => []),
     getSiteSettings().catch(() => null),
+    getFeaturedCategories().catch(() => null),
   ]);
 
   const safePromo = Array.isArray(promoBooks) ? promoBooks : [];
@@ -68,7 +70,7 @@ export default async function Home() {
       <UpcomingSection books={safeUpcoming} />
 
       {/* 6. Category Selection: Kategori Pilihan */}
-      <CategorySection />
+      <CategorySection initialFeaturedData={featuredCategories} />
 
       {/* 7. Warta & Media Preview Section: Cerita dalam Sorotan & Artikel */}
       <WartaSection articles={safeArticles} videos={safeVideos} />

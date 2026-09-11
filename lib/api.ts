@@ -587,3 +587,145 @@ export async function submitPreorder(
 
   return { success: true, data };
 }
+
+export interface FeaturedCategoryData {
+  name: string;
+  desc?: string;
+  description?: string;
+  slug?: string;
+  href?: string;
+  covers?: string[];
+  book_ids?: string[];
+  is_main?: boolean;
+}
+
+export interface FeaturedCategoriesConfig {
+  main?: FeaturedCategoryData;
+  categories?: FeaturedCategoryData[];
+}
+
+export async function getFeaturedCategories(): Promise<FeaturedCategoriesConfig | null> {
+  try {
+    // Fetch directly from site_settings (no web_settings — that table does not exist)
+    const { data: siteData, error } = await supabase
+      .from("site_settings")
+      .select("featured_categories")
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.warn("[getFeaturedCategories] Error fetching site_settings:", error.message);
+    }
+
+    console.log("[getFeaturedCategories] RAW featured_categories:", siteData?.featured_categories);
+
+    const rawSettings = siteData?.featured_categories ?? null;
+    if (!rawSettings) return null;
+
+    // Parse JSON if stored as a string
+    let parsed: any;
+    try {
+      parsed = typeof rawSettings === "string" ? JSON.parse(rawSettings) : rawSettings;
+    } catch (parseErr) {
+      console.warn("[getFeaturedCategories] Failed to parse JSON:", parseErr);
+      return null;
+    }
+
+    // Helper: extract cover URL strings from a books array
+    // Handles both object form { cover_url, title } and plain URL strings
+    const extractCovers = (books: any[]): string[] => {
+      if (!Array.isArray(books)) return [];
+      return books
+        .map((b: any) => {
+          if (!b) return null;
+          if (typeof b === "string") return (b.startsWith("http") || b.startsWith("/")) ? b : null;
+          return b.cover_url || b.coverUrl || b.url || b.src || null;
+        })
+        .filter(Boolean) as string[];
+    };
+
+    let mainCat: FeaturedCategoryData | undefined;
+    let subCats: FeaturedCategoryData[] = [];
+
+    // ── Primary shape saved by admin ──────────────────────────────────────────
+    // {
+    //   "main":       { "category": "...", "books": [{ "title": "...", "cover_url": "..." }] },
+    //   "supporting": [{ "slot": 2, "category": "...", "books": [...] }, ...]
+    // }
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const rawMain = parsed.main;
+      const rawSupporting: any[] =
+        parsed.supporting || parsed.categories || parsed.subcategories || [];
+
+      if (rawMain) {
+        const name: string = rawMain.category || rawMain.name || "";
+        mainCat = {
+          name,
+          slug:   rawMain.slug || generateSlug(name),
+          desc:   rawMain.desc || rawMain.description || "",
+          href:   rawMain.href || `/katalog?kategori=${generateSlug(name)}`,
+          covers: extractCovers(rawMain.books || rawMain.covers || []),
+        };
+      }
+
+      if (Array.isArray(rawSupporting) && rawSupporting.length > 0) {
+        // Sort by slot field when present so order matches admin config
+        const sorted = [...rawSupporting].sort(
+          (a: any, b: any) => (a.slot ?? 99) - (b.slot ?? 99)
+        );
+        subCats = sorted.map((item: any) => {
+          const name: string = item.category || item.name || "";
+          return {
+            name,
+            slug:   item.slug || generateSlug(name),
+            desc:   item.desc || item.description || "",
+            href:   item.href || `/katalog?kategori=${generateSlug(name)}`,
+            covers: extractCovers(item.books || item.covers || []),
+          };
+        });
+      }
+    }
+
+    // ── Fallback: flat array shape ─────────────────────────────────────────────
+    // [{ is_main: true, category/name, books/covers }, ...]
+    if (Array.isArray(parsed)) {
+      const mainIdx = parsed.findIndex((c: any) => c.is_main || c.isMain);
+      const ordered =
+        mainIdx !== -1
+          ? [parsed[mainIdx], ...parsed.filter((_: any, i: number) => i !== mainIdx)]
+          : parsed;
+
+      const [first, ...rest] = ordered;
+      if (first) {
+        const name: string = first.category || first.name || "";
+        mainCat = {
+          name,
+          slug:   first.slug || generateSlug(name),
+          desc:   first.desc || first.description || "",
+          href:   first.href || `/katalog?kategori=${generateSlug(name)}`,
+          covers: extractCovers(first.books || first.covers || []),
+        };
+      }
+      subCats = rest.map((item: any) => {
+        const name: string = item.category || item.name || "";
+        return {
+          name,
+          slug:   item.slug || generateSlug(name),
+          desc:   item.desc || item.description || "",
+          href:   item.href || `/katalog?kategori=${generateSlug(name)}`,
+          covers: extractCovers(item.books || item.covers || []),
+        };
+      });
+    }
+
+    if (!mainCat && subCats.length === 0) return null;
+
+    console.log("[getFeaturedCategories] Resolved main:", mainCat?.name, "covers:", mainCat?.covers);
+    console.log("[getFeaturedCategories] Resolved supporting:", subCats.map(c => `${c.name}(${c.covers?.length ?? 0})`));
+
+    return { main: mainCat, categories: subCats };
+  } catch (err) {
+    console.warn("[getFeaturedCategories] Exception:", err);
+    return null;
+  }
+}
