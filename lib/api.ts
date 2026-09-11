@@ -170,7 +170,16 @@ export async function getUpcomingBooks(limit?: number) {
       return [];
     }
 
-    return data || [];
+    const validData = (data || []).filter(
+      (b: any) =>
+        !b.deleted_at &&
+        b.is_deleted !== true &&
+        b.status !== "trash" &&
+        b.status !== "draft" &&
+        b.is_active !== false
+    );
+
+    return validData;
   } catch (err) {
     console.error("Exception in getUpcomingBooks:", err);
     return [];

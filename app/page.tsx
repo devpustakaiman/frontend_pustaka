@@ -15,6 +15,9 @@ import {
   getSiteSettings,
 } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function Home() {
   // Fetch real backend data from Supabase with safe catch fallbacks
   const [promoBooks, recommendedBooks, newBooks, upcomingBooks, articles, videos, settings] = await Promise.all([

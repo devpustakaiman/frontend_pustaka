@@ -335,10 +335,26 @@ export default function UpcomingSection({ books = [] }: UpcomingSectionProps) {
   const [selectedBookForReminder, setSelectedBookForReminder] = useState<Book | null>(null);
 
   useEffect(() => {
-    // Filter books with is_upcoming === true
-    const filtered = books.filter((b) => b.is_upcoming === true);
-    const finalUpcoming = filtered.length > 0 ? filtered : DEMO_UPCOMING_BOOKS;
-    setUpcomingList(finalUpcoming);
+    // Filter out soft-deleted, trashed, draft, or inactive books
+    const filtered = (books || []).filter(
+      (b) =>
+        b.is_upcoming === true &&
+        !b.deleted_at &&
+        (b as any).is_deleted !== true &&
+        (b as any).status !== "trash" &&
+        (b as any).status !== "draft" &&
+        (b as any).is_active !== false
+    );
+
+    if (books && books.length > 0) {
+      setUpcomingList(filtered);
+    } else if (books && books.length === 0) {
+      // Real database fetch returned 0 items (or all upcoming items were deleted/trashed) -> show empty
+      setUpcomingList([]);
+    } else {
+      // Standalone fallback demo books only if books prop is undefined
+      setUpcomingList(DEMO_UPCOMING_BOOKS);
+    }
   }, [books]);
 
   const handleOpenReminder = (book: Book) => {
