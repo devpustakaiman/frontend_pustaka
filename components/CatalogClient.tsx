@@ -14,6 +14,7 @@ import {
   Flame,
   Star,
   Sparkles,
+  Calendar,
 } from "lucide-react";
 import BookGrid, { Book } from "@/components/BookGrid";
 import { CATEGORY_TREE } from "@/components/Navbar";
@@ -122,6 +123,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
   // Tri-State Toggles (0 = All/Default, 1 = Active Only, 2 = Inactive Only)
   const [promoFilter, setPromoFilter] = useState<number>(0);
   const [recommendedFilter, setRecommendedFilter] = useState<number>(0);
+  const [upcomingFilter, setUpcomingFilter] = useState<number>(0);
 
   // Dynamic Catalog Header & Banner State
   const [catalogTitle, setCatalogTitle] = useState("Katalog Buku Pustaka Iman");
@@ -198,6 +200,14 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     }
 
     if (
+      filterParam === "segera-terbit" ||
+      filterParam === "upcoming" ||
+      searchParams.get("is_upcoming") === "true"
+    ) {
+      setUpcomingFilter(1);
+    }
+
+    if (
       sortParam === "terbaru" ||
       sortParam === "new" ||
       filterParam === "buku-baru" ||
@@ -220,6 +230,8 @@ export default function CatalogClient({ books }: CatalogClientProps) {
         setRecommendedFilter(1);
       } else if (cleanParam === "promo" || paramSlug === "promo") {
         setPromoFilter(1);
+      } else if (cleanParam === "segera-terbit" || paramSlug === "segera-terbit" || cleanParam === "upcoming") {
+        setUpcomingFilter(1);
       } else if (
         cleanParam === "terbaru" ||
         cleanParam === "buku-baru" ||
@@ -314,6 +326,10 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     setRecommendedFilter((prev) => (prev + 1) % 3);
   };
 
+  const cycleUpcomingFilter = () => {
+    setUpcomingFilter((prev) => (prev + 1) % 3);
+  };
+
   const resetAllFilters = () => {
     setSelectedCategory("Semua Kategori");
     setSearchQuery("");
@@ -321,6 +337,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     setAuthorFilter("");
     setPromoFilter(0);
     setRecommendedFilter(0);
+    setUpcomingFilter(0);
     setSort("all");
     router.push("/katalog", { scroll: false });
   };
@@ -503,6 +520,10 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     if (recommendedFilter === 1 && !isRec) return false;
     if (recommendedFilter === 2 && isRec) return false;
 
+    // E. Segera Terbit (Upcoming) Tri-State Filter
+    if (upcomingFilter === 1 && !book.is_upcoming) return false;
+    if (upcomingFilter === 2 && book.is_upcoming) return false;
+
     return true;
   });
 
@@ -534,6 +555,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
     authorFilter.trim().length > 0 ||
     promoFilter !== 0 ||
     recommendedFilter !== 0 ||
+    upcomingFilter !== 0 ||
     sort !== "all";
 
   return (
@@ -677,6 +699,26 @@ export default function CatalogClient({ books }: CatalogClientProps) {
               <Sparkles size={14} className={sort === "terbaru" ? "fill-amber-300 text-amber-300 drop-shadow-xs" : "text-[#E52E2D]"} />
               <span>
                 {sort === "terbaru" ? "Buku Baru ✓" : "Buku Baru"}
+              </span>
+            </button>
+
+            {/* Segera Terbit (Upcoming) Tri-State Filter Button */}
+            <button
+              onClick={cycleUpcomingFilter}
+              type="button"
+              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
+                upcomingFilter === 1
+                  ? "bg-[#E52E2D] text-white border-[#C12A26] shadow-md ring-2 ring-red-300"
+                  : upcomingFilter === 2
+                  ? "bg-slate-200 text-slate-700 border-slate-300 line-through opacity-80"
+                  : "bg-gray-50 text-[#272522] border-gray-200 hover:bg-white hover:border-[#E52E2D]/60"
+              }`}
+            >
+              <Calendar size={14} className={upcomingFilter === 1 ? "text-amber-300 drop-shadow-xs" : "text-[#E52E2D]"} />
+              <span>
+                {upcomingFilter === 0 && "Segera Terbit: Semua"}
+                {upcomingFilter === 1 && "Segera Terbit: Aktif ✓"}
+                {upcomingFilter === 2 && "Segera Terbit: Non-Rilis ✗"}
               </span>
             </button>
 
@@ -899,7 +941,7 @@ export default function CatalogClient({ books }: CatalogClientProps) {
       )}
 
       {/* Book Grid */}
-      <BookGrid books={processed} />
+      <BookGrid books={processed} hidePrice={upcomingFilter === 1} />
     </div>
   );
 }

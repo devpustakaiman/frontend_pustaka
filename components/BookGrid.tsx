@@ -5,9 +5,10 @@ export type { Book };
 
 interface BookGridProps {
   books?: Book[];
+  hidePrice?: boolean;
 }
 
-export default function BookGrid({ books = [] }: BookGridProps) {
+export default function BookGrid({ books = [], hidePrice = false }: BookGridProps) {
   if (!books || books.length === 0) {
     return (
       <div className="text-center py-16 bg-white rounded-xl border border-[#E7E1D8] my-4 shadow-sm">
@@ -22,7 +23,7 @@ export default function BookGrid({ books = [] }: BookGridProps) {
     <section className="py-4 text-[#272522]">
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {books.map((book) => (
-          <BookCard key={book.id} book={book} />
+          <BookCard key={book.id} book={book} hidePrice={hidePrice || book.is_upcoming === true} />
         ))}
       </div>
     </section>

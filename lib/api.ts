@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 import { generateSlug } from "./slugify";
 
-const BOOK_LIST_FIELDS = "id, title, author, category, price, promo_price, is_promo, promo_end_date, promo_percentage, is_recommended, coverUrl, created_at";
+const BOOK_LIST_FIELDS = "*";
 
 export interface DBCategory {
   id: string;
@@ -146,6 +146,33 @@ export async function getNewBooks(limit = 12) {
     return data || [];
   } catch (err) {
     console.error("Exception in getNewBooks:", err);
+    return [];
+  }
+}
+
+export async function getUpcomingBooks(limit?: number) {
+  try {
+    let query = supabase
+      .from("books")
+      .select("*")
+      .is("deleted_at", null)
+      .eq("is_upcoming", true)
+      .order("created_at", { ascending: false });
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching upcoming books:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Exception in getUpcomingBooks:", err);
     return [];
   }
 }

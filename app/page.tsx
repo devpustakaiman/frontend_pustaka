@@ -2,12 +2,14 @@ import HeroBanner from "@/components/HeroBanner";
 import PromoSection from "@/components/PromoSection";
 import RecommendedSection from "@/components/RecommendedSection";
 import RecentlyAddedSection from "@/components/RecentlyAddedSection";
+import UpcomingSection from "@/components/UpcomingSection";
 import CategorySection from "@/components/CategorySection";
 import WartaSection from "@/components/WartaSection";
 import {
   getPromoBooks,
   getRecommendedBooks,
   getNewBooks,
+  getUpcomingBooks,
   getArticles,
   getMediaVideos,
   getSiteSettings,
@@ -15,10 +17,11 @@ import {
 
 export default async function Home() {
   // Fetch real backend data from Supabase with safe catch fallbacks
-  const [promoBooks, recommendedBooks, newBooks, articles, videos, settings] = await Promise.all([
+  const [promoBooks, recommendedBooks, newBooks, upcomingBooks, articles, videos, settings] = await Promise.all([
     getPromoBooks().catch(() => []),
     getRecommendedBooks().catch(() => []),
     getNewBooks().catch(() => []),
+    getUpcomingBooks().catch(() => []),
     getArticles().catch(() => []),
     getMediaVideos().catch(() => []),
     getSiteSettings().catch(() => null),
@@ -27,6 +30,7 @@ export default async function Home() {
   const safePromo = Array.isArray(promoBooks) ? promoBooks : [];
   const safeRecommended = Array.isArray(recommendedBooks) ? recommendedBooks : [];
   const safeNew = Array.isArray(newBooks) ? newBooks : [];
+  const safeUpcoming = Array.isArray(upcomingBooks) ? upcomingBooks : [];
   const safeArticles = Array.isArray(articles) ? articles : [];
   const safeVideos = Array.isArray(videos) ? videos : [];
 
@@ -57,10 +61,13 @@ export default async function Home() {
       {/* 4. New Arrivals Section: ✨ Buku Baru Terbit */}
       <RecentlyAddedSection books={safeNew} />
 
-      {/* Secondary Sections */}
+      {/* 5. Upcoming Books Section: 🚀 Segera Terbit */}
+      <UpcomingSection books={safeUpcoming} />
+
+      {/* 6. Category Selection: Kategori Pilihan */}
       <CategorySection />
-      
-      {/* 5. Warta & Media Preview Section */}
+
+      {/* 7. Warta & Media Preview Section: Cerita dalam Sorotan & Artikel */}
       <WartaSection articles={safeArticles} videos={safeVideos} />
     </main>
   );

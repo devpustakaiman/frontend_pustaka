@@ -34,6 +34,9 @@ export interface Book {
   is_recommended?: boolean;
   is_featured?: boolean;
   is_bestseller?: boolean;
+  is_upcoming?: boolean;
+  release_date?: string | null;
+  estimated_release_date?: string | null;
 }
 
 /**
