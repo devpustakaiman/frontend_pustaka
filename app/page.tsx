@@ -52,6 +52,14 @@ export default async function Home() {
     safeNew[0] ||
     null;
 
+  // Ambil nomor WhatsApp resmi dari settings (sama persis dengan yang dipakai di halaman Kontak)
+  const rawWhatsapp =
+    (settings as any)?.whatsapp ||
+    (settings as any)?.phone ||
+    (settings as any)?.contact_phone ||
+    "6281234567890";
+  const cleanWhatsappPhone = String(rawWhatsapp).replace(/\D/g, "");
+
   return (
     <main className="w-full min-h-screen bg-white">
       {/* 1. Hero / Banner Section */}
@@ -66,8 +74,8 @@ export default async function Home() {
       {/* 4. New Arrivals Section: ✨ Buku Baru Terbit */}
       <RecentlyAddedSection books={safeNew} />
 
-      {/* 5. Upcoming Books Section: 🚀 Segera Terbit */}
-      <UpcomingSection books={safeUpcoming} />
+      {/* 5. Upcoming Books Section: 🚀 Segera Terbit (Gunakan nomor WhatsApp dinamis) */}
+      <UpcomingSection books={safeUpcoming} whatsappPhone={cleanWhatsappPhone} />
 
       {/* 6. Category Selection: Kategori Pilihan */}
       <CategorySection initialFeaturedData={featuredCategories} />
